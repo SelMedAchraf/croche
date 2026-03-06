@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { FiHeart, FiMail, FiUser, FiPlus, FiMinus, FiShoppingCart } from 'react-icons/fi';
-import { usePriceComponents } from '../hooks/usePriceComponents';
+import { useItems } from '../hooks/useItems';
 
 const CustomOrders = () => {
   const { t } = useTranslation();
-  const { components, loading } = usePriceComponents();
+  const { items, loading } = useItems();
   const [selectedComponents, setSelectedComponents] = useState({});
   const [formData, setFormData] = useState({
     name: '',
@@ -16,10 +16,10 @@ const CustomOrders = () => {
   });
   const [submitted, setSubmitted] = useState(false);
 
-  // Group components by category
-  const flowers = components.filter(c => c.category === 'flower');
-  const packaging = components.filter(c => c.category === 'packaging');
-  const accessories = components.filter(c => c.category === 'accessory');
+  // Group items by category
+  const flowers = items.filter(c => c.category === 'flower');
+  const packaging = items.filter(c => c.category === 'packaging');
+  const accessories = items.filter(c => c.category === 'accessory');
 
   const handleAddComponent = (component) => {
     setSelectedComponents(prev => ({

@@ -9,7 +9,6 @@ A beautiful, full-stack e-commerce platform for showcasing and selling handmade 
 - 🛒 **Shopping Cart** - Add products, manage quantities, and checkout seamlessly
 - 🌐 **Multi-Language** - Full support for English, French, and Arabic (with RTL)
 - 📱 **Responsive Design** - Perfect experience on mobile, tablet, and desktop
-- 🖼️ **Image Gallery** - View stunning crochet creations
 - 💝 **Custom Orders** - Request personalized crochet items
 -  **Contact** - Easy communication with the artist
 - 💚 **WhatsApp Integration** - Quick messaging via floating button
@@ -19,7 +18,6 @@ A beautiful, full-stack e-commerce platform for showcasing and selling handmade 
 - 📦 **Product Management** - Add, edit, and delete products
 - 📋 **Order Management** - View and update order statuses
 - 📊 **Analytics Dashboard** - Track sales and popular products
-- 🖼️ **Gallery Management** - Upload and manage showcase images
 
 ### Admin Routes
 - Login: `http://localhost:5173/admin/login`

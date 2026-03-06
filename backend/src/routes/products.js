@@ -5,21 +5,17 @@ import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 
-// Get all products (public)
+// Get all products (public/admin)
 router.get('/', async (req, res) => {
   try {
-    const { category, search } = req.query;
+    const { category } = req.query;
+    
     let query = supabase
       .from('products')
-      .select('*, product_images(*)')
-      .eq('is_active', true);
+      .select('*, product_images(*)');
 
     if (category) {
       query = query.eq('category', category);
-    }
-
-    if (search) {
-      query = query.ilike('name', `%${search}%`);
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -57,10 +53,8 @@ router.get('/:id', async (req, res) => {
 router.post('/',
   authenticateAdmin,
   [
-    body('name').notEmpty().trim(),
-    body('description').notEmpty().trim(),
     body('price').isFloat({ min: 0 }),
-    body('category').notEmpty().trim(),
+    body('category').notEmpty().trim()
   ],
   async (req, res) => {
     try {
@@ -69,19 +63,13 @@ router.post('/',
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { name, description, price, category, colors, stock_quantity, tags } = req.body;
+      const { price, category } = req.body;
 
       const { data, error } = await supabase
         .from('products')
         .insert([{
-          name,
-          description,
           price,
-          category,
-          colors: colors || [],
-          stock_quantity: stock_quantity || 0,
-          tags: tags || [],
-          is_active: true
+          category
         }])
         .select()
         .single();
@@ -100,19 +88,13 @@ router.put('/:id',
   authenticateAdmin,
   async (req, res) => {
     try {
-      const { name, description, price, category, colors, stock_quantity, tags, is_active } = req.body;
+      const { price, category } = req.body;
 
       const { data, error } = await supabase
         .from('products')
         .update({
-          name,
-          description,
           price,
           category,
-          colors,
-          stock_quantity,
-          tags,
-          is_active,
           updated_at: new Date().toISOString()
         })
         .eq('id', req.params.id)
@@ -156,13 +138,13 @@ router.post('/:id/images',
   authenticateAdmin,
   async (req, res) => {
     try {
-      const { url, is_primary } = req.body;
+      const { image_url, is_primary } = req.body;
       
       const { data, error } = await supabase
         .from('product_images')
         .insert([{
           product_id: req.params.id,
-          image_url: url,
+          image_url: image_url,
           is_primary: is_primary || false
         }])
         .select()
@@ -173,6 +155,25 @@ router.post('/:id/images',
     } catch (error) {
       console.error('Error adding product image:', error);
       res.status(500).json({ error: 'Failed to add product image' });
+    }
+  }
+);
+
+// Delete all product images (admin only)
+router.delete('/:id/images',
+  authenticateAdmin,
+  async (req, res) => {
+    try {
+      const { error } = await supabase
+        .from('product_images')
+        .delete()
+        .eq('product_id', req.params.id);
+
+      if (error) throw error;
+      res.json({ message: 'Product images deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting product images:', error);
+      res.status(500).json({ error: 'Failed to delete product images' });
     }
   }
 );

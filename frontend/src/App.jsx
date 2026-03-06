@@ -3,11 +3,9 @@ import { CartProvider } from './context/CartContext';
 import './i18n/config';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import WhatsAppButton from './components/WhatsAppButton';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetails from './pages/ProductDetails';
-import Gallery from './pages/Gallery';
 import CustomOrders from './pages/CustomOrders';
 import About from './pages/About';
 import Contact from './pages/Contact';
@@ -28,7 +26,6 @@ function AppContent() {
               <Route path="/" element={<Home />} />
               <Route path="/products" element={<Products />} />
               <Route path="/products/:id" element={<ProductDetails />} />
-              <Route path="/gallery" element={<Gallery />} />
               <Route path="/custom-orders" element={<CustomOrders />} />
               <Route path="/about" element={<About />} />
 
@@ -40,7 +37,6 @@ function AppContent() {
             </Routes>
           </main>
           {!isAdminRoute && <Footer />}
-          {!isAdminRoute && <WhatsAppButton />}
         </div>
   );
 }

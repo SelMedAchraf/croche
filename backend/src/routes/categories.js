@@ -97,6 +97,21 @@ router.put(
     try {
       const { name } = req.body;
 
+      // First, get the old category name
+      const { data: oldCategory, error: fetchError } = await supabase
+        .from('categories')
+        .select('name')
+        .eq('id', req.params.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!oldCategory) {
+        return res.status(404).json({ error: 'Category not found' });
+      }
+
+      const oldName = oldCategory.name;
+
+      // Update the category
       const { data, error } = await supabase
         .from('categories')
         .update({
@@ -118,6 +133,17 @@ router.put(
         return res.status(404).json({ error: 'Category not found' });
       }
 
+      // Update all products with the old category name to the new category name
+      const { error: updateProductsError } = await supabase
+        .from('products')
+        .update({ category: name })
+        .eq('category', oldName);
+
+      if (updateProductsError) {
+        console.error('Error updating products:', updateProductsError);
+        // Don't throw error here, category update was successful
+      }
+
       res.json(data);
     } catch (error) {
       console.error('Error updating category:', error);
@@ -129,6 +155,34 @@ router.put(
 // Delete category (admin only)
 router.delete('/:id', authenticateAdmin, async (req, res) => {
   try {
+    // First, get the category name
+    const { data: category, error: fetchError } = await supabase
+      .from('categories')
+      .select('name')
+      .eq('id', req.params.id)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    // Check if any products use this category
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('id')
+      .eq('category', category.name)
+      .limit(1);
+
+    if (productsError) throw productsError;
+
+    if (products && products.length > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete this category. There are products using this category. Please delete the products first or reassign them to another category.' 
+      });
+    }
+
+    // If no products use this category, proceed with deletion
     const { error } = await supabase
       .from('categories')
       .delete()

@@ -5,12 +5,12 @@ import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 
-// Get all price components (public)
+// Get all items (public)
 router.get('/', async (req, res) => {
   try {
     const { category } = req.query;
     let query = supabase
-      .from('price_components')
+      .from('items')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -23,33 +23,33 @@ router.get('/', async (req, res) => {
     if (error) throw error;
     res.json(data);
   } catch (error) {
-    console.error('Error fetching price components:', error);
-    res.status(500).json({ error: 'Failed to fetch price components' });
+    console.error('Error fetching items:', error);
+    res.status(500).json({ error: 'Failed to fetch items' });
   }
 });
 
-// Get single price component by ID (public)
+// Get single item by ID (public)
 router.get('/:id', async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from('price_components')
+      .from('items')
       .select('*')
       .eq('id', req.params.id)
       .single();
 
     if (error) throw error;
     if (!data) {
-      return res.status(404).json({ error: 'Price component not found' });
+      return res.status(404).json({ error: 'Item not found' });
     }
 
     res.json(data);
   } catch (error) {
-    console.error('Error fetching price component:', error);
-    res.status(500).json({ error: 'Failed to fetch price component' });
+    console.error('Error fetching item:', error);
+    res.status(500).json({ error: 'Failed to fetch item' });
   }
 });
 
-// Create price component (admin only)
+// Create item (admin only)
 router.post('/',
   authenticateAdmin,
   [
@@ -65,13 +65,12 @@ router.post('/',
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { name, description, category, image_url, price } = req.body;
+      const { name, category, image_url, price } = req.body;
 
       const { data, error } = await supabase
-        .from('price_components')
+        .from('items')
         .insert([{
           name,
-          description: description || null,
           category,
           image_url,
           price
@@ -82,24 +81,23 @@ router.post('/',
       if (error) throw error;
       res.status(201).json(data);
     } catch (error) {
-      console.error('Error creating price component:', error);
-      res.status(500).json({ error: 'Failed to create price component' });
+      console.error('Error creating item:', error);
+      res.status(500).json({ error: 'Failed to create item' });
     }
   }
 );
 
-// Update price component (admin only)
+// Update item (admin only)
 router.put('/:id',
   authenticateAdmin,
   async (req, res) => {
     try {
-      const { name, description, category, image_url, price } = req.body;
+      const { name, category, image_url, price } = req.body;
 
       const { data, error } = await supabase
-        .from('price_components')
+        .from('items')
         .update({
           name,
-          description,
           category,
           image_url,
           price
@@ -110,32 +108,32 @@ router.put('/:id',
 
       if (error) throw error;
       if (!data) {
-        return res.status(404).json({ error: 'Price component not found' });
+        return res.status(404).json({ error: 'Item not found' });
       }
 
       res.json(data);
     } catch (error) {
-      console.error('Error updating price component:', error);
-      res.status(500).json({ error: 'Failed to update price component' });
+      console.error('Error updating item:', error);
+      res.status(500).json({ error: 'Failed to update item' });
     }
   }
 );
 
-// Delete price component (admin only)
+// Delete item (admin only)
 router.delete('/:id',
   authenticateAdmin,
   async (req, res) => {
     try {
       const { error } = await supabase
-        .from('price_components')
+        .from('items')
         .delete()
         .eq('id', req.params.id);
 
       if (error) throw error;
-      res.json({ message: 'Price component deleted successfully' });
+      res.json({ message: 'Item deleted successfully' });
     } catch (error) {
-      console.error('Error deleting price component:', error);
-      res.status(500).json({ error: 'Failed to delete price component' });
+      console.error('Error deleting item:', error);
+      res.status(500).json({ error: 'Failed to delete item' });
     }
   }
 );

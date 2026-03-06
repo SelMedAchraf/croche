@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { FiSearch } from 'react-icons/fi';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
 
@@ -15,7 +14,6 @@ const Products = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
 
   useEffect(() => {
@@ -46,7 +44,7 @@ const Products = () => {
 
   useEffect(() => {
     filterProducts();
-  }, [products, searchQuery, selectedCategory]);
+  }, [products, selectedCategory]);
 
   const fetchProducts = async () => {
     try {
@@ -67,14 +65,6 @@ const Products = () => {
     // Filter by category
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(p => p.category === selectedCategory);
-    }
-
-    // Filter by search query
-    if (searchQuery) {
-      filtered = filtered.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
     }
 
     setFilteredProducts(filtered);
@@ -105,19 +95,7 @@ const Products = () => {
         </motion.div>
 
         {/* Filters */}
-        <div className="mb-8 space-y-4">
-          {/* Search */}
-          <div className="relative max-w-md mx-auto">
-            <input
-              type="text"
-              placeholder={t('products.search')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-field pl-12"
-            />
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-text/40 w-5 h-5" />
-          </div>
-
+        <div className="mb-8">
           {/* Category Filter */}
           <div className="flex flex-wrap justify-center gap-3">
             {categories.map((category) => (
@@ -173,7 +151,6 @@ const Products = () => {
             <p className="text-xl text-text/60">No products found</p>
             <button
               onClick={() => {
-                setSearchQuery('');
                 setSelectedCategory('all');
                 setSearchParams({});
               }}
@@ -199,15 +176,16 @@ const ProductCard = ({ product, addToCart }) => {
 
   const handleAddToCart = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     addToCart(product, 1);
   };
 
   return (
-    <div className="card group h-full flex flex-col">
-      <Link to={`/products/${product.id}`} className="relative h-64 overflow-hidden">
+    <Link to={`/products/${product.id}`} className="card group h-full flex flex-col">
+      <div className="relative h-64 overflow-hidden">
         <img
           src={primaryImage}
-          alt={product.name}
+          alt="Product"
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           loading="lazy"
         />
@@ -223,18 +201,9 @@ const ProductCard = ({ product, addToCart }) => {
             NEW
           </div>
         )}
-      </Link>
+      </div>
       
       <div className="p-4 flex-grow flex flex-col">
-        <Link to={`/products/${product.id}`}>
-          <h3 className="font-display font-semibold text-lg mb-2 text-text group-hover:text-primary transition-colors">
-            {product.name}
-          </h3>
-          <p className="text-text/60 text-sm mb-3 line-clamp-2">
-            {product.description}
-          </p>
-        </Link>
-        
         {product.colors && product.colors.length > 0 && (
           <div className="flex gap-2 mb-3">
             {product.colors.slice(0, 5).map((color, index) => (
@@ -276,7 +245,7 @@ const ProductCard = ({ product, addToCart }) => {
           </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

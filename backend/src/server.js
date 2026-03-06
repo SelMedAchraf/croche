@@ -3,8 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import productRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
-import galleryRoutes from './routes/gallery.js';
-import priceComponentRoutes from './routes/priceComponents.js';
+import itemRoutes from './routes/items.js';
 import deliveryPriceRoutes from './routes/deliveryPrices.js';
 import categoryRoutes from './routes/categories.js';
 
@@ -25,8 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/gallery', galleryRoutes);
-app.use('/api/price-components', priceComponentRoutes);
+app.use('/api/items', itemRoutes);
 app.use('/api/delivery-prices', deliveryPriceRoutes);
 
 // Health check

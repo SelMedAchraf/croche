@@ -25,11 +25,10 @@ export const useCategoriesManagement = () => {
   };
 
   // Create category
-  const createCategory = async (categoryData) => {
+  const createCategory = async (categoryData, token) => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('supabase.auth.token');
       if (!token) throw new Error('Authentication required');
 
       const response = await axios.post(
@@ -50,11 +49,10 @@ export const useCategoriesManagement = () => {
   };
 
   // Update category
-  const updateCategory = async (id, categoryData) => {
+  const updateCategory = async (id, categoryData, token) => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('supabase.auth.token');
       if (!token) throw new Error('Authentication required');
 
       const response = await axios.put(
@@ -75,11 +73,10 @@ export const useCategoriesManagement = () => {
   };
 
   // Delete category
-  const deleteCategory = async (id) => {
+  const deleteCategory = async (id, token) => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('supabase.auth.token');
       if (!token) throw new Error('Authentication required');
 
       await axios.delete(

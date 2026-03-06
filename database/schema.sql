@@ -15,14 +15,8 @@ CREATE TABLE categories (
 -- Products Table
 CREATE TABLE products (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name VARCHAR(255) NOT NULL,
-  description TEXT NOT NULL,
   price DECIMAL(10, 2) NOT NULL,
   category VARCHAR(100) NOT NULL,
-  colors TEXT[] DEFAULT '{}',
-  stock_quantity INTEGER DEFAULT 0,
-  tags TEXT[] DEFAULT '{}',
-  is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -60,18 +54,8 @@ CREATE TABLE order_items (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Gallery Table
-CREATE TABLE gallery (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  image_url TEXT NOT NULL,
-  title VARCHAR(255),
-  description TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
 -- Create indexes for better performance
 CREATE INDEX idx_products_category ON products(category);
-CREATE INDEX idx_products_active ON products(is_active);
 CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_orders_created ON orders(created_at DESC);
 CREATE INDEX idx_product_images_product ON product_images(product_id);
@@ -83,7 +67,6 @@ ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE product_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE gallery ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for Public Read Access
 CREATE POLICY "Categories are viewable by everyone"
@@ -96,10 +79,6 @@ CREATE POLICY "Products are viewable by everyone"
 
 CREATE POLICY "Product images are viewable by everyone"
   ON product_images FOR SELECT
-  USING (true);
-
-CREATE POLICY "Gallery is viewable by everyone"
-  ON gallery FOR SELECT
   USING (true);
 
 -- RLS Policies for Authenticated Admin
@@ -135,10 +114,6 @@ CREATE POLICY "Authenticated users can view order items"
   ON order_items FOR SELECT
   USING (auth.role() = 'authenticated');
 
-CREATE POLICY "Authenticated users can manage gallery"
-  ON gallery FOR ALL
-  USING (auth.role() = 'authenticated');
-
 -- RLS Policies for Public Order Creation
 CREATE POLICY "Anyone can create orders"
   ON orders FOR INSERT
@@ -158,9 +133,6 @@ INSERT INTO categories (name) VALUES
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('product-images', 'product-images', true);
 
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('gallery-images', 'gallery-images', true);
-
 -- Storage policies
 CREATE POLICY "Public can view product images"
   ON storage.objects FOR SELECT
@@ -170,22 +142,13 @@ CREATE POLICY "Authenticated users can upload product images"
   ON storage.objects FOR INSERT
   WITH CHECK (bucket_id = 'product-images' AND auth.role() = 'authenticated');
 
-CREATE POLICY "Public can view gallery images"
-  ON storage.objects FOR SELECT
-  USING (bucket_id = 'gallery-images');
-
-CREATE POLICY "Authenticated users can upload gallery images"
-  ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'gallery-images' AND auth.role() = 'authenticated');
-
 -- ============================================
--- PRICE COMPONENTS TABLE
+-- ITEMS TABLE
 -- ============================================
 
-CREATE TABLE price_components (
+CREATE TABLE items (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
-  description TEXT,
   category VARCHAR(100) NOT NULL,
   image_url TEXT NOT NULL,
   price DECIMAL(10, 2) NOT NULL,
@@ -193,28 +156,28 @@ CREATE TABLE price_components (
 );
 
 -- Indexes for better performance
-CREATE INDEX idx_price_components_category ON price_components(category);
-CREATE INDEX idx_price_components_created ON price_components(created_at DESC);
+CREATE INDEX idx_items_category ON items(category);
+CREATE INDEX idx_items_created ON items(created_at DESC);
 
 -- Enable Row Level Security (RLS)
-ALTER TABLE price_components ENABLE ROW LEVEL SECURITY;
+ALTER TABLE items ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for Public Read Access
-CREATE POLICY "Price components are viewable by everyone"
-  ON price_components FOR SELECT
+CREATE POLICY "Items are viewable by everyone"
+  ON items FOR SELECT
   USING (true);
 
 -- RLS Policies for Authenticated Admin
-CREATE POLICY "Authenticated users can insert price components"
-  ON price_components FOR INSERT
+CREATE POLICY "Authenticated users can insert items"
+  ON items FOR INSERT
   WITH CHECK (auth.role() = 'authenticated');
 
-CREATE POLICY "Authenticated users can update price components"
-  ON price_components FOR UPDATE
+CREATE POLICY "Authenticated users can update items"
+  ON items FOR UPDATE
   USING (auth.role() = 'authenticated');
 
-CREATE POLICY "Authenticated users can delete price components"
-  ON price_components FOR DELETE
+CREATE POLICY "Authenticated users can delete items"
+  ON items FOR DELETE
   USING (auth.role() = 'authenticated');
 
 -- ============================================
@@ -312,23 +275,23 @@ INSERT INTO delivery_prices (wilaya_code, wilaya_name, home_delivery_price, stop
 (58, 'El Meniaa', 1200, 1000);
 
 -- ============================================
--- STORAGE BUCKET FOR PRICE COMPONENTS
+-- STORAGE BUCKET FOR ITEMS
 -- ============================================
 
--- Insert storage bucket for price component images
+-- Insert storage bucket for item images
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('price-component-images', 'price-component-images', true)
+VALUES ('item-images', 'item-images', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage policies
-CREATE POLICY "Public can view price component images"
+CREATE POLICY "Public can view item images"
   ON storage.objects FOR SELECT
-  USING (bucket_id = 'price-component-images');
+  USING (bucket_id = 'item-images');
 
-CREATE POLICY "Authenticated users can upload price component images"
+CREATE POLICY "Authenticated users can upload item images"
   ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'price-component-images' AND auth.role() = 'authenticated');
+  WITH CHECK (bucket_id = 'item-images' AND auth.role() = 'authenticated');
 
-CREATE POLICY "Authenticated users can delete price component images"
+CREATE POLICY "Authenticated users can delete item images"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'price-component-images' AND auth.role() = 'authenticated');
+  USING (bucket_id = 'item-images' AND auth.role() = 'authenticated');

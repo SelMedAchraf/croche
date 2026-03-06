@@ -2,23 +2,15 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiShoppingCart, FiMenu, FiX, FiGlobe } from 'react-icons/fi';
+import { FiShoppingCart, FiMenu, FiX } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { getCartCount } = useCart();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
-
-  const currentLang = i18n.language;
-  const isRTL = currentLang === 'ar';
-
-  useEffect(() => {
-    document.dir = isRTL ? 'rtl' : 'ltr';
-  }, [isRTL]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,22 +23,10 @@ const Navbar = () => {
   const navLinks = [
     { path: '/', label: t('nav.home') },
     { path: '/products', label: t('nav.products') },
-    { path: '/gallery', label: t('nav.gallery') },
     { path: '/custom-orders', label: t('nav.customOrders') },
     { path: '/about', label: t('nav.about') },
     { path: '/contact', label: t('nav.contact') }
   ];
-
-  const languages = [
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'ar', name: 'العربية', flag: '🇸🇦' }
-  ];
-
-  const changeLanguage = (lang) => {
-    i18n.changeLanguage(lang);
-    setIsLangMenuOpen(false);
-  };
 
   return (
     <nav
@@ -88,41 +68,6 @@ const Navbar = () => {
 
           {/* Right Actions */}
           <div className="flex items-center space-x-4">
-            {/* Language Switcher */}
-            <div className="relative">
-              <button
-                onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                aria-label="Change language"
-              >
-                <FiGlobe className="w-5 h-5 text-text" />
-              </button>
-
-              <AnimatePresence>
-                {isLangMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50"
-                  >
-                    {languages.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => changeLanguage(lang.code)}
-                        className={`w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors ${
-                          currentLang === lang.code ? 'bg-primary/10' : ''
-                        }`}
-                      >
-                        <span className="mr-2">{lang.flag}</span>
-                        {lang.name}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
             {/* Cart */}
             <Link
               to="/cart"

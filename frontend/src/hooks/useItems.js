@@ -1,90 +1,90 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-export const usePriceComponents = (category = null) => {
-  const [components, setComponents] = useState([]);
+export const useItems = (category = null) => {
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-  const fetchComponents = async () => {
+  const fetchItems = async () => {
     try {
       setLoading(true);
       const url = category 
-        ? `${apiUrl}/price-components?category=${category}`
-        : `${apiUrl}/price-components`;
+        ? `${apiUrl}/items?category=${category}`
+        : `${apiUrl}/items`;
       const response = await axios.get(url);
-      setComponents(response.data);
+      setItems(response.data);
       setError(null);
     } catch (err) {
-      console.error('Error fetching price components:', err);
+      console.error('Error fetching items:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const createComponent = async (componentData, token) => {
+  const createItem = async (itemData, token) => {
     try {
       const response = await axios.post(
-        `${apiUrl}/price-components`,
-        componentData,
+        `${apiUrl}/items`,
+        itemData,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-      await fetchComponents();
+      await fetchItems();
       return response.data;
     } catch (err) {
-      console.error('Error creating price component:', err);
+      console.error('Error creating item:', err);
       throw err;
     }
   };
 
-  const updateComponent = async (id, componentData, token) => {
+  const updateItem = async (id, itemData, token) => {
     try {
       const response = await axios.put(
-        `${apiUrl}/price-components/${id}`,
-        componentData,
+        `${apiUrl}/items/${id}`,
+        itemData,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-      await fetchComponents();
+      await fetchItems();
       return response.data;
     } catch (err) {
-      console.error('Error updating price component:', err);
+      console.error('Error updating item:', err);
       throw err;
     }
   };
 
-  const deleteComponent = async (id, token) => {
+  const deleteItem = async (id, token) => {
     try {
       await axios.delete(
-        `${apiUrl}/price-components/${id}`,
+        `${apiUrl}/items/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-      await fetchComponents();
+      await fetchItems();
     } catch (err) {
-      console.error('Error deleting price component:', err);
+      console.error('Error deleting item:', err);
       throw err;
     }
   };
 
   useEffect(() => {
-    fetchComponents();
+    fetchItems();
   }, [category]);
 
   return {
-    components,
+    items,
     loading,
     error,
-    refetch: fetchComponents,
-    createComponent,
-    updateComponent,
-    deleteComponent
+    refetch: fetchItems,
+    createItem,
+    updateItem,
+    deleteItem
   };
 };

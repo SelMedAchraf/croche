@@ -14,17 +14,19 @@ import {
   FiDollarSign,
   FiTruck,
   FiSave,
-  FiGrid
+  FiGrid,
+  FiUpload,
+  FiBox
 } from 'react-icons/fi';
 import axios from 'axios';
 import { supabase } from '../../config/supabase';
-import { usePriceComponents } from '../../hooks/usePriceComponents';
+import { useItems } from '../../hooks/useItems';
 import { useDeliveryPrices } from '../../hooks/useDeliveryPrices';
 import { useCategoriesManagement } from '../../hooks/useCategoriesManagement';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('categories');
+  const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -45,8 +47,15 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const token = localStorage.getItem('supabase.auth.token');
       
+      // Get token from session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/admin/login');
+        return;
+      }
+      
+      const token = session.access_token;
       const config = {
         headers: { Authorization: `Bearer ${token}` }
       };
@@ -132,34 +141,28 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-lg shadow-sm border mb-6">
           <div className="flex border-b overflow-x-auto">
             <TabButton
-              active={activeTab === 'categories'}
-              onClick={() => setActiveTab('categories')}
-              icon={<FiGrid />}
-              label="Categories"
-            />
-            <TabButton
               active={activeTab === 'products'}
               onClick={() => setActiveTab('products')}
               icon={<FiPackage />}
               label="Products"
             />
             <TabButton
+              active={activeTab === 'items'}
+              onClick={() => setActiveTab('items')}
+              icon={<FiBox />}
+              label="Items"
+            />
+            <TabButton
+              active={activeTab === 'categories'}
+              onClick={() => setActiveTab('categories')}
+              icon={<FiGrid />}
+              label="Categories"
+            />
+            <TabButton
               active={activeTab === 'orders'}
               onClick={() => setActiveTab('orders')}
               icon={<FiShoppingBag />}
               label="Orders"
-            />
-            <TabButton
-              active={activeTab === 'gallery'}
-              onClick={() => setActiveTab('gallery')}
-              icon={<FiImage />}
-              label="Gallery"
-            />
-            <TabButton
-              active={activeTab === 'priceComponents'}
-              onClick={() => setActiveTab('priceComponents')}
-              icon={<FiDollarSign />}
-              label="Price Components"
             />
             <TabButton
               active={activeTab === 'deliveryPrices'}
@@ -172,9 +175,8 @@ const AdminDashboard = () => {
           <div className="p-6">
             {activeTab === 'products' && <ProductsTab products={products} onRefresh={fetchData} />}
             {activeTab === 'orders' && <OrdersTab orders={orders} onRefresh={fetchData} />}
-            {activeTab === 'gallery' && <GalleryTab />}
-            {activeTab === 'categories' && <CategoriesTab />}
-            {activeTab === 'priceComponents' && <PriceComponentsTab />}
+            {activeTab === 'categories' && <CategoriesTab onRefresh={fetchData} />}
+            {activeTab === 'items' && <ItemsTab />}
             {activeTab === 'deliveryPrices' && <DeliveryPricesTab />}
           </div>
         </div>
@@ -216,50 +218,414 @@ const TabButton = ({ active, onClick, icon, label }) => (
   </button>
 );
 
-const ProductsTab = ({ products, onRefresh }) => (
-  <div>
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-semibold">Products Management</h2>
-      <button className="btn-primary flex items-center gap-2">
-        <FiPlus />
-        Add Product
-      </button>
-    </div>
+const ProductsTab = ({ products, onRefresh }) => {
+  const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [formData, setFormData] = useState({
+    price: '',
+    category: ''
+  });
 
-    {products.length === 0 ? (
-      <div className="text-center py-12 text-text/60">
-        <FiPackage className="w-16 h-16 mx-auto mb-4 opacity-30" />
-        <p>No products yet. Add your first product!</p>
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await axios.get(`${apiUrl}/categories`);
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    handleFile(file);
+  };
+
+  const handleFile = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else if (file) {
+      alert('Please select a valid image file');
+    }
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+
+  const uploadImage = async () => {
+    if (!selectedImage) return imagePreview || '';
+
+    setUploading(true);
+    try {
+      const fileExt = selectedImage.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, selectedImage);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image');
+      throw error;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      alert('Session expired. Please login again.');
+      navigate('/admin/login');
+      return;
+    }
+    const token = session.access_token;
+    
+    try {
+      const imageUrl = await uploadImage();
+      const productData = {
+        name: formData.name,
+        price: parseFloat(formData.price),
+        category: formData.category
+      };
+
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      
+      if (editingProduct) {
+        // Update product
+        await axios.put(
+          `${apiUrl}/products/${editingProduct.id}`,
+          productData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // Update image if new one was uploaded
+        if (imageUrl && imageUrl !== imagePreview) {
+          // Delete old images
+          await axios.delete(
+            `${apiUrl}/products/${editingProduct.id}/images`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          
+          // Add new image
+          await axios.post(
+            `${apiUrl}/products/${editingProduct.id}/images`,
+            { image_url: imageUrl, is_primary: true },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+      } else {
+        // Create product
+        const response = await axios.post(
+          `${apiUrl}/products`,
+          productData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // Add image
+        const productId = response.data.id;
+        if (imageUrl) {
+          await axios.post(
+            `${apiUrl}/products/${productId}/images`,
+            { image_url: imageUrl, is_primary: true },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+      }
+
+      setShowModal(false);
+      setEditingProduct(null);
+      setFormData({ 
+        price: '', 
+        category: categories.length > 0 ? categories[0].name : '' 
+      });
+      setSelectedImage(null);
+      setImagePreview(null);
+      setDragActive(false);
+      onRefresh();
+    } catch (error) {
+      console.error('Error saving product:', error);
+      alert('Failed to save product');
+    }
+  };
+
+  const handleEdit = (product) => {
+    setEditingProduct(product);
+    setFormData({
+      price: product.price.toString(),
+      category: product.category
+    });
+    setImagePreview(product.product_images?.[0]?.image_url || '');
+    setSelectedImage(null);
+    setDragActive(false);
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (confirm('Are you sure you want to delete this product?')) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Session expired. Please login again.');
+        navigate('/admin/login');
+        return;
+      }
+      const token = session.access_token;
+      
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        await axios.delete(`${apiUrl}/products/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        onRefresh();
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('Failed to delete product');
+      }
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold">Products Management</h2>
+        <button 
+          onClick={() => {
+            setEditingProduct(null);
+            setFormData({ 
+              name: '', 
+              price: '', 
+              category: categories.length > 0 ? categories[0].name : '' 
+            });
+            setSelectedImage(null);
+            setImagePreview(null);
+            setDragActive(false);
+            setShowModal(true);
+          }}
+          className="btn-primary flex items-center gap-2"
+        >
+          <FiPlus />
+          Add Product
+        </button>
       </div>
-    ) : (
-      <div className="space-y-3">
-        {products.map((product) => (
-          <div key={product.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-              <img
-                src={product.product_images?.[0]?.image_url || 'https://via.placeholder.com/100'}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+
+      {products.length === 0 ? (
+        <div className="text-center py-12 text-text/60">
+          <FiPackage className="w-16 h-16 mx-auto mb-4 opacity-30" />
+          <p>No products yet. Add your first product!</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {products.map((product) => (
+            <div key={product.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                <img
+                  src={product.product_images?.[0]?.image_url || 'https://via.placeholder.com/100'}
+                  alt="Product"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-grow">
+                <h3 className="font-semibold">{product.category}</h3>
+                <p className="text-sm text-text/60">{product.price} DA</p>
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => handleEdit(product)}
+                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                >
+                  <FiEdit />
+                </button>
+                <button 
+                  onClick={() => handleDelete(product.id)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                >
+                  <FiTrash2 />
+                </button>
+              </div>
             </div>
-            <div className="flex-grow">
-              <h3 className="font-semibold">{product.name}</h3>
-              <p className="text-sm text-text/60">${product.price} • {product.category}</p>
-            </div>
-            <div className="flex gap-2">
-              <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
-                <FiEdit />
-              </button>
-              <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
-                <FiTrash2 />
-              </button>
-            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-semibold mb-4">
+              {editingProduct ? 'Edit Product' : 'Add Product'}
+            </h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Price (DA) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Category *</label>
+                <div className="relative">
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all appearance-none"
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Image *</label>
+                {!imagePreview ? (
+                  <div
+                    className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                      dragActive
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-300 hover:border-primary/50'
+                    }`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      required={!editingProduct}
+                    />
+                    <FiUpload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <p className="text-gray-600 mb-1 font-medium">
+                      Drop your image here, or <span className="text-primary">browse</span>
+                    </p>
+                    <p className="text-sm text-gray-400">Supports: JPG, PNG, GIF</p>
+                  </div>
+                ) : (
+                  <div className="relative rounded-lg overflow-hidden border-2 border-gray-200">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute top-2 right-2 flex gap-2">
+                      <label className="bg-white/90 hover:bg-white p-2 rounded-lg cursor-pointer shadow-lg transition-all">
+                        <FiUpload />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="bg-red-500/90 hover:bg-red-500 text-white p-2 rounded-lg shadow-lg transition-all"
+                      >
+                        <FiX />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingProduct(null);
+                    setFormData({ 
+                      name: '', 
+                      price: '', 
+                      category: categories.length > 0 ? categories[0].name : '' 
+                    });
+                    setSelectedImage(null);
+                    setImagePreview(null);
+                    setDragActive(false);
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  disabled={uploading}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="flex-1 btn-primary"
+                  disabled={uploading}
+                >
+                  {uploading ? 'Uploading...' : editingProduct ? 'Update' : 'Create'}
+                </button>
+              </div>
+            </form>
           </div>
-        ))}
-      </div>
-    )}
-  </div>
-);
+        </div>
+      )}
+    </div>
+  );
+};
 
 const OrdersTab = ({ orders, onRefresh }) => {
   const getStatusColor = (status) => {
@@ -315,23 +681,8 @@ const OrdersTab = ({ orders, onRefresh }) => {
   );
 };
 
-const GalleryTab = () => (
-  <div>
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-semibold">Gallery Management</h2>
-      <button className="btn-primary flex items-center gap-2">
-        <FiPlus />
-        Add Image
-      </button>
-    </div>
-    <div className="text-center py-12 text-text/60">
-      <FiImage className="w-16 h-16 mx-auto mb-4 opacity-30" />
-      <p>Gallery management coming soon</p>
-    </div>
-  </div>
-);
-
-const CategoriesTab = () => {
+const CategoriesTab = ({ onRefresh }) => {
+  const navigate = useNavigate();
   const { categories, loading, createCategory, updateCategory, deleteCategory } = useCategoriesManagement();
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -340,11 +691,22 @@ const CategoriesTab = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Get token from session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      alert('Session expired. Please login again.');
+      navigate('/admin/login');
+      return;
+    }
+    const token = session.access_token;
+    
     try {
       if (editingCategory) {
-        await updateCategory(editingCategory.id, formData);
+        await updateCategory(editingCategory.id, formData, token);
+        // Refresh products data to show updated category names
+        onRefresh();
       } else {
-        await createCategory(formData);
+        await createCategory(formData, token);
       }
       setShowModal(false);
       setEditingCategory(null);
@@ -361,9 +723,18 @@ const CategoriesTab = () => {
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this category? This may affect existing products.')) {
+    if (confirm('Are you sure you want to delete this category?')) {
+      // Get token from session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Session expired. Please login again.');
+        navigate('/admin/login');
+        return;
+      }
+      const token = session.access_token;
+      
       try {
-        await deleteCategory(id);
+        await deleteCategory(id, token);
       } catch (error) {
         alert(error.message || 'Failed to delete category');
       }
@@ -473,55 +844,153 @@ const CategoriesTab = () => {
   );
 };
 
-const PriceComponentsTab = () => {
-  const { components, loading, createComponent, updateComponent, deleteComponent } = usePriceComponents();
+const ItemsTab = () => {
+  const { items, loading, createItem, updateItem, deleteItem } = useItems();
   const [showModal, setShowModal] = useState(false);
-  const [editingComponent, setEditingComponent] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
     category: 'flower',
     image_url: '',
     price: ''
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem('supabase.auth.token');
-    
-    try {
-      if (editingComponent) {
-        await updateComponent(editingComponent.id, formData, token);
-      } else {
-        await createComponent(formData, token);
-      }
-      setShowModal(false);
-      setEditingComponent(null);
-      setFormData({ name: '', description: '', category: 'flower', image_url: '', price: '' });
-    } catch (error) {
-      alert('Failed to save component');
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    handleFile(file);
+  };
+
+  const handleFile = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else if (file) {
+      alert('Please select a valid image file');
     }
   };
 
-  const handleEdit = (component) => {
-    setEditingComponent(component);
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+
+  const uploadImage = async () => {
+    if (!selectedImage) return formData.image_url;
+
+    setUploading(true);
+    try {
+      const fileExt = selectedImage.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('item-images')
+        .upload(filePath, selectedImage);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('item-images')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image');
+      throw error;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Get token from session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      alert('Session expired. Please login again.');
+      navigate('/admin/login');
+      return;
+    }
+    const token = session.access_token;
+    
+    try {
+      const imageUrl = await uploadImage();
+      const dataToSubmit = { ...formData, image_url: imageUrl };
+      
+      if (editingItem) {
+        await updateItem(editingItem.id, dataToSubmit, token);
+      } else {
+        await createItem(dataToSubmit, token);
+      }
+      setShowModal(false);
+      setEditingItem(null);
+      setFormData({ name: '', category: 'flower', image_url: '', price: '' });
+      setSelectedImage(null);
+      setImagePreview(null);
+      setDragActive(false);
+    } catch (error) {
+      alert('Failed to save item');
+    }
+  };
+
+  const handleEdit = (item) => {
+    setEditingItem(item);
     setFormData({
-      name: component.name,
-      description: component.description || '',
-      category: component.category,
-      image_url: component.image_url,
-      price: component.price.toString()
+      name: item.name,
+      category: item.category,
+      image_url: item.image_url,
+      price: item.price.toString()
     });
+    setImagePreview(item.image_url);
+    setSelectedImage(null);
+    setDragActive(false);
     setShowModal(true);
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this component?')) {
-      const token = localStorage.getItem('supabase.auth.token');
+    if (confirm('Are you sure you want to delete this item?')) {
+      // Get token from session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Session expired. Please login again.');
+        navigate('/admin/login');
+        return;
+      }
+      const token = session.access_token;
+      
       try {
-        await deleteComponent(id, token);
+        await deleteItem(id, token);
       } catch (error) {
-        alert('Failed to delete component');
+        alert('Failed to delete item');
       }
     }
   };
@@ -529,56 +998,56 @@ const PriceComponentsTab = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Price Components</h2>
+        <h2 className="text-xl font-semibold">Items Management</h2>
         <button 
           onClick={() => {
-            setEditingComponent(null);
-            setFormData({ name: '', description: '', category: 'flower', image_url: '', price: '' });
+            setEditingItem(null);
+            setFormData({ name: '', category: 'flower', image_url: '', price: '' });
+            setSelectedImage(null);
+            setImagePreview(null);
+            setDragActive(false);
             setShowModal(true);
           }}
           className="btn-primary flex items-center gap-2"
         >
           <FiPlus />
-          Add Component
+          Add Item
         </button>
       </div>
 
       {loading ? (
         <div className="text-center py-12">Loading...</div>
-      ) : components.length === 0 ? (
+      ) : items.length === 0 ? (
         <div className="text-center py-12 text-text/60">
-          <FiDollarSign className="w-16 h-16 mx-auto mb-4 opacity-30" />
-          <p>No components yet. Add your first component!</p>
+          <FiBox className="w-16 h-16 mx-auto mb-4 opacity-30" />
+          <p>No items yet. Add your first item!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {components.map((component) => (
-            <div key={component.id} className="bg-gray-50 rounded-lg overflow-hidden">
+          {items.map((item) => (
+            <div key={item.id} className="bg-gray-50 rounded-lg overflow-hidden">
               <img
-                src={component.image_url}
-                alt={component.name}
+                src={item.image_url}
+                alt={item.name}
                 className="w-full h-48 object-cover"
               />
               <div className="p-4">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <h3 className="font-semibold">{component.name}</h3>
-                    <p className="text-sm text-text/60">{component.category}</p>
+                    <h3 className="font-semibold">{item.name}</h3>
+                    <p className="text-sm text-text/60">{item.category}</p>
                   </div>
-                  <span className="text-lg font-bold text-primary">{component.price} DA</span>
+                  <span className="text-lg font-bold text-primary">{item.price} DA</span>
                 </div>
-                {component.description && (
-                  <p className="text-sm text-text/70 mb-3">{component.description}</p>
-                )}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleEdit(component)}
+                    onClick={() => handleEdit(item)}
                     className="flex-1 p-2 text-blue-600 hover:bg-blue-50 rounded-lg flex items-center justify-center gap-1"
                   >
                     <FiEdit /> Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(component.id)}
+                    onClick={() => handleDelete(item.id)}
                     className="flex-1 p-2 text-red-600 hover:bg-red-50 rounded-lg flex items-center justify-center gap-1"
                   >
                     <FiTrash2 /> Delete
@@ -595,7 +1064,7 @@ const PriceComponentsTab = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h3 className="text-xl font-semibold mb-4">
-              {editingComponent ? 'Edit Component' : 'Add Component'}
+              {editingItem ? 'Edit Item' : 'Add Item'}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -610,35 +1079,87 @@ const PriceComponentsTab = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Category *</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="input-field"
-                  required
-                >
-                  <option value="flower">Flower</option>
-                  <option value="packaging">Packaging</option>
-                  <option value="accessory">Accessory</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all appearance-none"
+                    required
+                  >
+                    <option value="flower">Flower</option>
+                    <option value="packaging">Packaging</option>
+                    <option value="accessory">Accessory</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="input-field"
-                  rows="2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Image URL *</label>
-                <input
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  className="input-field"
-                  required
-                />
+                <label className="block text-sm font-medium mb-2">Image *</label>
+                {!imagePreview ? (
+                  <div
+                    className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                      dragActive
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-300 hover:border-primary/50'
+                    }`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      required={!editingItem && !formData.image_url}
+                    />
+                    <FiUpload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <p className="text-gray-600 mb-1 font-medium">
+                      Drop your image here, or <span className="text-primary">browse</span>
+                    </p>
+                    <p className="text-sm text-gray-400">Supports: JPG, PNG, GIF (Max 5MB)</p>
+                  </div>
+                ) : (
+                  <div className="relative rounded-lg overflow-hidden border-2 border-gray-200">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute top-2 right-2 flex gap-2">
+                      <label className="bg-white/90 hover:bg-white p-2 rounded-lg cursor-pointer shadow-lg transition-all flex items-center gap-1 text-sm">
+                        <FiEdit className="w-4 h-4" />
+                        <span>Change</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="bg-red-500/90 hover:bg-red-500 text-white p-2 rounded-lg shadow-lg transition-all"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {selectedImage && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white px-3 py-2 text-xs">
+                        <p className="truncate">{selectedImage.name}</p>
+                        <p className="text-gray-300">
+                          {(selectedImage.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Price (DA) *</label>
@@ -652,16 +1173,21 @@ const PriceComponentsTab = () => {
                 />
               </div>
               <div className="flex gap-3">
-                <button type="submit" className="btn-primary flex-1">
-                  {editingComponent ? 'Update' : 'Create'}
+                <button type="submit" className="btn-primary flex-1" disabled={uploading}>
+                  {uploading ? 'Uploading...' : editingItem ? 'Update' : 'Create'}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     setShowModal(false);
-                    setEditingComponent(null);
+                    setEditingItem(null);
+                    setSelectedImage(null);
+                    setImagePreview(null);
+                    setDragActive(false);
+                    setFormData({ name: '', category: 'flower', image_url: '', price: '' });
                   }}
                   className="btn-secondary flex-1"
+                  disabled={uploading}
                 >
                   Cancel
                 </button>
@@ -675,6 +1201,7 @@ const PriceComponentsTab = () => {
 };
 
 const DeliveryPricesTab = () => {
+  const navigate = useNavigate();
   const { deliveryPrices, loading, updateDeliveryPrice } = useDeliveryPrices();
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -689,7 +1216,15 @@ const DeliveryPricesTab = () => {
   };
 
   const handleSave = async (id) => {
-    const token = localStorage.getItem('supabase.auth.token');
+    // Get token from session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      alert('Session expired. Please login again.');
+      navigate('/admin/login');
+      return;
+    }
+    const token = session.access_token;
+    
     try {
       await updateDeliveryPrice(id, editForm, token);
       setEditingId(null);

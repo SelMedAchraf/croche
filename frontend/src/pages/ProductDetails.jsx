@@ -89,7 +89,7 @@ const ProductDetails = () => {
           <span className="mx-2">/</span>
           <Link to="/products" className="hover:text-primary">Products</Link>
           <span className="mx-2">/</span>
-          <span className="text-text">{product.name}</span>
+          <span className="text-text">{product.category}</span>
         </div>
 
         <div className="grid md:grid-cols-2 gap-12">
@@ -103,7 +103,7 @@ const ProductDetails = () => {
               <div className="relative aspect-square rounded-2xl overflow-hidden shadow-xl mb-4 group">
                 <img
                   src={images[selectedImage]}
-                  alt={product.name}
+                  alt="Product"
                   className="w-full h-full object-cover"
                 />
                 <button
@@ -125,7 +125,7 @@ const ProductDetails = () => {
                         selectedImage === index ? 'border-primary' : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <img src={img} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                      <img src={img} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -139,7 +139,7 @@ const ProductDetails = () => {
             animate={{ opacity: 1, x: 0 }}
           >
             <h1 className="text-4xl font-display font-bold text-primary mb-4">
-              {product.name}
+              {product.category}
             </h1>
 
             <div className="flex items-center gap-4 mb-6">
@@ -151,15 +151,9 @@ const ProductDetails = () => {
               </span>
             </div>
 
-            <div className="border-t border-b border-gray-200 py-6 mb-6">
-              <h3 className="font-semibold text-lg mb-3">{t('productDetails.description')}</h3>
-              <p className="text-text/70 leading-relaxed">{product.description}</p>
-            </div>
-
             {/* Colors */}
             {product.colors && product.colors.length > 0 && (
-              <div className="mb-6">
-                <h3 className="font-semibold mb-3">{t('productDetails.colors')}</h3>
+              <div className="mb-6">\n                <h3 className="font-semibold mb-3">{t('productDetails.colors')}</h3>
                 <div className="flex flex-wrap gap-3">
                   {product.colors.map((color, index) => (
                     <button
@@ -252,13 +246,13 @@ const ProductDetails = () => {
                   <div className="relative h-48 overflow-hidden">
                     <img
                       src={relatedProduct.product_images?.[0]?.image_url || 'https://images.unsplash.com/photo-1595341595313-12e3e1a5f9b8?w=400'}
-                      alt={relatedProduct.name}
+                      alt="Product"
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
                   <div className="p-4">
                     <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">
-                      {relatedProduct.name}
+                      {relatedProduct.category}
                     </h3>
                     <p className="text-primary font-bold">${relatedProduct.price}</p>
                   </div>
@@ -287,7 +281,7 @@ const ProductDetails = () => {
             </button>
             <img
               src={images[selectedImage]}
-              alt={product.name}
+              alt="Product"
               className="max-w-full max-h-full object-contain"
               onClick={(e) => e.stopPropagation()}
             />

@@ -163,34 +163,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      {/* Newsletter */}
-      <section className="section-padding bg-gradient-to-br from-primary/20 to-highlight/20">
-        <div className="max-w-2xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl font-display font-bold text-primary mb-4">
-              {t('home.newsletter.title')}
-            </h2>
-            <p className="text-text/70 mb-8">
-              {t('home.newsletter.subtitle')}
-            </p>
-            <form className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="email"
-                placeholder={t('home.newsletter.placeholder')}
-                className="input-field flex-1"
-              />
-              <button type="submit" className="btn-primary whitespace-nowrap">
-                {t('home.newsletter.button')}
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      </section>
     </div>
   );
 };
@@ -210,7 +182,7 @@ const ProductCard = ({ product }) => {
         <div className="relative h-64 overflow-hidden">
           <img
             src={primaryImage}
-            alt={product.name}
+            alt="Product"
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
           {product.stock_quantity === 0 && (
@@ -222,12 +194,6 @@ const ProductCard = ({ product }) => {
           )}
         </div>
         <div className="p-4">
-          <h3 className="font-display font-semibold text-lg mb-2 text-text group-hover:text-primary transition-colors">
-            {product.name}
-          </h3>
-          <p className="text-text/60 text-sm mb-3 line-clamp-2">
-            {product.description}
-          </p>
           <div className="flex items-center justify-between">
             <span className="text-primary font-bold text-xl">
               ${product.price}

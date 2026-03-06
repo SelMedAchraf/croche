@@ -13,7 +13,7 @@
    - `NODE_ENV` = `production`
    - `FRONTEND_URL` = `https://croche-gamma.vercel.app` (your Vercel domain)
    - `SUPABASE_URL` = (your Supabase project URL)
-   - `SUPABASE_ANON_KEY` = (your Supabase anon key)
+   - `SUPABASE_SERVICE_ROLE_KEY` = (your Supabase service role key - from Settings > API)
    - `PORT` = (leave empty - Render auto-provides)
 6. Click **Deploy**
 7. **Copy your backend URL**: `https://your-service-name.onrender.com`
@@ -45,7 +45,7 @@
 2. **Verify Connection**:
    - Visit your Vercel frontend: `https://croche-gamma.vercel.app`
    - Check browser console (F12) for any API errors
-   - Test adding products to cart, viewing gallery, etc.
+   - Test adding products to cart, etc.
 
 3. **Test Backend is Running**:
    - Visit: `https://your-service-name.onrender.com/api/products`
