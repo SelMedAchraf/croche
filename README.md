@@ -22,3 +22,5 @@ A beautiful, full-stack e-commerce platform for showcasing and selling handmade 
 ### Admin Routes
 - Login: `http://localhost:5173/admin/login`
 - Dashboard: `http://localhost:5173/admin/dashboard`
+
+<!-- kill -9 $(lsof -t -i:5000) -->

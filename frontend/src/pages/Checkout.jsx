@@ -69,12 +69,28 @@ const Checkout = () => {
         customer_city: formData.customer_city,
         delivery_notes: formData.delivery_notes,
         total_amount: getCartTotal() + deliveryPrice,
-        items: cartItems.map(item => ({
-          product_id: item.id,
-          quantity: item.quantity,
-          price: item.price,
-          color: item.selectedColor
-        }))
+        items: cartItems.map(item => {
+          if (item.isCustomOrder) {
+            return {
+              product_id: null,
+              quantity: item.quantity || 1,
+              price: item.price, // May be null for custom_request
+              color: null,
+              custom_order_type: item.customOrderType,
+              custom_data: item.customData,
+              reference_image_url: item.referenceImageUrl || null
+            };
+          }
+          return {
+            product_id: item.id,
+            quantity: item.quantity,
+            price: item.price,
+            color: item.selectedColor,
+            custom_order_type: null,
+            custom_data: null,
+            reference_image_url: null
+          };
+        })
       };
 
       const response = await axios.post(`${apiUrl}/orders`, orderData);
@@ -239,28 +255,40 @@ const Checkout = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">
-                    Full Address *
-                  </label>
-                  <textarea
-                    name="delivery_notes"
-                    value={formData.delivery_notes}
-                    onChange={handleChange}
-                    required
-                    rows="2"
-                    className="input-field resize-none"
-                    placeholder="Street address, building, apartment number..."
-                  />
-                </div>
+                {formData.delivery_type === 'home' && (
+                  <div>
+                    <label className="block text-sm font-medium text-text mb-2">
+                      Full Address *
+                    </label>
+                    <textarea
+                      name="delivery_notes"
+                      value={formData.delivery_notes}
+                      onChange={handleChange}
+                      required
+                      rows="2"
+                      className="input-field resize-none"
+                      placeholder="Street address, building, apartment number..."
+                    />
+                  </div>
+                )}
 
                 <div className="border-t pt-4">
                   <h3 className="font-semibold mb-3">{t('checkout.paymentMethod')}</h3>
-                  <div className="flex items-center gap-3 p-4 bg-accent/30 rounded-lg">
-                    <FiCreditCard className="w-6 h-6 text-primary" />
-                    <div>
-                      <p className="font-medium">{t('checkout.cashOnDelivery')}</p>
-                      <p className="text-sm text-text/60">Pay when you receive your order</p>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 p-4 bg-accent/30 rounded-lg">
+                      <FiCreditCard className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium">{t('checkout.cashOnDelivery')}</p>
+                        <p className="text-sm text-text/60">Pay when you receive your order</p>
+                      </div>
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm text-blue-900 font-medium mb-1">
+                        Deposit Required
+                      </p>
+                      <p className="text-sm text-blue-800">
+                        To confirm your order and begin production, a deposit payment is required. Our team will contact you to arrange the deposit and provide payment details. The remaining balance will be paid upon delivery.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -287,35 +315,71 @@ const Checkout = () => {
               </h2>
 
               <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
-                {cartItems.map((item) => (
-                  <div key={`${item.id}-${item.selectedColor}`} className="flex gap-3">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                      <img
-                        src={item.product_images?.[0]?.image_url || 'https://images.unsplash.com/photo-1595341595313-12e3e1a5f9b8?w=200'}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-grow">
-                      <h3 className="font-semibold text-sm mb-1">{item.name}</h3>
-                      {item.selectedColor && (
-                        <div className="flex items-center gap-1 mb-1">
-                          <div
-                            className="w-4 h-4 rounded-full border"
-                            style={{ backgroundColor: item.selectedColor }}
+                {cartItems.map((item) => {
+                  const isCustomOrder = item.isCustomOrder || false;
+                  const itemKey = isCustomOrder ? `custom-${item.cartItemId}` : `${item.id}-${item.selectedColor}`;
+                  
+                  return (
+                    <div key={itemKey} className="flex gap-3">
+                      {!isCustomOrder ? (
+                        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                          <img
+                            src={item.product_images?.[0]?.image_url}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
                           />
                         </div>
+                      ) : (
+                        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-primary/10 flex items-center justify-center">
+                          <span className="text-3xl">
+                            {item.customOrderType === 'custom_bouquet' ? '💐' : '🧶'}
+                          </span>
+                        </div>
                       )}
-                      <p className="text-sm text-text/60">
-                        Qty: {item.quantity} × ${item.price}
-                      </p>
+                      <div className="flex-grow">
+                        <h3 className="font-semibold text-sm mb-1">
+                          {item.name}
+                          {isCustomOrder && (
+                            <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                              Custom
+                            </span>
+                          )}
+                        </h3>
+                        {item.selectedColor && !isCustomOrder && (
+                          <div className="flex items-center gap-1 mb-1">
+                            <div
+                              className="w-4 h-4 rounded-full border"
+                              style={{ backgroundColor: item.selectedColor }}
+                            />
+                          </div>
+                        )}
+                        {item.price !== null ? (
+                          <p className="text-sm text-text/60">
+                            Qty: {item.quantity || 1} × {item.price} DA
+                          </p>
+                        ) : (
+                          <p className="text-sm text-yellow-600">
+                            Price pending admin confirmation
+                          </p>
+                        )}
+                      </div>
+                      <div className="font-semibold text-primary">
+                        {item.price !== null 
+                          ? `${(item.price * (item.quantity || 1)).toFixed(2)} DA`
+                          : 'TBD'}
+                      </div>
                     </div>
-                    <div className="font-semibold text-primary">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+
+              {cartItems.some(item => item.price === null) && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-yellow-800">
+                    ⚠️ Your order includes custom items with pending prices. We'll confirm the final price before processing payment.
+                  </p>
+                </div>
+              )}
 
               <div className="border-t pt-4 space-y-3">
                 <div className="flex justify-between text-text/70">

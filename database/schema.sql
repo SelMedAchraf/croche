@@ -1,6 +1,14 @@
 -- Croche Ella Database Schema
 -- Run this script in your Supabase SQL Editor
 
+-- ============================================================================
+-- REQUIRED STORAGE BUCKETS (Created automatically via schema)
+-- ============================================================================
+-- 1. product-images (Public) - For product photos
+-- 2. item-images (Public) - For custom order item photos
+-- 3. color-images (Public) - For color swatch images
+-- ============================================================================
+
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -11,6 +19,33 @@ CREATE TABLE categories (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Colors Table
+CREATE TABLE colors (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  image_url TEXT NOT NULL,
+  available BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create storage bucket for color images
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('color-images', 'color-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage policies for color images
+CREATE POLICY "Public can view color images"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'color-images');
+
+CREATE POLICY "Authenticated users can upload color images"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'color-images' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can delete color images"
+  ON storage.objects FOR DELETE
+  USING (bucket_id = 'color-images' AND auth.role() = 'authenticated');
 
 -- Products Table
 CREATE TABLE products (
@@ -63,6 +98,7 @@ CREATE INDEX idx_order_items_order ON order_items(order_id);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE colors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE product_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
@@ -71,6 +107,10 @@ ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 -- RLS Policies for Public Read Access
 CREATE POLICY "Categories are viewable by everyone"
   ON categories FOR SELECT
+  USING (true);
+
+CREATE POLICY "Colors are viewable by everyone"
+  ON colors FOR SELECT
   USING (true);
 
 CREATE POLICY "Products are viewable by everyone"
@@ -84,6 +124,10 @@ CREATE POLICY "Product images are viewable by everyone"
 -- RLS Policies for Authenticated Admin
 CREATE POLICY "Authenticated users can manage categories"
   ON categories FOR ALL
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can manage colors"
+  ON colors FOR ALL
   USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Authenticated users can insert products"

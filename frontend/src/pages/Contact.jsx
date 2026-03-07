@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { FiMail, FiPhone, FiMapPin, FiInstagram, FiSend } from 'react-icons/fi';
-import { FaWhatsapp } from 'react-icons/fa';
+import { FaWhatsapp, FaTiktok } from 'react-icons/fa';
 
 const Contact = () => {
   const { t } = useTranslation();
@@ -176,7 +176,7 @@ const Contact = () => {
               </div>
             </div>
 
-            <div className="card p-8 bg-gradient-to-br from-primary/10 to-highlight/10">
+            <div className="card p-8">
               <h3 className="text-xl font-display font-semibold text-primary mb-6">
                 Follow Us
               </h3>
@@ -186,38 +186,26 @@ const Contact = () => {
                   href="https://www.instagram.com/croche.ella_/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-14 h-14 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-md hover:shadow-lg"
+                  className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary hover:text-white text-primary transition-all"
                 >
                   <FiInstagram className="w-6 h-6" />
+                </a>
+                <a
+                  href="https://www.tiktok.com/@floria.hx?_r=1&_t=ZS-94UYEuX4k7s"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary hover:text-white text-primary transition-all"
+                >
+                  <FaTiktok className="w-6 h-6" />
                 </a>
                 <a
                   href="https://wa.me/1234567890"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-14 h-14 bg-white rounded-full flex items-center justify-center hover:bg-green-500 hover:text-white transition-all shadow-md hover:shadow-lg"
+                  className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary hover:text-white text-primary transition-all"
                 >
                   <FaWhatsapp className="w-6 h-6" />
                 </a>
-              </div>
-            </div>
-
-            <div className="card p-8">
-              <h3 className="text-xl font-display font-semibold text-primary mb-4">
-                Business Hours
-              </h3>
-              <div className="space-y-2 text-text/70">
-                <div className="flex justify-between">
-                  <span>Monday - Friday</span>
-                  <span className="font-medium">9:00 AM - 6:00 PM</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Saturday</span>
-                  <span className="font-medium">10:00 AM - 4:00 PM</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Sunday</span>
-                  <span className="font-medium">Closed</span>
-                </div>
               </div>
             </div>
           </motion.div>

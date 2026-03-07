@@ -168,11 +168,7 @@ const Products = () => {
 // Product Card Component
 const ProductCard = ({ product, addToCart }) => {
   const { t } = useTranslation();
-  const primaryImage = product.product_images?.find(img => img.is_primary)?.image_url || 
-                       product.product_images?.[0]?.image_url ||
-                       'https://images.unsplash.com/photo-1595341595313-12e3e1a5f9b8?w=400';
-
-  const isOutOfStock = product.stock_quantity === 0;
+  const productImage = product.product_images?.[0]?.image_url;
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -184,18 +180,11 @@ const ProductCard = ({ product, addToCart }) => {
     <Link to={`/products/${product.id}`} className="card group h-full flex flex-col">
       <div className="relative h-64 overflow-hidden">
         <img
-          src={primaryImage}
+          src={productImage}
           alt="Product"
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           loading="lazy"
         />
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-            <span className="bg-white text-text px-4 py-2 rounded-full font-semibold text-sm">
-              {t('products.outOfStock')}
-            </span>
-          </div>
-        )}
         {product.tags && product.tags.includes('new') && (
           <div className="absolute top-3 right-3 bg-highlight text-white px-3 py-1 rounded-full text-xs font-semibold">
             NEW
@@ -225,7 +214,7 @@ const ProductCard = ({ product, addToCart }) => {
         <div className="mt-auto">
           <div className="flex items-center justify-between mb-3">
             <span className="text-primary font-bold text-xl">
-              ${product.price}
+              {product.price} DA
             </span>
             <span className="text-xs text-text/60 bg-gray-100 px-2 py-1 rounded-full">
               {product.category}
@@ -234,14 +223,9 @@ const ProductCard = ({ product, addToCart }) => {
           
           <button
             onClick={handleAddToCart}
-            disabled={isOutOfStock}
-            className={`w-full py-2 rounded-lg font-medium transition-all ${
-              isOutOfStock
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-primary text-white hover:bg-highlight hover:shadow-lg'
-            }`}
+            className="w-full py-2 rounded-lg font-medium transition-all bg-primary text-white hover:bg-highlight hover:shadow-lg"
           >
-            {isOutOfStock ? t('products.outOfStock') : t('products.addToCart')}
+            {t('products.addToCart')}
           </button>
         </div>
       </div>

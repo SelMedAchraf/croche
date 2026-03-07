@@ -1,5 +1,2 @@
--- Migration file
--- This file is currently empty
--- Add new migrations here as needed
-
-
+-- Incremental database migrations
+-- Add new migration SQL here

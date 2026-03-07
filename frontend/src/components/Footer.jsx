@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiInstagram, FiFacebook, FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
-import { FaWhatsapp } from 'react-icons/fa';
+import { FiInstagram, FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
+import { FaWhatsapp, FaTiktok } from 'react-icons/fa';
 import axios from 'axios';
 
 const Footer = () => {
@@ -27,7 +27,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-secondary border-t border-primary/20">
+    <footer className="bg-white border-t border-primary/20">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
@@ -52,13 +52,13 @@ const Footer = () => {
                 <FiInstagram className="w-5 h-5" />
               </a>
               <a
-                href="#"
+                href="https://www.tiktok.com/@floria.hx?_r=1&_t=ZS-94UYEuX4k7s"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 bg-primary text-white rounded-full hover:bg-highlight transition-colors"
-                aria-label="Facebook"
+                aria-label="TikTok"
               >
-                <FiFacebook className="w-5 h-5" />
+                <FaTiktok className="w-5 h-5" />
               </a>
               <a
                 href="https://wa.me/1234567890"
@@ -89,6 +89,11 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/custom-orders" className="text-text/70 hover:text-primary transition-colors text-sm">
+                  Custom Orders
+                </Link>
+              </li>
+              <li>
                 <Link to="/about" className="text-text/70 hover:text-primary transition-colors text-sm">
                   {t('nav.about')}
                 </Link>
@@ -96,10 +101,10 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Categories */}
+          {/* Produt Categories */}
           <div>
             <h3 className="font-display font-semibold text-lg mb-4 text-primary">
-              Categories
+              Product Categories
             </h3>
             <ul className="space-y-2">
               {categories.map((category) => (
@@ -112,11 +117,6 @@ const Footer = () => {
                   </Link>
                 </li>
               ))}
-              <li>
-                <Link to="/custom-orders" className="text-text/70 hover:text-primary transition-colors text-sm">
-                  Custom Orders
-                </Link>
-              </li>
             </ul>
           </div>
 

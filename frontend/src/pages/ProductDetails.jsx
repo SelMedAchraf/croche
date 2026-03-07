@@ -14,8 +14,6 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [isZoomed, setIsZoomed] = useState(false);
 
@@ -29,10 +27,6 @@ const ProductDetails = () => {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const response = await axios.get(`${apiUrl}/products/${id}`);
       setProduct(response.data);
-      
-      if (response.data.colors && response.data.colors.length > 0) {
-        setSelectedColor(response.data.colors[0]);
-      }
 
       // Fetch related products
       const relatedRes = await axios.get(`${apiUrl}/products?category=${response.data.category}`);
@@ -45,7 +39,7 @@ const ProductDetails = () => {
   };
 
   const handleAddToCart = () => {
-    addToCart(product, quantity, selectedColor);
+    addToCart(product, quantity);
     // Show success notification (you can add a toast notification here)
     alert('Added to cart!');
   };
@@ -74,11 +68,7 @@ const ProductDetails = () => {
     );
   }
 
-  const images = product.product_images?.length > 0
-    ? product.product_images.map(img => img.image_url)
-    : ['https://images.unsplash.com/photo-1595341595313-12e3e1a5f9b8?w=800'];
-
-  const isOutOfStock = product.stock_quantity === 0;
+  const productImage = product.product_images?.[0]?.image_url;
 
   return (
     <div className="min-h-screen section-padding">
@@ -93,16 +83,16 @@ const ProductDetails = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-12">
-          {/* Images */}
+          {/* Image */}
           <div>
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               className="relative"
             >
-              <div className="relative aspect-square rounded-2xl overflow-hidden shadow-xl mb-4 group">
+              <div className="relative aspect-square rounded-2xl overflow-hidden shadow-xl group">
                 <img
-                  src={images[selectedImage]}
+                  src={productImage}
                   alt="Product"
                   className="w-full h-full object-cover"
                 />
@@ -113,23 +103,6 @@ const ProductDetails = () => {
                   <FiZoomIn className="w-5 h-5 text-primary" />
                 </button>
               </div>
-
-              {/* Thumbnail Gallery */}
-              {images.length > 1 && (
-                <div className="grid grid-cols-4 gap-3">
-                  {images.map((img, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedImage === index ? 'border-primary' : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <img src={img} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
             </motion.div>
           </div>
 
@@ -138,37 +111,15 @@ const ProductDetails = () => {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <h1 className="text-4xl font-display font-bold text-primary mb-4">
-              {product.category}
-            </h1>
-
-            <div className="flex items-center gap-4 mb-6">
-              <span className="text-4xl font-bold text-primary">
-                ${product.price}
-              </span>
-              <span className="px-3 py-1 bg-accent text-text rounded-full text-sm">
+            <div className="mb-2">
+              <span className="px-3 py-1 bg-accent text-text rounded-full text-sm inline-block mb-4">
                 {product.category}
               </span>
+              <h3 className="font-semibold mb-2">Price</h3>
+              <span className="text-4xl font-bold text-primary block">
+                {product.price} DA
+              </span>
             </div>
-
-            {/* Colors */}
-            {product.colors && product.colors.length > 0 && (
-              <div className="mb-6">\n                <h3 className="font-semibold mb-3">{t('productDetails.colors')}</h3>
-                <div className="flex flex-wrap gap-3">
-                  {product.colors.map((color, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedColor(color)}
-                      className={`w-12 h-12 rounded-full border-4 transition-all ${
-                        selectedColor === color ? 'border-primary scale-110' : 'border-gray-200'
-                      }`}
-                      style={{ backgroundColor: color }}
-                      title={color}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Quantity */}
             <div className="mb-6">
@@ -188,32 +139,16 @@ const ProductDetails = () => {
                   +
                 </button>
               </div>
-              {!isOutOfStock && (
-                <p className="text-sm text-text/60 mt-2">
-                  {product.stock_quantity} items available
-                </p>
-              )}
             </div>
 
             {/* Actions */}
-            <div className="flex gap-4 mb-6">
+            <div className="mb-6">
               <button
                 onClick={handleAddToCart}
-                disabled={isOutOfStock}
-                className={`flex-1 py-4 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 ${
-                  isOutOfStock
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-primary text-white hover:bg-highlight hover:shadow-xl'
-                }`}
+                className="w-full py-4 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 bg-primary text-white hover:bg-highlight hover:shadow-xl"
               >
                 <FiShoppingCart />
-                {isOutOfStock ? t('products.outOfStock') : t('productDetails.addToCart')}
-              </button>
-              <button
-                className="w-14 h-14 rounded-lg bg-secondary hover:bg-accent transition-colors flex items-center justify-center"
-                aria-label="Add to wishlist"
-              >
-                <FiHeart className="w-6 h-6 text-primary" />
+                {t('productDetails.addToCart')}
               </button>
             </div>
 
@@ -245,7 +180,7 @@ const ProductDetails = () => {
                 >
                   <div className="relative h-48 overflow-hidden">
                     <img
-                      src={relatedProduct.product_images?.[0]?.image_url || 'https://images.unsplash.com/photo-1595341595313-12e3e1a5f9b8?w=400'}
+                      src={relatedProduct.product_images?.[0]?.image_url}
                       alt="Product"
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -254,7 +189,7 @@ const ProductDetails = () => {
                     <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">
                       {relatedProduct.category}
                     </h3>
-                    <p className="text-primary font-bold">${relatedProduct.price}</p>
+                    <p className="text-primary font-bold">{relatedProduct.price} DA</p>
                   </div>
                 </Link>
               ))}
@@ -280,7 +215,7 @@ const ProductDetails = () => {
               <FiX className="w-6 h-6" />
             </button>
             <img
-              src={images[selectedImage]}
+              src={productImage}
               alt="Product"
               className="max-w-full max-h-full object-contain"
               onClick={(e) => e.stopPropagation()}

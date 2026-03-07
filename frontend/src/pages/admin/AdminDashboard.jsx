@@ -16,13 +16,16 @@ import {
   FiSave,
   FiGrid,
   FiUpload,
-  FiBox
+  FiBox,
+  FiDroplet,
+  FiClock
 } from 'react-icons/fi';
 import axios from 'axios';
 import { supabase } from '../../config/supabase';
 import { useItems } from '../../hooks/useItems';
 import { useDeliveryPrices } from '../../hooks/useDeliveryPrices';
 import { useCategoriesManagement } from '../../hooks/useCategoriesManagement';
+import { useColors } from '../../hooks/useColors';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -30,6 +33,8 @@ const AdminDashboard = () => {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { items } = useItems();
+  const { colors } = useColors();
 
   useEffect(() => {
     checkAuth();
@@ -84,7 +89,8 @@ const AdminDashboard = () => {
     totalProducts: products.length,
     totalOrders: orders.length,
     pendingOrders: orders.filter(o => o.status === 'pending').length,
-    revenue: orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0)
+    totalItems: items.length,
+    totalColors: colors.length
   };
 
   return (
@@ -118,22 +124,22 @@ const AdminDashboard = () => {
             color="bg-blue-500"
           />
           <StatCard
-            icon={<FiShoppingBag className="w-8 h-8" />}
-            title="Total Orders"
-            value={stats.totalOrders}
-            color="bg-green-500"
+            icon={<FiBox className="w-8 h-8" />}
+            title="Total Items"
+            value={stats.totalItems}
+            color="bg-purple-500"
           />
           <StatCard
-            icon={<FiCheck className="w-8 h-8" />}
+            icon={<FiDroplet className="w-8 h-8" />}
+            title="Total Colors"
+            value={stats.totalColors}
+            color="bg-pink-500"
+          />
+          <StatCard
+            icon={<FiClock className="w-8 h-8" />}
             title="Pending Orders"
             value={stats.pendingOrders}
             color="bg-yellow-500"
-          />
-          <StatCard
-            icon={<span className="text-2xl">💰</span>}
-            title="Total Revenue"
-            value={`$${stats.revenue.toFixed(2)}`}
-            color="bg-purple-500"
           />
         </div>
 
@@ -153,10 +159,16 @@ const AdminDashboard = () => {
               label="Items"
             />
             <TabButton
+              active={activeTab === 'colors'}
+              onClick={() => setActiveTab('colors')}
+              icon={<FiDroplet />}
+              label="Colors"
+            />
+            <TabButton
               active={activeTab === 'categories'}
               onClick={() => setActiveTab('categories')}
               icon={<FiGrid />}
-              label="Categories"
+              label="Product Categories"
             />
             <TabButton
               active={activeTab === 'orders'}
@@ -178,6 +190,7 @@ const AdminDashboard = () => {
             {activeTab === 'categories' && <CategoriesTab onRefresh={fetchData} />}
             {activeTab === 'items' && <ItemsTab />}
             {activeTab === 'deliveryPrices' && <DeliveryPricesTab />}
+            {activeTab === 'colors' && <ColorsTab />}
           </div>
         </div>
       </div>
@@ -227,6 +240,7 @@ const ProductsTab = ({ products, onRefresh }) => {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [formData, setFormData] = useState({
     price: '',
     category: ''
@@ -431,62 +445,100 @@ const ProductsTab = ({ products, onRefresh }) => {
     }
   };
 
+  // Filter products by category
+  const filteredProducts = categoryFilter === 'all' 
+    ? products 
+    : products.filter(product => product.category === categoryFilter);
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 className="text-xl font-semibold">Products Management</h2>
-        <button 
-          onClick={() => {
-            setEditingProduct(null);
-            setFormData({ 
-              name: '', 
-              price: '', 
-              category: categories.length > 0 ? categories[0].name : '' 
-            });
-            setSelectedImage(null);
-            setImagePreview(null);
-            setDragActive(false);
-            setShowModal(true);
-          }}
-          className="btn-primary flex items-center gap-2"
-        >
-          <FiPlus />
-          Add Product
-        </button>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-initial">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full px-4 py-2 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all appearance-none"
+            >
+              <option value="all">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              setEditingProduct(null);
+              setFormData({ 
+                name: '', 
+                price: '', 
+                category: categories.length > 0 ? categories[0].name : '' 
+              });
+              setSelectedImage(null);
+              setImagePreview(null);
+              setDragActive(false);
+              setShowModal(true);
+            }}
+            className="btn-primary flex items-center gap-2 whitespace-nowrap"
+          >
+            <FiPlus />
+            Add Product
+          </button>
+        </div>
       </div>
 
-      {products.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <div className="text-center py-12 text-text/60">
           <FiPackage className="w-16 h-16 mx-auto mb-4 opacity-30" />
           <p>No products yet. Add your first product!</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {products.map((product) => (
-            <div key={product.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filteredProducts.map((product) => (
+            <div 
+              key={product.id} 
+              className="group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100"
+            >
+              {/* Product Image */}
+              <div className="aspect-square w-full overflow-hidden bg-gray-100">
                 <img
-                  src={product.product_images?.[0]?.image_url || 'https://via.placeholder.com/100'}
-                  alt="Product"
-                  className="w-full h-full object-cover"
+                  src={product.product_images?.[0]?.image_url}
+                  alt={product.category}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 />
               </div>
-              <div className="flex-grow">
-                <h3 className="font-semibold">{product.category}</h3>
-                <p className="text-sm text-text/60">{product.price} DA</p>
+              
+              {/* Product Info */}
+              <div className="p-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold text-gray-900 truncate">{product.category}</h3>
+                  <p className="text-lg font-bold text-primary whitespace-nowrap ml-2">{product.price} DA</p>
+                </div>
               </div>
-              <div className="flex gap-2">
+
+              {/* Action Buttons - Show on hover */}
+              <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <button 
                   onClick={() => handleEdit(product)}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                  className="p-2 bg-white text-blue-600 hover:bg-blue-50 rounded-lg shadow-md transition-colors"
+                  title="Edit product"
                 >
-                  <FiEdit />
+                  <FiEdit className="w-4 h-4" />
                 </button>
                 <button 
                   onClick={() => handleDelete(product.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                  className="p-2 bg-white text-red-600 hover:bg-red-50 rounded-lg shadow-md transition-colors"
+                  title="Delete product"
                 >
-                  <FiTrash2 />
+                  <FiTrash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -628,6 +680,8 @@ const ProductsTab = ({ products, onRefresh }) => {
 };
 
 const OrdersTab = ({ orders, onRefresh }) => {
+  const [expandedOrder, setExpandedOrder] = useState(null);
+  
   const getStatusColor = (status) => {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-800',
@@ -637,6 +691,10 @@ const OrdersTab = ({ orders, onRefresh }) => {
       cancelled: 'bg-red-100 text-red-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const toggleOrderExpansion = (orderId) => {
+    setExpandedOrder(expandedOrder === orderId ? null : orderId);
   };
 
   return (
@@ -652,29 +710,216 @@ const OrdersTab = ({ orders, onRefresh }) => {
         </div>
       ) : (
         <div className="space-y-3">
-          {orders.map((order) => (
-            <div key={order.id} className="p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold">{order.customer_name}</h3>
-                  <p className="text-sm text-text/60">
-                    {order.customer_phone} • {order.customer_city}
-                  </p>
+          {orders.map((order) => {
+            const isExpanded = expandedOrder === order.id;
+            const hasCustomItems = order.order_items?.some(item => item.custom_order_type);
+            
+            return (
+              <div key={order.id} className="bg-gray-50 rounded-lg overflow-hidden">
+                <div 
+                  className="p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => toggleOrderExpansion(order.id)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="font-semibold flex items-center gap-2">
+                        {order.customer_name}
+                        {hasCustomItems && (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                            Custom Order
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-sm text-text/60">
+                        {order.customer_phone} • {order.customer_city}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                      {order.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-bold text-primary">
+                      {order.total_amount} DA
+                    </span>
+                    <span className="text-sm text-text/60">
+                      {new Date(order.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                  {order.status}
-                </span>
+
+                {/* Expanded Order Details */}
+                {isExpanded && order.order_items && (
+                  <div className="border-t border-gray-200 p-4 bg-white">
+                    <h4 className="font-semibold mb-3">Order Items:</h4>
+                    <div className="space-y-3">
+                      {order.order_items.map((item, idx) => (
+                        <div key={idx} className="border border-gray-200 rounded-lg p-3">
+                          {/* Custom Order Item */}
+                          {item.custom_order_type ? (
+                            <div>
+                              <div className="flex items-start gap-3 mb-2">
+                                <div className="w-16 h-16 bg-primary/10 rounded flex items-center justify-center flex-shrink-0">
+                                  <span className="text-2xl">
+                                    {item.custom_order_type === 'custom_bouquet' ? '💐' : '🧶'}
+                                  </span>
+                                </div>
+                                <div className="flex-grow">
+                                  <h5 className="font-semibold">
+                                    {item.custom_order_type === 'custom_bouquet' 
+                                      ? 'Custom Flower Bouquet' 
+                                      : 'Custom Crochet Request'}
+                                  </h5>
+                                  <p className="text-sm text-text/60">
+                                    Qty: {item.quantity || 1}
+                                  </p>
+                                  {item.price !== null ? (
+                                    <p className="text-sm font-semibold text-primary">
+                                      {item.price} DA
+                                    </p>
+                                  ) : (
+                                    <p className="text-sm text-yellow-600 font-semibold">
+                                      ⚠️ Price pending - Please set price
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Custom Order Details */}
+                              {item.custom_data && (
+                                <div className="mt-3 p-3 bg-gray-50 rounded text-sm">
+                                  {item.custom_order_type === 'custom_bouquet' ? (
+                                    <div className="space-y-2">
+                                      {item.custom_data.flowers && (
+                                        <div>
+                                          <span className="font-medium">Flowers:</span>
+                                          <div className="ml-2 text-text/70">
+                                            {item.custom_data.flowers.map((f, i) => (
+                                              <div key={i}>• {f.name} (×{f.quantity}) - {f.price} DA</div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                      {item.custom_data.colors && item.custom_data.colors.length > 0 && (
+                                        <div>
+                                          <span className="font-medium">Colors:</span>
+                                          <span className="ml-2 text-text/70">
+                                            {item.custom_data.colors.length} colors selected
+                                          </span>
+                                        </div>
+                                      )}
+                                      {item.custom_data.wrapping && (
+                                        <div>
+                                          <span className="font-medium">Wrapping:</span>
+                                          <span className="ml-2 text-text/70">
+                                            {item.custom_data.wrapping.name} - {item.custom_data.wrapping.price} DA
+                                          </span>
+                                        </div>
+                                      )}
+                                      {item.custom_data.accessories && item.custom_data.accessories.length > 0 && (
+                                        <div>
+                                          <span className="font-medium">Accessories:</span>
+                                          <div className="ml-2 text-text/70">
+                                            {item.custom_data.accessories.map((a, i) => (
+                                              <div key={i}>• {a.name} (×{a.quantity}) - {a.price} DA</div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-2">
+                                      {item.custom_data.description && (
+                                        <div>
+                                          <span className="font-medium">Description:</span>
+                                          <p className="ml-2 text-text/70">{item.custom_data.description}</p>
+                                        </div>
+                                      )}
+                                      {item.custom_data.size && (
+                                        <div>
+                                          <span className="font-medium">Size:</span>
+                                          <span className="ml-2 text-text/70">{item.custom_data.size}</span>
+                                        </div>
+                                      )}
+                                      {item.custom_data.deadline && (
+                                        <div>
+                                          <span className="font-medium">Deadline:</span>
+                                          <span className="ml-2 text-text/70">
+                                            {new Date(item.custom_data.deadline).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                      )}
+                                      {item.custom_data.colors && item.custom_data.colors.length > 0 && (
+                                        <div>
+                                          <span className="font-medium">Colors:</span>
+                                          <span className="ml-2 text-text/70">
+                                            {item.custom_data.colors.length} colors selected
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Reference Image */}
+                              {item.reference_image_url && (
+                                <div className="mt-3">
+                                  <span className="text-sm font-medium">Reference Image:</span>
+                                  <img 
+                                    src={item.reference_image_url} 
+                                    alt="Reference" 
+                                    className="mt-2 w-full max-w-xs h-40 object-cover rounded border"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            /* Regular Product Item */
+                            <div className="flex items-center gap-3">
+                              {item.product?.product_images?.[0] && (
+                                <img 
+                                  src={item.product.product_images[0].image_url} 
+                                  alt={item.product.name}
+                                  className="w-16 h-16 object-cover rounded"
+                                />
+                              )}
+                              <div className="flex-grow">
+                                <h5 className="font-semibold">{item.product?.name || 'Product'}</h5>
+                                <p className="text-sm text-text/60">
+                                  Qty: {item.quantity} × {item.price} DA
+                                </p>
+                                {item.color && (
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <div 
+                                      className="w-4 h-4 rounded-full border"
+                                      style={{ backgroundColor: item.color }}
+                                    />
+                                    <span className="text-xs text-text/60">Color</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="font-semibold text-primary">
+                                {(item.price * item.quantity).toFixed(2)} DA
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Delivery Notes */}
+                    {order.delivery_notes && (
+                      <div className="mt-4 p-3 bg-blue-50 rounded">
+                        <span className="text-sm font-medium">Delivery Notes:</span>
+                        <p className="text-sm text-text/70 mt-1">{order.delivery_notes}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-bold text-primary">
-                  ${order.total_amount}
-                </span>
-                <span className="text-sm text-text/60">
-                  {new Date(order.created_at).toLocaleDateString()}
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -744,7 +989,7 @@ const CategoriesTab = ({ onRefresh }) => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Categories Management</h2>
+        <h2 className="text-xl font-semibold">Product Categories Management</h2>
         <button 
           onClick={() => {
             setEditingCategory(null);
@@ -852,6 +1097,7 @@ const ItemsTab = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [formData, setFormData] = useState({
     name: '',
     category: 'flower',
@@ -995,64 +1241,100 @@ const ItemsTab = () => {
     }
   };
 
+  // Filter items by category
+  const filteredItems = categoryFilter === 'all' 
+    ? items 
+    : items.filter(item => item.category === categoryFilter);
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 className="text-xl font-semibold">Items Management</h2>
-        <button 
-          onClick={() => {
-            setEditingItem(null);
-            setFormData({ name: '', category: 'flower', image_url: '', price: '' });
-            setSelectedImage(null);
-            setImagePreview(null);
-            setDragActive(false);
-            setShowModal(true);
-          }}
-          className="btn-primary flex items-center gap-2"
-        >
-          <FiPlus />
-          Add Item
-        </button>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-initial">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full px-4 py-2 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all appearance-none"
+            >
+              <option value="all">All Categories</option>
+              <option value="flower">Flower</option>
+              <option value="packaging">Packaging</option>
+              <option value="accessory">Accessory</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              setEditingItem(null);
+              setFormData({ name: '', category: 'flower', image_url: '', price: '' });
+              setSelectedImage(null);
+              setImagePreview(null);
+              setDragActive(false);
+              setShowModal(true);
+            }}
+            className="btn-primary flex items-center gap-2 whitespace-nowrap"
+          >
+            <FiPlus />
+            Add Item
+          </button>
+        </div>
       </div>
 
       {loading ? (
         <div className="text-center py-12">Loading...</div>
-      ) : items.length === 0 ? (
+      ) : filteredItems.length === 0 ? (
         <div className="text-center py-12 text-text/60">
           <FiBox className="w-16 h-16 mx-auto mb-4 opacity-30" />
           <p>No items yet. Add your first item!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {items.map((item) => (
-            <div key={item.id} className="bg-gray-50 rounded-lg overflow-hidden">
-              <img
-                src={item.image_url}
-                alt={item.name}
-                className="w-full h-48 object-cover"
-              />
+          {filteredItems.map((item) => (
+            <div 
+              key={item.id} 
+              className="group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100"
+            >
+              {/* Item Image */}
+              <div className="w-full overflow-hidden bg-gray-100">
+                <img
+                  src={item.image_url}
+                  alt={item.name}
+                  className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-200"
+                />
+              </div>
+              
+              {/* Item Info */}
               <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-semibold">{item.name}</h3>
+                <div className="flex justify-between items-start mb-1">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
                     <p className="text-sm text-text/60">{item.category}</p>
                   </div>
-                  <span className="text-lg font-bold text-primary">{item.price} DA</span>
+                  <span className="text-lg font-bold text-primary whitespace-nowrap ml-2">{item.price} DA</span>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(item)}
-                    className="flex-1 p-2 text-blue-600 hover:bg-blue-50 rounded-lg flex items-center justify-center gap-1"
-                  >
-                    <FiEdit /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="flex-1 p-2 text-red-600 hover:bg-red-50 rounded-lg flex items-center justify-center gap-1"
-                  >
-                    <FiTrash2 /> Delete
-                  </button>
-                </div>
+              </div>
+
+              {/* Action Buttons - Show on hover */}
+              <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <button 
+                  onClick={() => handleEdit(item)}
+                  className="p-2 bg-white text-blue-600 hover:bg-blue-50 rounded-lg shadow-md transition-colors"
+                  title="Edit item"
+                >
+                  <FiEdit className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => handleDelete(item.id)}
+                  className="p-2 bg-white text-red-600 hover:bg-red-50 rounded-lg shadow-md transition-colors"
+                  title="Delete item"
+                >
+                  <FiTrash2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
           ))}
@@ -1313,6 +1595,413 @@ const DeliveryPricesTab = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Colors Tab Component
+const ColorsTab = () => {
+  const navigate = useNavigate();
+  const [filter, setFilter] = useState('all');
+  const { colors, loading, createColor, updateColor, deleteColor, refetch } = useColors(
+    filter === 'all' ? null : filter
+  );
+  
+  const [showModal, setShowModal] = useState(false);
+  const [editingColor, setEditingColor] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [formData, setFormData] = useState({ name: '', available: true });
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    handleFile(file);
+  };
+
+  const handleFile = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else if (file) {
+      alert('Please select a valid image file');
+    }
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+
+  const uploadImage = async () => {
+    if (!selectedImage) return imagePreview || '';
+
+    setUploading(true);
+    try {
+      const fileExt = selectedImage.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('color-images')
+        .upload(filePath, selectedImage);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('color-images')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image');
+      throw error;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      alert('Session expired. Please login again.');
+      navigate('/admin/login');
+      return;
+    }
+    const token = session.access_token;
+    
+    try {
+      const imageUrl = await uploadImage();
+      
+      if (!imageUrl) {
+        alert('Please select an image');
+        return;
+      }
+      
+      if (!formData.name || !formData.name.trim()) {
+        alert('Please enter a color name');
+        return;
+      }
+      
+      const colorData = {
+        name: formData.name.trim(),
+        image_url: imageUrl,
+        available: formData.available
+      };
+
+      if (editingColor) {
+        await updateColor(editingColor.id, colorData, token);
+      } else {
+        await createColor(colorData, token);
+      }
+      
+      setShowModal(false);
+      setEditingColor(null);
+      setFormData({ name: '', available: true });
+      setSelectedImage(null);
+      setImagePreview(null);
+      setDragActive(false);
+    } catch (error) {
+      console.error('Error saving color:', error);
+      alert('Failed to save color');
+    }
+  };
+
+  const handleEdit = (color) => {
+    setEditingColor(color);
+    setFormData({ name: color.name, available: color.available });
+    setImagePreview(color.image_url);
+    setSelectedImage(null);
+    setDragActive(false);
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (confirm('Are you sure you want to delete this color?')) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Session expired. Please login again.');
+        navigate('/admin/login');
+        return;
+      }
+      const token = session.access_token;
+      
+      try {
+        await deleteColor(id, token);
+      } catch (error) {
+        console.error('Error deleting color:', error);
+        alert('Failed to delete color');
+      }
+    }
+  };
+
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter);
+    refetch(newFilter === 'all' ? null : newFilter);
+  };
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="text-xl font-semibold">Colors Management</h2>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-initial">
+            <select
+              value={filter}
+              onChange={(e) => handleFilterChange(e.target.value)}
+              className="w-full px-4 py-2 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all appearance-none"
+            >
+              <option value="all">All Colors</option>
+              <option value="available">Available</option>
+              <option value="unavailable">Unavailable</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              setEditingColor(null);
+              setFormData({ name: '', available: true });
+              setSelectedImage(null);
+              setImagePreview(null);
+              setDragActive(false);
+              setShowModal(true);
+            }}
+            className="btn-primary flex items-center gap-2 whitespace-nowrap"
+          >
+            <FiPlus />
+            Add Color
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12">Loading...</div>
+      ) : colors.length === 0 ? (
+        <div className="text-center py-12 text-text/60">
+          <FiDroplet className="w-16 h-16 mx-auto mb-4 opacity-30" />
+          <p>No colors found. Add your first color!</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {colors.map((color) => (
+            <motion.div
+              key={color.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative group"
+            >
+              <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow">
+                <img
+                  src={color.image_url}
+                  alt={color.name}
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Color Name */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                  <p className="text-white font-medium text-sm truncate">{color.name}</p>
+                </div>
+                
+                {/* Availability Badge */}
+                <div className="absolute top-2 left-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    color.available 
+                      ? 'bg-green-100 text-green-700' 
+                      : 'bg-red-100 text-red-700'
+                  }`}>
+                    {color.available ? 'Available' : 'Unavailable'}
+                  </span>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => handleEdit(color)}
+                    className="p-3 bg-white text-blue-600 rounded-full hover:bg-blue-50 transition-colors"
+                  >
+                    <FiEdit className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(color.id)}
+                    className="p-3 bg-white text-red-600 rounded-full hover:bg-red-50 transition-colors"
+                  >
+                    <FiTrash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-semibold mb-4">
+                {editingColor ? 'Edit Color' : 'Add New Color'}
+              </h3>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Color Name */}
+                <div>
+                  <label className="block text-sm font-medium text-text/70 mb-2">
+                    Color Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g., Sky Blue, Rose Pink"
+                    className="input-field w-full"
+                    required
+                  />
+                </div>
+
+                {/* Image Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-text/70 mb-2">
+                    Color Image *
+                  </label>
+                  
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <FiX />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onDragEnter={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDragOver={handleDrag}
+                      onDrop={handleDrop}
+                      className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                        dragActive 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-gray-300 hover:border-primary'
+                      }`}
+                    >
+                      <FiUpload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                      <p className="text-sm text-text/60 mb-2">
+                        Drag and drop an image here, or click to select
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                        id="color-image-upload"
+                      />
+                      <label
+                        htmlFor="color-image-upload"
+                        className="btn-primary inline-block cursor-pointer"
+                      >
+                        Select Image
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                {/* Available Toggle */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <label className="block font-medium text-sm mb-1">
+                      Available
+                    </label>
+                    <p className="text-xs text-text/60">
+                      Is this color currently available?
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, available: !formData.available })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      formData.available ? 'bg-green-500' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        formData.available ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowModal(false);
+                      setEditingColor(null);
+                      setFormData({ name: '', available: true });
+                      setSelectedImage(null);
+                      setImagePreview(null);
+                      setDragActive(false);
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={uploading || (!selectedImage && !imagePreview) || !formData.name.trim()}
+                    className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {uploading ? 'Uploading...' : editingColor ? 'Update' : 'Create'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>

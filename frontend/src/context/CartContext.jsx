@@ -22,13 +22,24 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = (product, quantity = 1, selectedColor = null) => {
     setCartItems(prevItems => {
+      // Handle custom orders (they always get added as new items)
+      if (product.isCustomOrder) {
+        return [...prevItems, { 
+          ...product, 
+          quantity,
+          // Generate unique ID for custom orders
+          cartItemId: Date.now() + Math.random()
+        }];
+      }
+
+      // Handle regular products
       const existingItem = prevItems.find(
-        item => item.id === product.id && item.selectedColor === selectedColor
+        item => item.id === product.id && item.selectedColor === selectedColor && !item.isCustomOrder
       );
 
       if (existingItem) {
         return prevItems.map(item =>
-          item.id === product.id && item.selectedColor === selectedColor
+          item.id === product.id && item.selectedColor === selectedColor && !item.isCustomOrder
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
@@ -38,26 +49,39 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  const removeFromCart = (productId, selectedColor) => {
+  const removeFromCart = (productId, selectedColor, cartItemId = null) => {
     setCartItems(prevItems =>
       prevItems.filter(
-        item => !(item.id === productId && item.selectedColor === selectedColor)
+        item => {
+          // For custom orders, use cartItemId
+          if (cartItemId) {
+            return item.cartItemId !== cartItemId;
+          }
+          // For regular products
+          return !(item.id === productId && item.selectedColor === selectedColor);
+        }
       )
     );
   };
 
-  const updateQuantity = (productId, selectedColor, quantity) => {
+  const updateQuantity = (productId, selectedColor, quantity, cartItemId = null) => {
     if (quantity <= 0) {
-      removeFromCart(productId, selectedColor);
+      removeFromCart(productId, selectedColor, cartItemId);
       return;
     }
 
     setCartItems(prevItems =>
-      prevItems.map(item =>
-        item.id === productId && item.selectedColor === selectedColor
-          ? { ...item, quantity }
-          : item
-      )
+      prevItems.map(item => {
+        // For custom orders
+        if (cartItemId && item.cartItemId === cartItemId) {
+          return { ...item, quantity };
+        }
+        // For regular products  
+        if (item.id === productId && item.selectedColor === selectedColor && !item.isCustomOrder) {
+          return { ...item, quantity };
+        }
+        return item;
+      })
     );
   };
 
@@ -66,7 +90,11 @@ export const CartProvider = ({ children }) => {
   };
 
   const getCartTotal = () => {
-    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    return cartItems.reduce((total, item) => {
+      // Skip items with null prices (custom crochet requests)
+      if (item.price === null) return total;
+      return total + item.price * (item.quantity || 1);
+    }, 0);
   };
 
   const getCartCount = () => {

@@ -4,10 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { FiArrowRight, FiHeart } from 'react-icons/fi';
 import axios from 'axios';
+import { useCart } from '../context/CartContext';
 import ellaImage from '../assets/ella.jpg';
 
 const Home = () => {
   const { t } = useTranslation();
+  const { addToCart } = useCart();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -107,7 +109,7 @@ const Home = () => {
           ) : featuredProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} addToCart={addToCart} />
               ))}
             </div>
           ) : (
@@ -125,8 +127,33 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Custom Orders Section */}
+      <section className="section-padding bg-gradient-to-br from-accent/30 via-accent/20 to-accent/10">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-3xl mx-auto"
+          >
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-primary mb-6">
+              Create Your Dream Design
+            </h2>
+            
+            <p className="text-lg text-text/70 mb-8 leading-relaxed">
+              Bring your vision to life with our custom order services. Design your own flower bouquet or request a unique crochet piece tailored just for you.
+            </p>
+
+            <Link to="/custom-orders" className="btn-primary inline-flex items-center gap-2 text-lg px-8 py-4">
+              Explore Custom Orders
+              <FiArrowRight />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
       {/* About Preview */}
-      <section className="section-padding bg-gradient-to-br from-secondary to-accent/30">
+      <section className="section-padding bg-gradient-to-br from-highlight/20 via-highlight/10 to-white">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -168,43 +195,70 @@ const Home = () => {
 };
 
 // Product Card Component
-const ProductCard = ({ product }) => {
-  const primaryImage = product.product_images?.find(img => img.is_primary)?.image_url || 
-                       product.product_images?.[0]?.image_url ||
-                       'https://images.unsplash.com/photo-1595341595313-12e3e1a5f9b8?w=400';
+const ProductCard = ({ product, addToCart }) => {
+  const { t } = useTranslation();
+  const productImage = product.product_images?.[0]?.image_url;
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product, 1);
+  };
 
   return (
-    <motion.div
-      whileHover={{ y: -10 }}
-      className="card group cursor-pointer"
-    >
-      <Link to={`/products/${product.id}`}>
-        <div className="relative h-64 overflow-hidden">
-          <img
-            src={primaryImage}
-            alt="Product"
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          {product.stock_quantity === 0 && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="bg-white text-text px-4 py-2 rounded-full font-semibold">
-                Out of Stock
+    <Link to={`/products/${product.id}`} className="card group h-full flex flex-col">
+      <div className="relative h-72 overflow-hidden">
+        <img
+          src={productImage}
+          alt="Product"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          loading="lazy"
+        />
+        {product.tags && product.tags.includes('new') && (
+          <div className="absolute top-3 right-3 bg-highlight text-white px-3 py-1 rounded-full text-xs font-semibold">
+            NEW
+          </div>
+        )}
+      </div>
+      
+      <div className="p-4 flex-grow flex flex-col">
+        {product.colors && product.colors.length > 0 && (
+          <div className="flex gap-2 mb-3">
+            {product.colors.slice(0, 5).map((color, index) => (
+              <div
+                key={index}
+                className="w-6 h-6 rounded-full border-2 border-gray-200"
+                style={{ backgroundColor: color }}
+                title={color}
+              />
+            ))}
+            {product.colors.length > 5 && (
+              <span className="text-xs text-text/60 self-center">
+                +{product.colors.length - 5}
               </span>
-            </div>
-          )}
-        </div>
-        <div className="p-4">
-          <div className="flex items-center justify-between">
+            )}
+          </div>
+        )}
+        
+        <div className="mt-auto">
+          <div className="flex items-center justify-between mb-3">
             <span className="text-primary font-bold text-xl">
-              ${product.price}
+              {product.price} DA
             </span>
-            <span className="text-sm text-text/60">
+            <span className="text-xs text-text/60 bg-gray-100 px-2 py-1 rounded-full">
               {product.category}
             </span>
           </div>
+          
+          <button
+            onClick={handleAddToCart}
+            className="w-full py-2 rounded-lg font-medium transition-all bg-primary text-white hover:bg-highlight hover:shadow-lg"
+          >
+            {t('products.addToCart')}
+          </button>
         </div>
-      </Link>
-    </motion.div>
+      </div>
+    </Link>
   );
 };
 
