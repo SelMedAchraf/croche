@@ -925,10 +925,19 @@ const ProvideDetails = ({ description, onDescriptionChange }) => {
 // Reference Images Upload Component (Multiple)
 const ReferenceImagesUpload = ({ images, onImagesChange }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const MAX_IMAGES = 3;
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    const validFiles = files.filter(file => {
+    const remainingSlots = MAX_IMAGES - images.length;
+    
+    if (remainingSlots <= 0) {
+      alert(`Maximum ${MAX_IMAGES} images allowed`);
+      return;
+    }
+    
+    const filesToAdd = files.slice(0, remainingSlots);
+    const validFiles = filesToAdd.filter(file => {
       if (!file.type.startsWith('image/')) return false;
       if (file.size > 10 * 1024 * 1024) {
         alert(`${file.name} is too large. Maximum size is 10MB`);
@@ -936,6 +945,11 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
       }
       return true;
     });
+    
+    if (files.length > remainingSlots) {
+      alert(`Only ${remainingSlots} more image(s) can be added (maximum ${MAX_IMAGES} total)`);
+    }
+    
     onImagesChange([...images, ...validFiles]);
   };
 
@@ -962,7 +976,15 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files);
-    const validFiles = files.filter(file => {
+    const remainingSlots = MAX_IMAGES - images.length;
+    
+    if (remainingSlots <= 0) {
+      alert(`Maximum ${MAX_IMAGES} images allowed`);
+      return;
+    }
+    
+    const filesToAdd = files.slice(0, remainingSlots);
+    const validFiles = filesToAdd.filter(file => {
       if (!file.type.startsWith('image/')) {
         alert(`${file.name} is not an image file`);
         return false;
@@ -973,6 +995,10 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
       }
       return true;
     });
+    
+    if (files.length > remainingSlots) {
+      alert(`Only ${remainingSlots} more image(s) can be added (maximum ${MAX_IMAGES} total)`);
+    }
     
     if (validFiles.length > 0) {
       onImagesChange([...images, ...validFiles]);
@@ -994,36 +1020,46 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
         📸 Upload Reference Images
       </h2>
       <p className="text-text/70 mb-8">
-        Upload images of designs you'd like us to recreate or use as inspiration
+        Upload images of designs you'd like us to recreate or use as inspiration (Maximum 3 images)
       </p>
 
       <div className="max-w-4xl mx-auto">
-        <label 
-          className={`card p-8 cursor-pointer transition-all flex flex-col items-center mb-6 ${
-            isDragging 
-              ? 'border-2 border-primary border-dashed bg-primary/5 shadow-xl' 
-              : 'hover:shadow-lg border-2 border-transparent'
-          }`}
-          onDragEnter={handleDragEnter}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <FiUpload className={`w-12 h-12 mb-3 transition-colors ${
-            isDragging ? 'text-highlight' : 'text-primary'
-          }`} />
-          <p className="text-lg font-medium mb-1">
-            {isDragging ? 'Drop images here' : 'Click or drag to upload images'}
-          </p>
-          <p className="text-sm text-text/60">PNG, JPG up to 10MB each</p>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleFileChange}
-            className="hidden"
-          />
-        </label>
+        {images.length < MAX_IMAGES && (
+          <label 
+            className={`card p-8 cursor-pointer transition-all flex flex-col items-center mb-6 ${
+              isDragging 
+                ? 'border-2 border-primary border-dashed bg-primary/5 shadow-xl' 
+                : 'hover:shadow-lg border-2 border-transparent'
+            }`}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <FiUpload className={`w-12 h-12 mb-3 transition-colors ${
+              isDragging ? 'text-highlight' : 'text-primary'
+            }`} />
+            <p className="text-lg font-medium mb-1">
+              {isDragging ? 'Drop images here' : 'Click or drag to upload images'}
+            </p>
+            <p className="text-sm text-text/60">PNG, JPG up to 10MB each • {images.length}/{MAX_IMAGES} uploaded</p>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
+        )}
+        
+        {images.length >= MAX_IMAGES && (
+          <div className="card p-6 mb-6 bg-primary/5 border-2 border-primary/20">
+            <p className="text-center text-text/70">
+              ✓ Maximum of {MAX_IMAGES} images uploaded. Remove an image to add a different one.
+            </p>
+          </div>
+        )}
 
         {images.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

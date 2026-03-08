@@ -17,7 +17,7 @@ const Checkout = () => {
     customer_name: '',
     customer_phone: '',
     customer_city: '',
-    delivery_notes: '',
+    full_address: '',
     wilaya_code: '',
     delivery_type: 'home' // 'home' or 'stopdesk'
   });
@@ -67,7 +67,10 @@ const Checkout = () => {
         customer_name: formData.customer_name,
         customer_phone: formData.customer_phone,
         customer_city: formData.customer_city,
-        delivery_notes: formData.delivery_notes,
+        full_address: formData.delivery_type === 'home' ? formData.full_address : null,
+        delivery_type: formData.delivery_type,
+        wilaya_code: formData.wilaya_code ? parseInt(formData.wilaya_code) : null,
+        delivery_price: deliveryPrice,
         total_amount: getCartTotal() + deliveryPrice,
         items: cartItems.map(item => {
           if (item.isCustomOrder) {
@@ -75,20 +78,20 @@ const Checkout = () => {
               product_id: null,
               quantity: item.quantity || 1,
               price: item.price, // May be null for custom_request
-              color: null,
               custom_order_type: item.customOrderType,
               custom_data: item.customData,
-              reference_image_url: item.referenceImageUrl || null
+              reference_image_url: item.referenceImageUrl || null,
+              reference_images: item.allReferenceImages || (item.referenceImageUrl ? [item.referenceImageUrl] : [])
             };
           }
           return {
             product_id: item.id,
             quantity: item.quantity,
             price: item.price,
-            color: item.selectedColor,
             custom_order_type: null,
             custom_data: null,
-            reference_image_url: null
+            reference_image_url: null,
+            reference_images: null
           };
         })
       };
@@ -207,7 +210,7 @@ const Checkout = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, delivery_type: 'stopdesk' })}
+                      onClick={() => setFormData({ ...formData, delivery_type: 'stopdesk', full_address: '' })}
                       className={`p-4 rounded-lg border-2 transition-all ${
                         formData.delivery_type === 'stopdesk'
                           ? 'border-primary bg-primary/10'
@@ -261,8 +264,8 @@ const Checkout = () => {
                       Full Address *
                     </label>
                     <textarea
-                      name="delivery_notes"
-                      value={formData.delivery_notes}
+                      name="full_address"
+                      value={formData.full_address}
                       onChange={handleChange}
                       required
                       rows="2"
@@ -317,7 +320,7 @@ const Checkout = () => {
               <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
                 {cartItems.map((item) => {
                   const isCustomOrder = item.isCustomOrder || false;
-                  const itemKey = isCustomOrder ? `custom-${item.cartItemId}` : `${item.id}-${item.selectedColor}`;
+                  const itemKey = isCustomOrder ? `custom-${item.cartItemId}` : `${item.id}`;
                   
                   return (
                     <div key={itemKey} className="flex gap-3">
@@ -345,14 +348,6 @@ const Checkout = () => {
                             </span>
                           )}
                         </h3>
-                        {item.selectedColor && !isCustomOrder && (
-                          <div className="flex items-center gap-1 mb-1">
-                            <div
-                              className="w-4 h-4 rounded-full border"
-                              style={{ backgroundColor: item.selectedColor }}
-                            />
-                          </div>
-                        )}
                         {item.price !== null ? (
                           <p className="text-sm text-text/60">
                             Qty: {item.quantity || 1} × {item.price} DA

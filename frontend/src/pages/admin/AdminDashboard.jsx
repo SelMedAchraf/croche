@@ -991,14 +991,29 @@ const OrdersTab = ({ orders, onRefresh }) => {
                           </div>
                         )}
 
-                        {/* Wilaya Card */}
-                        {order.wilaya_code && (
-                          <div className="bg-orange-50 border border-orange-200 rounded-lg p-2">
+                        {/* Delivery Price Card */}
+                        {order.delivery_price && (
+                          <div className="border border-gray-300 rounded-lg p-2">
                             <div className="flex items-center gap-1.5">
-                              <span className="text-base">📮</span>
+                              <span className="text-base">💰</span>
                               <div>
-                                <p className="text-xs text-orange-600 font-medium">Wilaya</p>
-                                <p className="text-sm font-semibold text-orange-900">{order.wilaya_code}</p>
+                                <p className="text-xs text-gray-600 font-medium">Delivery Price</p>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {order.delivery_price} DZD
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Full Address Card */}
+                        {order.full_address && (
+                          <div className="border border-gray-300 rounded-lg p-2 col-span-2 lg:col-span-3">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-base">🏠</span>
+                              <div>
+                                <p className="text-xs text-gray-600 font-medium">Full Address</p>
+                                <p className="text-sm font-semibold text-gray-900">{order.full_address}</p>
                               </div>
                             </div>
                           </div>
@@ -1292,7 +1307,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                               <span>📷</span> Customer Reference {item.reference_images?.length > 1 || (item.reference_image_url && item.reference_images?.length >= 1) ? 'Images' : 'Image'}
                                             </h6>
                                             {item.reference_images && item.reference_images.length > 0 ? (
-                                              <div className="grid grid-cols-1 gap-3">
+                                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                 {item.reference_images.map((img, imgIdx) => {
                                                   const imgUrl = typeof img === 'string' ? img : img.url || img.image_url;
                                                   return (
@@ -1300,7 +1315,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                                       <img 
                                                         src={imgUrl} 
                                                         alt={`Reference ${imgIdx + 1}`} 
-                                                        className="w-full h-96 object-cover rounded-lg shadow-md"
+                                                        className="w-full h-64 object-cover rounded-lg shadow-md"
                                                       />
                                                       <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-xs font-medium">
                                                         {imgIdx + 1}/{item.reference_images.length}
@@ -1312,7 +1327,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                                   );
                                                 })}
                                               </div>
-                                            ) : (
+                                            ) : item.reference_image_url ? (
                                               <div className="relative group cursor-pointer" onClick={() => setZoomedImage(item.reference_image_url)}>
                                                 <img 
                                                   src={item.reference_image_url} 
@@ -1323,7 +1338,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                                   <FiZoomIn className="text-white text-3xl" />
                                                 </div>
                                               </div>
-                                            )}
+                                            ) : null}
                                           </div>
                                         )}
                                       </div>
@@ -1390,15 +1405,6 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                 <div className="flex items-center gap-4 text-sm text-text/60">
                                   <span>{item.quantity} × {item.price} DA</span>
                                 </div>
-                                {item.color && (
-                                  <div className="flex items-center gap-2 mt-2">
-                                    <div 
-                                      className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"
-                                      style={{ backgroundColor: item.color }}
-                                    />
-                                    <span className="text-xs text-text/60">Selected Color</span>
-                                  </div>
-                                )}
                               </div>
                               <div className="text-right">
                                 <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
@@ -1410,14 +1416,6 @@ const OrdersTab = ({ orders, onRefresh }) => {
                         </div>
                       ))}
                     </div>
-
-                    {/* Delivery Notes */}
-                    {order.delivery_notes && (
-                      <div className="mt-4 p-3 bg-blue-50 rounded">
-                        <span className="text-sm font-medium">Delivery Notes:</span>
-                        <p className="text-sm text-text/70 mt-1">{order.delivery_notes}</p>
-                      </div>
-                    )}
 
                     {/* Order Lifecycle Management Panel */}
                     <div className="mt-6 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border-2 border-primary/20">
@@ -1540,12 +1538,6 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                   : `${(order.total_amount || 0) - (order.deposit_value || 0)} DA`}
                               </span>
                             </div>
-                            {order.delivery_price > 0 && (
-                              <div className="flex justify-between text-xs text-text/60 pt-1">
-                                <span>Delivery Fee:</span>
-                                <span>{order.delivery_price} DA</span>
-                              </div>
-                            )}
                           </div>
                         </div>
                       </div>

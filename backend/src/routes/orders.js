@@ -24,7 +24,7 @@ router.post('/',
         customer_name,
         customer_phone,
         customer_city,
-        delivery_notes,
+        full_address,
         items,
         total_amount,
         wilaya_code,
@@ -39,10 +39,9 @@ router.post('/',
           customer_name,
           customer_phone,
           customer_city,
-          delivery_notes,
+          full_address,
           total_amount,
           status: 'pending',
-          order_state: 'pending_contact',
           wilaya_code: wilaya_code || null,
           delivery_type: delivery_type || 'home',
           delivery_price: delivery_price || 0
@@ -58,10 +57,10 @@ router.post('/',
         product_id: item.product_id || null,
         quantity: item.quantity,
         price: item.price,
-        color: item.color || null,
         custom_order_type: item.custom_order_type || null,
         custom_data: item.custom_data || null,
-        reference_image_url: item.reference_image_url || null
+        reference_image_url: item.reference_image_url || null,
+        reference_images: item.reference_images || null
       }));
 
       const { error: itemsError } = await supabase
@@ -203,14 +202,15 @@ router.patch('/:id/status',
 // LIFECYCLE MANAGEMENT ENDPOINTS
 // ============================================================
 
-// Update order state (admin only)
+// Update order status (admin only)
 router.patch('/:id/state',
   authenticateAdmin,
   async (req, res) => {
     try {
-      const { order_state } = req.body;
+      const { status } = req.body;
 
-      const validStates = [
+      const validStatuses = [
+        'pending',
         'pending_contact',
         'waiting_deposit',
         'confirmed',
@@ -220,16 +220,16 @@ router.patch('/:id/state',
         'cancelled'
       ];
 
-      if (!validStates.includes(order_state)) {
+      if (!validStatuses.includes(status)) {
         return res.status(400).json({ 
-          error: 'Invalid order state',
-          validStates 
+          error: 'Invalid order status',
+          validStatuses 
         });
       }
 
       const { data, error } = await supabase
         .from('orders')
-        .update({ order_state, updated_at: new Date().toISOString() })
+        .update({ status, updated_at: new Date().toISOString() })
         .eq('id', req.params.id)
         .select()
         .single();
@@ -241,8 +241,8 @@ router.patch('/:id/state',
 
       res.json(data);
     } catch (error) {
-      console.error('Error updating order state:', error);
-      res.status(500).json({ error: 'Failed to update order state' });
+      console.error('Error updating order status:', error);
+      res.status(500).json({ error: 'Failed to update order status' });
     }
   }
 );
@@ -358,6 +358,15 @@ router.patch('/:id/custom-price',
 
       if (updateItemError) throw updateItemError;
 
+      // Get current order to fetch delivery_price
+      const { data: currentOrder, error: orderFetchError } = await supabase
+        .from('orders')
+        .select('delivery_price')
+        .eq('id', orderId)
+        .single();
+
+      if (orderFetchError) throw orderFetchError;
+
       // Recalculate order total from all items
       const { data: allItems, error: allItemsError } = await supabase
         .from('order_items')
@@ -366,9 +375,13 @@ router.patch('/:id/custom-price',
 
       if (allItemsError) throw allItemsError;
 
-      const newTotal = allItems.reduce((sum, item) => {
+      const itemsTotal = allItems.reduce((sum, item) => {
         return sum + (parseFloat(item.price || 0) * item.quantity);
       }, 0);
+
+      // Add delivery price to items total
+      const deliveryPrice = parseFloat(currentOrder.delivery_price || 0);
+      const newTotal = itemsTotal + deliveryPrice;
 
       // Update order total (trigger will recalculate remaining_balance)
       const { data: updatedOrder, error: updateOrderError } = await supabase
@@ -440,6 +453,15 @@ router.patch('/:id/item-price',
 
       if (updateItemError) throw updateItemError;
 
+      // Get current order to fetch delivery_price
+      const { data: currentOrder, error: orderFetchError } = await supabase
+        .from('orders')
+        .select('delivery_price')
+        .eq('id', orderId)
+        .single();
+
+      if (orderFetchError) throw orderFetchError;
+
       // Recalculate order total from all items
       const { data: allItems, error: allItemsError } = await supabase
         .from('order_items')
@@ -448,9 +470,13 @@ router.patch('/:id/item-price',
 
       if (allItemsError) throw allItemsError;
 
-      const newTotal = allItems.reduce((sum, item) => {
+      const itemsTotal = allItems.reduce((sum, item) => {
         return sum + (parseFloat(item.price || 0) * item.quantity);
       }, 0);
+
+      // Add delivery price to items total
+      const deliveryPrice = parseFloat(currentOrder.delivery_price || 0);
+      const newTotal = itemsTotal + deliveryPrice;
 
       // Update order total (trigger will recalculate remaining_balance)
       const { data: updatedOrder, error: updateOrderError } = await supabase

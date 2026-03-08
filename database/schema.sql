@@ -61,7 +61,6 @@ CREATE TABLE product_images (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   product_id UUID REFERENCES products(id) ON DELETE CASCADE,
   image_url TEXT NOT NULL,
-  is_primary BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -71,11 +70,15 @@ CREATE TABLE orders (
   customer_name VARCHAR(255) NOT NULL,
   customer_phone VARCHAR(50) NOT NULL,
   customer_city VARCHAR(100) NOT NULL,
-  delivery_notes TEXT,
+  full_address TEXT,
   total_amount DECIMAL(10, 2) NOT NULL,
   status VARCHAR(50) DEFAULT 'pending',
+  delivery_type VARCHAR(50) DEFAULT 'home',
+  wilaya_code INTEGER,
+  delivery_price DECIMAL(10, 2) DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT check_delivery_type_valid CHECK (delivery_type IN ('home', 'stopdesk'))
 );
 
 -- Order Items Table
@@ -85,7 +88,10 @@ CREATE TABLE order_items (
   product_id UUID REFERENCES products(id) ON DELETE SET NULL,
   quantity INTEGER NOT NULL,
   price DECIMAL(10, 2) NOT NULL,
-  color VARCHAR(100),
+  custom_order_type VARCHAR(100),
+  custom_data JSONB,
+  reference_image_url TEXT,
+  reference_images JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

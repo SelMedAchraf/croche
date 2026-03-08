@@ -138,14 +138,13 @@ router.post('/:id/images',
   authenticateAdmin,
   async (req, res) => {
     try {
-      const { image_url, is_primary } = req.body;
+      const { image_url } = req.body;
       
       const { data, error } = await supabase
         .from('product_images')
         .insert([{
           product_id: req.params.id,
-          image_url: image_url,
-          is_primary: is_primary || false
+          image_url: image_url
         }])
         .select()
         .single();
