@@ -134,6 +134,7 @@ const OptionSelection = ({ onSelectOption }) => {
 const CustomFlowerBouquet = ({ onBack }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { colors } = useColors();
   const [currentStep, setCurrentStep] = useState(1);
   const [bouquetData, setBouquetData] = useState({
     flowers: {},
@@ -201,7 +202,14 @@ const CustomFlowerBouquet = ({ onBack }) => {
           price: f.price,
           image_url: f.image_url
         })),
-        colors: bouquetData.colors,
+        colors: bouquetData.colors
+          .map(colorId => colors.find(c => c.id === colorId))
+          .filter(Boolean)
+          .map(c => ({
+            id: c.id,
+            name: c.name,
+            image_url: c.image_url
+          })),
         wrapping: bouquetData.wrapping ? {
           id: bouquetData.wrapping.id,
           name: bouquetData.wrapping.name,
@@ -339,6 +347,7 @@ const CustomFlowerBouquet = ({ onBack }) => {
 const CustomCrochetRequest = ({ onBack }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { colors } = useColors();
   const [currentStep, setCurrentStep] = useState(1);
   const [requestData, setRequestData] = useState({
     referenceImages: [],
@@ -383,7 +392,14 @@ const CustomCrochetRequest = ({ onBack }) => {
       isCustomOrder: true,
       customOrderType: 'custom_request',
       customData: {
-        colors: requestData.colors,
+        colors: requestData.colors
+          .map(colorId => colors.find(c => c.id === colorId))
+          .filter(Boolean)
+          .map(c => ({
+            id: c.id,
+            name: c.name,
+            image_url: c.image_url
+          })),
         description: requestData.description
       },
       referenceImageUrl: referenceImageUrls[0] || null, // Store first image URL

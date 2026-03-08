@@ -18,7 +18,8 @@ import {
   FiUpload,
   FiBox,
   FiDroplet,
-  FiClock
+  FiClock,
+  FiSettings
 } from 'react-icons/fi';
 import axios from 'axios';
 import { supabase } from '../../config/supabase';
@@ -680,7 +681,22 @@ const ProductsTab = ({ products, onRefresh }) => {
 };
 
 const OrdersTab = ({ orders, onRefresh }) => {
+  const navigate = useNavigate();
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [depositInput, setDepositInput] = useState({});
+  const [itemPriceInput, setItemPriceInput] = useState({});
+  const [expandedCustomDetails, setExpandedCustomDetails] = useState({});
+  const [expandedOrderManagement, setExpandedOrderManagement] = useState({});
+
+  const toggleCustomDetails = (orderId, itemIdx) => {
+    const key = `${orderId}-${itemIdx}`;
+    setExpandedCustomDetails(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const toggleOrderManagement = (orderId) => {
+    setExpandedOrderManagement(prev => ({ ...prev, [orderId]: !prev[orderId] }));
+  };
   
   const getStatusColor = (status) => {
     const colors = {
@@ -691,6 +707,148 @@ const OrdersTab = ({ orders, onRefresh }) => {
       cancelled: 'bg-red-100 text-red-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getOrderStateColor = (orderState) => {
+    const colors = {
+      pending_contact: 'bg-yellow-100 text-yellow-800',
+      waiting_deposit: 'bg-orange-100 text-orange-800',
+      confirmed: 'bg-blue-100 text-blue-800',
+      in_progress: 'bg-purple-100 text-purple-800',
+      ready_for_delivery: 'bg-teal-100 text-teal-800',
+      delivered: 'bg-green-100 text-green-800',
+      cancelled: 'bg-red-100 text-red-800'
+    };
+    return colors[orderState] || 'bg-gray-100 text-gray-800';
+  };
+
+  const formatOrderState = (orderState) => {
+    const labels = {
+      pending_contact: 'Pending Contact',
+      waiting_deposit: 'Waiting Deposit',
+      confirmed: 'Confirmed',
+      in_progress: 'In Progress',
+      ready_for_delivery: 'Ready for Delivery',
+      delivered: 'Delivered',
+      cancelled: 'Cancelled'
+    };
+    return labels[orderState] || orderState;
+  };
+
+  const updateOrderState = async (orderId, newState) => {
+    setUpdatingOrderId(orderId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Session expired. Please login again.');
+        navigate('/admin/login');
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}/state`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ order_state: newState })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update order state');
+      }
+
+      await onRefresh();
+      alert('Order state updated successfully!');
+    } catch (error) {
+      console.error('Error updating order state:', error);
+      alert(error.message || 'Failed to update order state');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const updateDeposit = async (orderId) => {
+    const depositValue = depositInput[orderId];
+    if (!depositValue || depositValue === '') {
+      alert('Please enter a deposit value');
+      return;
+    }
+
+    setUpdatingOrderId(orderId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Session expired. Please login again.');
+        navigate('/admin/login');
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}/deposit`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ deposit_value: parseFloat(depositValue) })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to set deposit');
+      }
+
+      await onRefresh();
+      setDepositInput({ ...depositInput, [orderId]: '' });
+      alert('Deposit set successfully!');
+    } catch (error) {
+      console.error('Error setting deposit:', error);
+      alert(error.message || 'Failed to set deposit');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const updateItemPrice = async (orderId, itemId) => {
+    const price = itemPriceInput[itemId];
+    if (!price || price === '') {
+      alert('Please enter a price');
+      return;
+    }
+
+    setUpdatingOrderId(orderId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Session expired. Please login again.');
+        navigate('/admin/login');
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}/custom-price`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ item_id: itemId, price: parseFloat(price) })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to set price');
+      }
+
+      await onRefresh();
+      setItemPriceInput({ ...itemPriceInput, [itemId]: '' });
+      alert('Price set successfully!');
+    } catch (error) {
+      console.error('Error setting price:', error);
+      alert(error.message || 'Failed to set price');
+    } finally {
+      setUpdatingOrderId(null);
+    }
   };
 
   const toggleOrderExpansion = (orderId) => {
@@ -713,194 +871,429 @@ const OrdersTab = ({ orders, onRefresh }) => {
           {orders.map((order) => {
             const isExpanded = expandedOrder === order.id;
             const hasCustomItems = order.order_items?.some(item => item.custom_order_type);
+            const hasPendingPrice = order.order_items?.some(item => item.price === null);
             
             return (
-              <div key={order.id} className="bg-gray-50 rounded-lg overflow-hidden">
+              <div key={order.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200">
                 <div 
-                  className="p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="p-5 cursor-pointer hover:bg-gray-50 transition-colors border-2 border-gray-200"
                   onClick={() => toggleOrderExpansion(order.id)}
                 >
-                  <div className="flex items-start justify-between mb-3">
+                  {/* Header Row: Order ID, Status, Arrow */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-grow">
+                      <div className="mb-3">
+                        <h3 className="font-bold text-lg text-gray-900">
+                          Order #{order.id}
+                        </h3>
+                      </div>
+                      
+                      {/* Info Cards Grid */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                        {/* Customer Name Card */}
+                        <div className="border border-gray-300 rounded-lg p-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-base">👤</span>
+                            <div>
+                              <p className="text-xs text-gray-600 font-medium">Customer</p>
+                              <p className="text-sm font-semibold text-gray-900">{order.customer_name}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Phone Card */}
+                        <div className="border border-gray-300 rounded-lg p-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-base">📞</span>
+                            <div>
+                              <p className="text-xs text-gray-600 font-medium">Phone</p>
+                              <p className="text-sm font-semibold text-gray-900">{order.customer_phone}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* City Card */}
+                        <div className="border border-gray-300 rounded-lg p-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-base">📍</span>
+                            <div>
+                              <p className="text-xs text-gray-600 font-medium">City</p>
+                              <p className="text-sm font-semibold text-gray-900">{order.customer_city}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Delivery Type Card */}
+                        {order.delivery_type && (
+                          <div className="border border-gray-300 rounded-lg p-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-base">🚚</span>
+                              <div>
+                                <p className="text-xs text-gray-600 font-medium">Delivery</p>
+                                <p className="text-sm font-semibold text-gray-900 capitalize">
+                                  {order.delivery_type === 'home' ? 'Home' : 'Pickup'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Wilaya Card */}
+                        {order.wilaya_code && (
+                          <div className="bg-orange-50 border border-orange-200 rounded-lg p-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-base">📮</span>
+                              <div>
+                                <p className="text-xs text-orange-600 font-medium">Wilaya</p>
+                                <p className="text-sm font-semibold text-orange-900">{order.wilaya_code}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
+                      <span className="text-gray-400 text-2xl">
+                        {isExpanded ? '▼' : '▶'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bottom Row: Price and Date */}
+                  <div className="flex justify-between items-center pt-3 border-t border-gray-100">
                     <div>
-                      <h3 className="font-semibold flex items-center gap-2">
-                        {order.customer_name}
-                        {hasCustomItems && (
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                            Custom Order
+                      <span className="text-xs text-gray-500 mt-1 block">Total Amount</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold text-gray-700">
+                          {order.total_amount} DA
+                        </span>
+                        {hasPendingPrice && (
+                          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">
+                            ⚠️ + Pending Price
                           </span>
                         )}
-                      </h3>
-                      <p className="text-sm text-text/60">
-                        {order.customer_phone} • {order.customer_city}
-                      </p>
+                      </div>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-primary">
-                      {order.total_amount} DA
-                    </span>
-                    <span className="text-sm text-text/60">
-                      {new Date(order.created_at).toLocaleDateString()}
-                    </span>
+                    <div className="text-right">
+                      <span className="text-xs text-gray-500">Order Date</span>
+                      <div className="text-sm font-semibold text-gray-700">
+                        {new Date(order.created_at).toLocaleDateString('en-GB', { 
+                          day: '2-digit', 
+                          month: 'short', 
+                          year: 'numeric' 
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Expanded Order Details */}
                 {isExpanded && order.order_items && (
-                  <div className="border-t border-gray-200 p-4 bg-white">
-                    <h4 className="font-semibold mb-3">Order Items:</h4>
-                    <div className="space-y-3">
+                  <div className="border-t-0 border-x-2 border-b-2 border-gray-200 bg-white p-4 shadow-inner">
+                    <h4 className="font-semibold mb-4 text-lg">Order Items</h4>
+                    <div className="space-y-4">
                       {order.order_items.map((item, idx) => (
-                        <div key={idx} className="border border-gray-200 rounded-lg p-3">
+                        <div key={idx} className="border-2 border-gray-200 rounded-xl p-4 bg-gradient-to-r from-gray-50 to-white">
                           {/* Custom Order Item */}
                           {item.custom_order_type ? (
                             <div>
-                              <div className="flex items-start gap-3 mb-2">
-                                <div className="w-16 h-16 bg-primary/10 rounded flex items-center justify-center flex-shrink-0">
-                                  <span className="text-2xl">
+                              {/* Header - Clickable */}
+                              <div 
+                                className="flex items-start gap-4 mb-4 pb-4 border-b cursor-pointer hover:bg-gray-50/50 -m-4 p-4 rounded-t-xl transition-colors"
+                                onClick={() => toggleCustomDetails(order.id, idx)}
+                              >
+                                <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                                  <span className="text-3xl">
                                     {item.custom_order_type === 'custom_bouquet' ? '💐' : '🧶'}
                                   </span>
                                 </div>
                                 <div className="flex-grow">
-                                  <h5 className="font-semibold">
+                                  <h5 className="font-bold text-lg mb-1">
                                     {item.custom_order_type === 'custom_bouquet' 
                                       ? 'Custom Flower Bouquet' 
                                       : 'Custom Crochet Request'}
                                   </h5>
-                                  <p className="text-sm text-text/60">
-                                    Qty: {item.quantity || 1}
+                                  <p className="text-sm text-text/60 mb-2">
+                                    Quantity: {item.quantity || 1}
                                   </p>
                                   {item.price !== null ? (
-                                    <p className="text-sm font-semibold text-primary">
-                                      {item.price} DA
-                                    </p>
+                                    <div className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                                      Total: {(item.price * (item.quantity || 1)).toFixed(2)} DA
+                                    </div>
                                   ) : (
-                                    <p className="text-sm text-yellow-600 font-semibold">
-                                      ⚠️ Price pending - Please set price
-                                    </p>
+                                    <div className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
+                                      ⚠️ Price Pending
+                                    </div>
                                   )}
+                                </div>
+                                <div className="flex-shrink-0">
+                                  <span className="text-primary text-xl">
+                                    {expandedCustomDetails[`${order.id}-${idx}`] ? '▼' : '▶'}
+                                  </span>
                                 </div>
                               </div>
 
-                              {/* Custom Order Details */}
-                              {item.custom_data && (
-                                <div className="mt-3 p-3 bg-gray-50 rounded text-sm">
+                              {/* Custom Order Details - Collapsible */}
+                              {expandedCustomDetails[`${order.id}-${idx}`] && item.custom_data && (
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                   {item.custom_order_type === 'custom_bouquet' ? (
-                                    <div className="space-y-2">
-                                      {item.custom_data.flowers && (
-                                        <div>
-                                          <span className="font-medium">Flowers:</span>
-                                          <div className="ml-2 text-text/70">
-                                            {item.custom_data.flowers.map((f, i) => (
-                                              <div key={i}>• {f.name} (×{f.quantity}) - {f.price} DA</div>
-                                            ))}
+                                    <>
+                                      {/* Left Column: Flowers and Accessories */}
+                                      <div className="space-y-4">
+                                        {/* Flowers */}
+                                        {item.custom_data.flowers && item.custom_data.flowers.length > 0 && (
+                                          <div>
+                                            <h6 className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
+                                              <span>🌸</span> Flowers Selected
+                                            </h6>
+                                            <div className="space-y-2">
+                                              {item.custom_data.flowers.map((f, i) => (
+                                                <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                                                  {f.image_url && (
+                                                    <img 
+                                                      src={f.image_url} 
+                                                      alt={f.name}
+                                                      className="w-14 h-14 object-cover rounded-lg shadow-sm flex-shrink-0"
+                                                    />
+                                                  )}
+                                                  <div className="flex-grow min-w-0">
+                                                    <p className="font-semibold text-sm truncate">{f.name}</p>
+                                                    <p className="text-xs text-text/60">
+                                                      {f.quantity} × {f.price} DA
+                                                    </p>
+                                                  </div>
+                                                  <div className="text-right flex-shrink-0">
+                                                    <p className="font-bold text-primary text-sm">
+                                                      {(f.quantity * f.price).toFixed(2)} DA
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
                                           </div>
-                                        </div>
-                                      )}
-                                      {item.custom_data.colors && item.custom_data.colors.length > 0 && (
-                                        <div>
-                                          <span className="font-medium">Colors:</span>
-                                          <span className="ml-2 text-text/70">
-                                            {item.custom_data.colors.length} colors selected
-                                          </span>
-                                        </div>
-                                      )}
-                                      {item.custom_data.wrapping && (
-                                        <div>
-                                          <span className="font-medium">Wrapping:</span>
-                                          <span className="ml-2 text-text/70">
-                                            {item.custom_data.wrapping.name} - {item.custom_data.wrapping.price} DA
-                                          </span>
-                                        </div>
-                                      )}
-                                      {item.custom_data.accessories && item.custom_data.accessories.length > 0 && (
-                                        <div>
-                                          <span className="font-medium">Accessories:</span>
-                                          <div className="ml-2 text-text/70">
-                                            {item.custom_data.accessories.map((a, i) => (
-                                              <div key={i}>• {a.name} (×{a.quantity}) - {a.price} DA</div>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <div className="space-y-2">
-                                      {item.custom_data.description && (
-                                        <div>
-                                          <span className="font-medium">Description:</span>
-                                          <p className="ml-2 text-text/70">{item.custom_data.description}</p>
-                                        </div>
-                                      )}
-                                      {item.custom_data.size && (
-                                        <div>
-                                          <span className="font-medium">Size:</span>
-                                          <span className="ml-2 text-text/70">{item.custom_data.size}</span>
-                                        </div>
-                                      )}
-                                      {item.custom_data.deadline && (
-                                        <div>
-                                          <span className="font-medium">Deadline:</span>
-                                          <span className="ml-2 text-text/70">
-                                            {new Date(item.custom_data.deadline).toLocaleDateString()}
-                                          </span>
-                                        </div>
-                                      )}
-                                      {item.custom_data.colors && item.custom_data.colors.length > 0 && (
-                                        <div>
-                                          <span className="font-medium">Colors:</span>
-                                          <span className="ml-2 text-text/70">
-                                            {item.custom_data.colors.length} colors selected
-                                          </span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
+                                        )}
 
-                              {/* Reference Image */}
-                              {item.reference_image_url && (
-                                <div className="mt-3">
-                                  <span className="text-sm font-medium">Reference Image:</span>
-                                  <img 
-                                    src={item.reference_image_url} 
-                                    alt="Reference" 
-                                    className="mt-2 w-full max-w-xs h-40 object-cover rounded border"
-                                  />
+                                        {/* Accessories */}
+                                        {item.custom_data.accessories && item.custom_data.accessories.length > 0 && (
+                                          <div>
+                                            <h6 className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
+                                              <span>✨</span> Accessories
+                                            </h6>
+                                            <div className="space-y-2">
+                                              {item.custom_data.accessories.map((a, i) => (
+                                                <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                                                  {a.image_url && (
+                                                    <img 
+                                                      src={a.image_url} 
+                                                      alt={a.name}
+                                                      className="w-14 h-14 object-cover rounded-lg shadow-sm flex-shrink-0"
+                                                    />
+                                                  )}
+                                                  <div className="flex-grow min-w-0">
+                                                    <p className="font-semibold text-sm truncate">{a.name}</p>
+                                                    <p className="text-xs text-text/60">
+                                                      {a.quantity} × {a.price} DA
+                                                    </p>
+                                                  </div>
+                                                  <div className="text-right flex-shrink-0">
+                                                    <p className="font-bold text-primary text-sm">
+                                                      {(a.quantity * a.price).toFixed(2)} DA
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Description */}
+                                        {item.custom_data.description && (
+                                          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                            <h6 className="font-semibold text-sm mb-1 text-blue-900 flex items-center gap-2">
+                                              <span>📝</span> Description
+                                            </h6>
+                                            <p className="text-sm text-blue-800">{item.custom_data.description}</p>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Right Column: Wrapping and Colors */}
+                                      <div className="space-y-4">
+                                        {/* Wrapping */}
+                                        {item.custom_data.wrapping && (
+                                          <div>
+                                            <h6 className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
+                                              <span>🎁</span> Wrapping
+                                            </h6>
+                                            <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                                              {item.custom_data.wrapping.image_url && (
+                                                <img 
+                                                  src={item.custom_data.wrapping.image_url} 
+                                                  alt={item.custom_data.wrapping.name}
+                                                  className="w-14 h-14 object-cover rounded-lg shadow-sm flex-shrink-0"
+                                                />
+                                              )}
+                                              <div className="flex-grow min-w-0">
+                                                <p className="font-semibold text-sm truncate">{item.custom_data.wrapping.name}</p>
+                                                <p className="text-xs text-text/60">1 × {item.custom_data.wrapping.price} DA</p>
+                                              </div>
+                                              <div className="text-right flex-shrink-0">
+                                                <p className="font-bold text-primary text-sm">
+                                                  {item.custom_data.wrapping.price} DA
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Colors Preview */}
+                                        {item.custom_data.colors && item.custom_data.colors.length > 0 && (
+                                          <div>
+                                            <h6 className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
+                                              <span>🎨</span> Selected Colors
+                                            </h6>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                              {item.custom_data.colors.map((color, i) => (
+                                                <div key={i} className="bg-white p-2 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                                                  {color.image_url ? (
+                                                    <img 
+                                                      src={color.image_url} 
+                                                      alt={color.name || 'Color'}
+                                                      className="w-full h-16 object-cover rounded-lg mb-1.5"
+                                                    />
+                                                  ) : (
+                                                    <div 
+                                                      className="w-full h-16 rounded-lg mb-1.5"
+                                                      style={{ backgroundColor: color.id || color }}
+                                                    />
+                                                  )}
+                                                  <p className="text-xs font-medium text-center truncate">
+                                                    {color.name || `Color ${i + 1}`}
+                                                  </p>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Reference Image */}
+                                        {item.reference_image_url && (
+                                          <div className="bg-white p-3 rounded-lg border border-gray-200">
+                                            <h6 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                                              <span>📷</span> Customer Reference Image
+                                            </h6>
+                                            <img 
+                                              src={item.reference_image_url} 
+                                              alt="Reference" 
+                                              className="w-full h-48 object-cover rounded-lg shadow-md"
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+                                    </>
+                                  ) : (
+                                    /* Custom Crochet Request Details */
+                                    <>
+                                      {/* Left Column: Description */}
+                                      <div className="space-y-4">
+                                        {item.custom_data.description && (
+                                          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                            <h6 className="font-semibold text-sm mb-2 text-blue-900 flex items-center gap-2">
+                                              <span>📝</span> Description
+                                            </h6>
+                                            <p className="text-sm text-blue-800">{item.custom_data.description}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                      
+                                      {/* Right Column: Selected Colors */}
+                                      <div className="space-y-4">
+                                        {item.custom_data.colors && item.custom_data.colors.length > 0 && (
+                                          <div>
+                                            <h6 className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
+                                              <span>🎨</span> Selected Colors
+                                            </h6>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                              {item.custom_data.colors.map((color, i) => (
+                                                <div key={i} className="bg-white p-2 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                                                  {color.image_url ? (
+                                                    <img 
+                                                      src={color.image_url} 
+                                                      alt={color.name || 'Color'}
+                                                      className="w-full h-16 object-cover rounded-lg mb-1.5"
+                                                    />
+                                                  ) : (
+                                                    <div 
+                                                      className="w-full h-16 rounded-lg mb-1.5"
+                                                      style={{ backgroundColor: color.id || color }}
+                                                    />
+                                                  )}
+                                                  <p className="text-xs font-medium text-center truncate">
+                                                    {color.name || `Color ${i + 1}`}
+                                                  </p>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Reference Image for Custom Crochet Request */}
+                                        {item.reference_image_url && (
+                                          <div className="bg-white p-3 rounded-lg border border-gray-200">
+                                            <h6 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                                              <span>📷</span> Customer Reference Image
+                                            </h6>
+                                            <img 
+                                              src={item.reference_image_url} 
+                                              alt="Reference" 
+                                              className="w-full h-48 object-cover rounded-lg shadow-md"
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               )}
                             </div>
                           ) : (
-                            /* Regular Product Item */
-                            <div className="flex items-center gap-3">
+                            /* Regular Product Item - Enhanced Display */
+                            <div className="flex items-center gap-4">
                               {item.product?.product_images?.[0] && (
                                 <img 
                                   src={item.product.product_images[0].image_url} 
                                   alt={item.product.name}
-                                  className="w-16 h-16 object-cover rounded"
+                                  className="w-20 h-20 object-cover rounded-lg shadow-md"
                                 />
                               )}
                               <div className="flex-grow">
-                                <h5 className="font-semibold">{item.product?.name || 'Product'}</h5>
-                                <p className="text-sm text-text/60">
-                                  Qty: {item.quantity} × {item.price} DA
-                                </p>
+                                <h5 className="font-bold text-base mb-1">{item.product?.name || 'Product'}</h5>
+                                <div className="flex items-center gap-4 text-sm text-text/60">
+                                  <span>Qty: {item.quantity}</span>
+                                  <span>×</span>
+                                  <span>{item.price} DA</span>
+                                  <span>=</span>
+                                  <span className="font-semibold text-primary">
+                                    {(item.price * item.quantity).toFixed(2)} DA
+                                  </span>
+                                </div>
                                 {item.color && (
-                                  <div className="flex items-center gap-1 mt-1">
+                                  <div className="flex items-center gap-2 mt-2">
                                     <div 
-                                      className="w-4 h-4 rounded-full border"
+                                      className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"
                                       style={{ backgroundColor: item.color }}
                                     />
-                                    <span className="text-xs text-text/60">Color</span>
+                                    <span className="text-xs text-text/60">Selected Color</span>
                                   </div>
                                 )}
                               </div>
-                              <div className="font-semibold text-primary">
-                                {(item.price * item.quantity).toFixed(2)} DA
+                              <div className="text-right">
+                                <div className="px-4 py-2 bg-green-100 text-green-800 rounded-lg font-bold">
+                                  {(item.price * item.quantity).toFixed(2)} DA
+                                </div>
                               </div>
                             </div>
                           )}
@@ -915,6 +1308,168 @@ const OrdersTab = ({ orders, onRefresh }) => {
                         <p className="text-sm text-text/70 mt-1">{order.delivery_notes}</p>
                       </div>
                     )}
+
+                    {/* Order Lifecycle Management Panel */}
+                    <div className="mt-6 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border-2 border-primary/20">
+                      <div 
+                        className="p-4 cursor-pointer hover:bg-primary/5 rounded-t-lg transition-colors"
+                        onClick={() => toggleOrderManagement(order.id)}
+                      >
+                        <h4 className="font-semibold text-lg flex items-center gap-2">
+                          <FiSettings className="text-primary" />
+                          Order Management
+                          <span className="text-primary text-xl ml-auto">
+                            {expandedOrderManagement[order.id] ? '▼' : '▶'}
+                          </span>
+                        </h4>
+                      </div>
+
+                      {expandedOrderManagement[order.id] && (
+                        <div className="p-4 pt-0">
+
+                      {/* Order State & Financial Overview */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        {/* Order State */}
+                        <div className="bg-white p-3 rounded border">
+                          <label className="block text-sm font-medium mb-2">Order State</label>
+                          <select
+                            value={order.order_state || 'pending_contact'}
+                            onChange={(e) => updateOrderState(order.id, e.target.value)}
+                            disabled={updatingOrderId === order.id}
+                            className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary"
+                          >
+                            <option value="pending_contact">Pending Contact</option>
+                            <option value="waiting_deposit">Waiting Deposit</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="ready_for_delivery">Ready for Delivery</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                          <div className="mt-2">
+                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getOrderStateColor(order.order_state || 'pending_contact')}`}>
+                              {formatOrderState(order.order_state || 'pending_contact')}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Financial Summary */}
+                        <div className="bg-white p-3 rounded border">
+                          <label className="block text-sm font-medium mb-2">Financial Status</label>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-text/60">Total Amount:</span>
+                              <span className="font-semibold">{order.total_amount || 0} DA</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-text/60">Deposit Paid:</span>
+                              <span className="font-semibold text-green-600">
+                                {order.deposit_value || 0} DA
+                              </span>
+                            </div>
+                            <div className="flex justify-between pt-2 border-t">
+                              <span className="font-medium">Remaining:</span>
+                              <span className="font-bold text-primary">
+                                {(order.remaining_balance !== null && order.remaining_balance !== undefined) 
+                                  ? `${order.remaining_balance} DA`
+                                  : `${(order.total_amount || 0) - (order.deposit_value || 0)} DA`}
+                              </span>
+                            </div>
+                            {order.delivery_price > 0 && (
+                              <div className="flex justify-between text-xs text-text/60 pt-1">
+                                <span>Delivery Fee:</span>
+                                <span>{order.delivery_price} DA</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Set Deposit */}
+                      {(!order.deposit_value || order.deposit_value === 0) && (
+                        <div className="bg-white p-3 rounded border mb-4">
+                          <label className="block text-sm font-medium mb-2">Set Deposit Amount</label>
+                          {hasPendingPrice && (
+                            <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded flex items-start gap-2">
+                              <span className="text-yellow-600">⚠️</span>
+                              <p className="text-xs text-yellow-800">
+                                You must set all pending item prices before setting a deposit.
+                              </p>
+                            </div>
+                          )}
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              max={order.total_amount}
+                              step="0.01"
+                              placeholder={hasPendingPrice ? "Set all prices first" : "Enter deposit amount"}
+                              value={depositInput[order.id] || ''}
+                              onChange={(e) => setDepositInput({ ...depositInput, [order.id]: e.target.value })}
+                              disabled={updatingOrderId === order.id || hasPendingPrice}
+                              className="flex-1 px-3 py-2 border rounded focus:ring-2 focus:ring-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            />
+                            <button
+                              onClick={() => updateDeposit(order.id)}
+                              disabled={updatingOrderId === order.id || !depositInput[order.id] || hasPendingPrice}
+                              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Set Deposit
+                            </button>
+                          </div>
+                          <p className="text-xs text-text/60 mt-1">
+                            Maximum: {order.total_amount} DA
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Custom Item Price Setting */}
+                      {order.order_items?.some(item => item.custom_order_type && item.price === null) && (
+                        <div className="bg-white p-3 rounded border">
+                          <label className="block text-sm font-medium mb-3">Set Custom Item Prices</label>
+                          <div className="space-y-3">
+                            {order.order_items
+                              .filter(item => item.custom_order_type && item.price === null)
+                              .map(item => (
+                                <div key={item.id} className="flex items-start gap-3 p-2 bg-yellow-50 rounded">
+                                  <div className="flex-1">
+                                    <p className="font-medium text-sm">
+                                      {item.custom_order_type === 'custom_bouquet' 
+                                        ? '🌹 Custom Flower Bouquet' 
+                                        : '🧶 Custom Crochet Request'}
+                                    </p>
+                                    <p className="text-xs text-text/60 mt-1">
+                                      ⚠️ Price not set - please contact customer and set price
+                                    </p>
+                                  </div>
+                                  <div className="flex gap-2 items-center">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      placeholder="Price"
+                                      value={itemPriceInput[item.id] || ''}
+                                      onChange={(e) => setItemPriceInput({ ...itemPriceInput, [item.id]: e.target.value })}
+                                      disabled={updatingOrderId === order.id}
+                                      className="w-32 px-3 py-1 text-sm border rounded focus:ring-2 focus:ring-primary"
+                                    />
+                                    <span className="text-sm text-text/60">DA</span>
+                                    <button
+                                      onClick={() => updateItemPrice(order.id, item.id)}
+                                      disabled={updatingOrderId === order.id || !itemPriceInput[item.id]}
+                                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      Set Price
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
