@@ -69,7 +69,6 @@ const Checkout = () => {
         customer_city: formData.customer_city,
         full_address: formData.delivery_type === 'home' ? formData.full_address : null,
         delivery_type: formData.delivery_type,
-        wilaya_code: formData.wilaya_code ? parseInt(formData.wilaya_code) : null,
         delivery_price: deliveryPrice,
         total_amount: getCartTotal() + deliveryPrice,
         items: cartItems.map(item => {
@@ -80,7 +79,6 @@ const Checkout = () => {
               price: item.price, // May be null for custom_request
               custom_order_type: item.customOrderType,
               custom_data: item.customData,
-              reference_image_url: item.referenceImageUrl || null,
               reference_images: item.allReferenceImages || (item.referenceImageUrl ? [item.referenceImageUrl] : [])
             };
           }
@@ -90,7 +88,6 @@ const Checkout = () => {
             price: item.price,
             custom_order_type: null,
             custom_data: null,
-            reference_image_url: null,
             reference_images: null
           };
         })
@@ -170,20 +167,27 @@ const Checkout = () => {
                   <label className="block text-sm font-medium text-text mb-2">
                     Wilaya (Province) *
                   </label>
-                  <select
-                    name="wilaya_code"
-                    value={formData.wilaya_code}
-                    onChange={handleChange}
-                    required
-                    className="input-field"
-                  >
-                    <option value="">Select your wilaya</option>
-                    {deliveryPrices.map((wilaya) => (
-                      <option key={wilaya.id} value={wilaya.wilaya_code}>
-                        {wilaya.wilaya_code} - {wilaya.wilaya_name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      name="wilaya_code"
+                      value={formData.wilaya_code}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-2 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all appearance-none"
+                    >
+                      <option value="">Select your wilaya</option>
+                      {deliveryPrices.map((wilaya) => (
+                        <option key={wilaya.id} value={wilaya.wilaya_code}>
+                          {wilaya.wilaya_code} - {wilaya.wilaya_name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                      <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
 
                 <div>

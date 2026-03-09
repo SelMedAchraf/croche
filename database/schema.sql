@@ -74,8 +74,8 @@ CREATE TABLE orders (
   total_amount DECIMAL(10, 2) NOT NULL,
   status VARCHAR(50) DEFAULT 'pending',
   delivery_type VARCHAR(50) DEFAULT 'home',
-  wilaya_code INTEGER,
   delivery_price DECIMAL(10, 2) DEFAULT 0,
+  admin_note TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   CONSTRAINT check_delivery_type_valid CHECK (delivery_type IN ('home', 'stopdesk'))
@@ -90,7 +90,6 @@ CREATE TABLE order_items (
   price DECIMAL(10, 2) NOT NULL,
   custom_order_type VARCHAR(100),
   custom_data JSONB,
-  reference_image_url TEXT,
   reference_images JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

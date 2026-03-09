@@ -27,7 +27,6 @@ router.post('/',
         full_address,
         items,
         total_amount,
-        wilaya_code,
         delivery_type,
         delivery_price
       } = req.body;
@@ -42,7 +41,6 @@ router.post('/',
           full_address,
           total_amount,
           status: 'pending',
-          wilaya_code: wilaya_code || null,
           delivery_type: delivery_type || 'home',
           delivery_price: delivery_price || 0
         }])
@@ -59,7 +57,6 @@ router.post('/',
         price: item.price,
         custom_order_type: item.custom_order_type || null,
         custom_data: item.custom_data || null,
-        reference_image_url: item.reference_image_url || null,
         reference_images: item.reference_images || null
       }));
 
@@ -501,6 +498,62 @@ router.patch('/:id/item-price',
     } catch (error) {
       console.error('Error updating item price:', error);
       res.status(500).json({ error: 'Failed to update item price' });
+    }
+  }
+);
+
+// Update admin note (admin only)
+router.patch('/:id/admin-note',
+  authenticateAdmin,
+  [
+    body('admin_note').optional().isString()
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { admin_note } = req.body;
+      const orderId = req.params.id;
+
+      // Fetch the order to check its status
+      const { data: order, error: fetchError } = await supabase
+        .from('orders')
+        .select('id, status')
+        .eq('id', orderId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!order) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      // Prevent updating admin_note if order is cancelled or done
+      if (order.status === 'cancelled' || order.status === 'done') {
+        return res.status(403).json({ 
+          error: 'Cannot update admin note for orders with status: cancelled or done'
+        });
+      }
+
+      // Update admin_note
+      const { data, error } = await supabase
+        .from('orders')
+        .update({ 
+          admin_note: admin_note || null,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', orderId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.json(data);
+    } catch (error) {
+      console.error('Error updating admin note:', error);
+      res.status(500).json({ error: 'Failed to update admin note' });
     }
   }
 );

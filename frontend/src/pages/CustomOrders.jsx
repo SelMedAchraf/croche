@@ -925,7 +925,7 @@ const ProvideDetails = ({ description, onDescriptionChange }) => {
 // Reference Images Upload Component (Multiple)
 const ReferenceImagesUpload = ({ images, onImagesChange }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const MAX_IMAGES = 3;
+  const MAX_IMAGES = 4;
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
@@ -1020,7 +1020,7 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
         📸 Upload Reference Images
       </h2>
       <p className="text-text/70 mb-8">
-        Upload images of designs you'd like us to recreate or use as inspiration (Maximum 3 images)
+        Upload images of designs you'd like us to recreate or use as inspiration (Maximum 4 images)
       </p>
 
       <div className="max-w-4xl mx-auto">

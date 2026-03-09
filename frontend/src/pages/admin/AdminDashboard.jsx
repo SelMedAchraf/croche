@@ -29,7 +29,7 @@ import { useColors } from '../../hooks/useColors';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('products');
+  const [activeTab, setActiveTab] = useState('orders');
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -147,6 +147,12 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-lg shadow-sm border mb-6">
           <div className="flex border-b overflow-x-auto">
             <TabButton
+              active={activeTab === 'orders'}
+              onClick={() => setActiveTab('orders')}
+              icon={<FiShoppingBag />}
+              label="Orders"
+            />
+            <TabButton
               active={activeTab === 'products'}
               onClick={() => setActiveTab('products')}
               icon={<FiPackage />}
@@ -169,12 +175,6 @@ const AdminDashboard = () => {
               onClick={() => setActiveTab('categories')}
               icon={<FiGrid />}
               label="Product Categories"
-            />
-            <TabButton
-              active={activeTab === 'orders'}
-              onClick={() => setActiveTab('orders')}
-              icon={<FiShoppingBag />}
-              label="Orders"
             />
             <TabButton
               active={activeTab === 'deliveryPrices'}
@@ -685,9 +685,12 @@ const OrdersTab = ({ orders, onRefresh }) => {
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
   const [depositInput, setDepositInput] = useState({});
   const [itemPriceInput, setItemPriceInput] = useState({});
+  const [adminNoteInput, setAdminNoteInput] = useState({});
   const [expandedCustomDetails, setExpandedCustomDetails] = useState({});
   const [expandedOrderManagement, setExpandedOrderManagement] = useState({});
   const [zoomedImage, setZoomedImage] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const toggleCustomDetails = (orderId, itemIdx) => {
     const key = `${orderId}-${itemIdx}`;
@@ -738,7 +741,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
   const getNextStates = (currentState) => {
     const stateFlow = {
       pending: ['waiting_deposit'],
-      waiting_deposit: ['confirmed'],
+      waiting_deposit: [], // Confirmed status is set automatically when deposit is added
       confirmed: ['in_progress'],
       in_progress: ['delivered'],
       delivered: ['done'],
@@ -778,14 +781,6 @@ const OrdersTab = ({ orders, onRefresh }) => {
       const hasPendingPrice = order.order_items?.some(item => item.price === null);
       if (hasPendingPrice) {
         alert('Please set all pending item prices before moving to Waiting Deposit status.');
-        return;
-      }
-    }
-
-    // Validation: Check if moving from waiting_deposit to confirmed
-    if (order.status === 'waiting_deposit' && newState === 'confirmed') {
-      if (!order.deposit_value || order.deposit_value === 0) {
-        alert('Please set the deposit amount before moving to Confirmed status.');
         return;
       }
     }
@@ -839,7 +834,8 @@ const OrdersTab = ({ orders, onRefresh }) => {
         return;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}/deposit`, {
+      // Set deposit
+      const depositResponse = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}/deposit`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -848,17 +844,73 @@ const OrdersTab = ({ orders, onRefresh }) => {
         body: JSON.stringify({ deposit_value: parseFloat(depositValue) })
       });
 
-      if (!response.ok) {
-        const error = await response.json();
+      if (!depositResponse.ok) {
+        const error = await depositResponse.json();
         throw new Error(error.error || 'Failed to set deposit');
+      }
+
+      // Automatically update status to confirmed after setting deposit
+      const statusResponse = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ status: 'confirmed' })
+      });
+
+      if (!statusResponse.ok) {
+        const error = await statusResponse.json();
+        console.error('Failed to update status:', error);
+        // Don't throw error here, deposit was successful
       }
 
       await onRefresh();
       setDepositInput({ ...depositInput, [orderId]: '' });
-      alert('Deposit set successfully!');
+      alert('Deposit set successfully and order status updated to Confirmed!');
     } catch (error) {
       console.error('Error setting deposit:', error);
       alert(error.message || 'Failed to set deposit');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const updateAdminNote = async (orderId, order) => {
+    // Check if order status is cancelled or done
+    if (order.status === 'cancelled' || order.status === 'done') {
+      alert('Cannot update admin note for orders with status: cancelled or done');
+      return;
+    }
+
+    setUpdatingOrderId(orderId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Session expired. Please login again.');
+        navigate('/admin/login');
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}/admin-note`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ admin_note: adminNoteInput[orderId] || '' })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update admin note');
+      }
+
+      await onRefresh();
+      alert('Admin note updated successfully!');
+    } catch (error) {
+      console.error('Error updating admin note:', error);
+      alert(error.message || 'Failed to update admin note');
     } finally {
       setUpdatingOrderId(null);
     }
@@ -909,20 +961,93 @@ const OrdersTab = ({ orders, onRefresh }) => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
   };
 
+  // Filter orders based on status and search term
+  const filteredOrders = orders.filter(order => {
+    // Status filter
+    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    
+    // Search filter (customer name or phone)
+    const matchesSearch = searchTerm === '' || 
+      order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer_phone?.includes(searchTerm);
+    
+    return matchesStatus && matchesSearch;
+  });
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Orders Management</h2>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Orders Management</h2>
+        </div>
+        
+        {/* Filters Row */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by customer name or phone..."
+              className="w-full px-4 py-2 pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            />
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                <FiX className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+          {/* Status Filter */}
+          <div className="relative flex-1 sm:max-w-xs">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-4 py-2 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all appearance-none"
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="waiting_deposit">Waiting Deposit</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="in_progress">In Progress</option>
+              <option value="delivered">Delivered</option>
+              <option value="done">Done</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          
+          
+        </div>
+        
+        {/* Results Count */}
+        {(statusFilter !== 'all' || searchTerm !== '') && (
+          <div className="text-sm text-gray-600">
+            Showing {filteredOrders.length} of {orders.length} orders
+          </div>
+        )}
       </div>
 
-      {orders.length === 0 ? (
+      {filteredOrders.length === 0 ? (
         <div className="text-center py-12 text-text/60">
           <FiShoppingBag className="w-16 h-16 mx-auto mb-4 opacity-30" />
-          <p>No orders yet.</p>
+          <p>{orders.length === 0 ? 'No orders yet.' : 'No orders match your search criteria.'}</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {orders.map((order) => {
+          {filteredOrders.map((order) => {
             const isExpanded = expandedOrder === order.id;
             const hasPendingPrice = order.order_items?.some(item => item.price === null);
             
@@ -1114,7 +1239,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                         {/* Flowers */}
                                         {item.custom_data.flowers && item.custom_data.flowers.length > 0 && (
                                           <div>
-                                            <h6 className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
+                                            <h6 className="font-semibold text-sm mb-3 text-gray-900flex items-center gap-2">
                                               <span>🌸</span> Flowers Selected
                                             </h6>
                                             <div className="space-y-2">
@@ -1152,7 +1277,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                         {/* Accessories */}
                                         {item.custom_data.accessories && item.custom_data.accessories.length > 0 && (
                                           <div>
-                                            <h6 className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
+                                            <h6 className="font-semibold text-sm mb-3 text-gray-900flex items-center gap-2">
                                               <span>✨</span> Accessories
                                             </h6>
                                             <div className="space-y-2">
@@ -1203,7 +1328,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                         {/* Wrapping */}
                                         {item.custom_data.wrapping && (
                                           <div>
-                                            <h6 className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
+                                            <h6 className="font-semibold text-sm mb-3 text-gray-900flex items-center gap-2">
                                               <span>🎁</span> Wrapping
                                             </h6>
                                             <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
@@ -1235,7 +1360,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                         {/* Colors Preview */}
                                         {item.custom_data.colors && item.custom_data.colors.length > 0 && (
                                           <div>
-                                            <h6 className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
+                                            <h6 className="font-semibold text-sm mb-3 text-gray-900flex items-center gap-2">
                                               <span>🎨</span> Selected Colors
                                             </h6>
                                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1267,24 +1392,35 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                           </div>
                                         )}
 
-                                        {/* Reference Image */}
-                                        {item.reference_image_url && (
+                                        {/* Reference Images for Custom Bouquet */}
+                                        {(item.reference_images && item.reference_images.length > 0) && (
                                           <div className="bg-white p-3 rounded-lg border border-gray-200">
-                                            <h6 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                                              <span>📷</span> Customer Reference Image
+                                            <h6 className="font-semibold text-sm text-gray-900 mb-2 flex items-center gap-2">
+                                              <span>📷</span> Customer Reference {item.reference_images?.length > 1 ? 'Images' : 'Image'}
                                             </h6>
-                                            <div className="relative group cursor-pointer" onClick={() => setZoomedImage(item.reference_image_url)}>
-                                              <img 
-                                                src={item.reference_image_url} 
-                                                alt="Reference" 
-                                                className="w-full h-96 object-cover rounded-lg shadow-md"
-                                              />
-                                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                                <FiZoomIn className="text-white text-3xl" />
-                                              </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                              {item.reference_images.map((img, imgIdx) => {
+                                                const imgUrl = typeof img === 'string' ? img : img.url || img.image_url;
+                                                return (
+                                                  <div key={imgIdx} className="relative group cursor-pointer" onClick={() => setZoomedImage(imgUrl)}>
+                                                    <img 
+                                                      src={imgUrl} 
+                                                      alt={`Reference ${imgIdx + 1}`} 
+                                                      className="w-full h-64 object-cover rounded-lg shadow-md"
+                                                    />
+                                                    <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-xs font-medium">
+                                                      {imgIdx + 1}/{item.reference_images.length}
+                                                    </div>
+                                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                                      <FiZoomIn className="text-white text-3xl" />
+                                                    </div>
+                                                  </div>
+                                                );
+                                              })}
                                             </div>
                                           </div>
                                         )}
+
                                       </div>
                                     </>
                                   ) : (
@@ -1301,44 +1437,31 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                           </div>
                                         )}
                                         {/* Reference Images for Custom Crochet Request */}
-                                        {(item.reference_image_url || (item.reference_images && item.reference_images.length > 0)) && (
+                                        {(item.reference_images && item.reference_images.length > 0) && (
                                           <div className="bg-white p-3 rounded-lg border border-gray-200">
-                                            <h6 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                                              <span>📷</span> Customer Reference {item.reference_images?.length > 1 || (item.reference_image_url && item.reference_images?.length >= 1) ? 'Images' : 'Image'}
+                                            <h6 className="font-semibold text-sm text-gray-900 mb-2 flex items-center gap-2">
+                                              <span>📷</span> Customer Reference {item.reference_images?.length > 1 ? 'Images' : 'Image'}
                                             </h6>
-                                            {item.reference_images && item.reference_images.length > 0 ? (
-                                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                {item.reference_images.map((img, imgIdx) => {
-                                                  const imgUrl = typeof img === 'string' ? img : img.url || img.image_url;
-                                                  return (
-                                                    <div key={imgIdx} className="relative group cursor-pointer" onClick={() => setZoomedImage(imgUrl)}>
-                                                      <img 
-                                                        src={imgUrl} 
-                                                        alt={`Reference ${imgIdx + 1}`} 
-                                                        className="w-full h-64 object-cover rounded-lg shadow-md"
-                                                      />
-                                                      <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-xs font-medium">
-                                                        {imgIdx + 1}/{item.reference_images.length}
-                                                      </div>
-                                                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                                        <FiZoomIn className="text-white text-3xl" />
-                                                      </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                              {item.reference_images.map((img, imgIdx) => {
+                                                const imgUrl = typeof img === 'string' ? img : img.url || img.image_url;
+                                                return (
+                                                  <div key={imgIdx} className="relative group cursor-pointer" onClick={() => setZoomedImage(imgUrl)}>
+                                                    <img 
+                                                      src={imgUrl} 
+                                                      alt={`Reference ${imgIdx + 1}`} 
+                                                      className="w-full h-64 object-cover rounded-lg shadow-md"
+                                                    />
+                                                    <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-xs font-medium">
+                                                      {imgIdx + 1}/{item.reference_images.length}
                                                     </div>
-                                                  );
-                                                })}
-                                              </div>
-                                            ) : item.reference_image_url ? (
-                                              <div className="relative group cursor-pointer" onClick={() => setZoomedImage(item.reference_image_url)}>
-                                                <img 
-                                                  src={item.reference_image_url} 
-                                                  alt="Reference" 
-                                                  className="w-full h-96 object-cover rounded-lg shadow-md"
-                                                />
-                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                                  <FiZoomIn className="text-white text-3xl" />
-                                                </div>
-                                              </div>
-                                            ) : null}
+                                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                                      <FiZoomIn className="text-white text-3xl" />
+                                                    </div>
+                                                  </div>
+                                                );
+                                              })}
+                                            </div>
                                           </div>
                                         )}
                                       </div>
@@ -1451,15 +1574,24 @@ const OrdersTab = ({ orders, onRefresh }) => {
                             <div className="space-y-2">
                               <p className="text-xs text-gray-600 mb-2">Available Actions:</p>
                               
+                              {/* Waiting Deposit Info Message */}
+                              {order.status === 'waiting_deposit' && getNextStates(order.status).length === 0 && (
+                                <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                                  <p className="text-sm font-medium text-blue-800">
+                                    💰 Awaiting Deposit
+                                  </p>
+                                  <p className="text-xs mt-1 text-blue-600">
+                                    Use the deposit section below to set the deposit amount and automatically confirm this order.
+                                  </p>
+                                </div>
+                              )}
+                              
                               {/* Next State Buttons */}
                               {getNextStates(order.status || 'pending').map((nextState) => {
                                 // Check if button should be disabled based on validation rules
                                 const isDisabled = (() => {
                                   if (order.status === 'pending' && nextState === 'waiting_deposit') {
                                     return hasPendingPrice;
-                                  }
-                                  if (order.status === 'waiting_deposit' && nextState === 'confirmed') {
-                                    return !order.deposit_value || order.deposit_value === 0;
                                   }
                                   return false;
                                 })();
@@ -1478,8 +1610,6 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                       <p className="text-xs text-red-600 mt-1 ml-1">
                                         {order.status === 'pending' && nextState === 'waiting_deposit' 
                                           ? '⚠️ Set all pending prices first'
-                                          : order.status === 'waiting_deposit' && nextState === 'confirmed'
-                                          ? '⚠️ Set deposit amount first'
                                           : ''}
                                       </p>
                                     )}
@@ -1543,32 +1673,30 @@ const OrdersTab = ({ orders, onRefresh }) => {
                       </div>
 
                       {/* Set Deposit */}
-                      {(!order.deposit_value || order.deposit_value === 0) && (
+                      {(!order.deposit_value || order.deposit_value === 0) && order.status === 'waiting_deposit' && (
                         <div className="bg-white p-3 rounded border mb-4">
                           <label className="block text-sm font-medium mb-2">Set Deposit Amount</label>
-                          {hasPendingPrice && (
-                            <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded flex items-start gap-2">
-                              <span className="text-yellow-600">⚠️</span>
-                              <p className="text-xs text-yellow-800">
-                                You must set all pending item prices before setting a deposit.
-                              </p>
-                            </div>
-                          )}
+                          <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded flex items-center gap-2">
+                            <span className="text-blue-600">ℹ️</span>
+                            <p className="text-xs text-blue-800">
+                              Setting a deposit will automatically move the order to <strong>Confirmed</strong> status.
+                            </p>
+                          </div>
                           <div className="flex gap-2">
                             <input
                               type="number"
                               min="0"
                               max={order.total_amount}
                               step="0.01"
-                              placeholder={hasPendingPrice ? "Set all prices first" : "Enter deposit amount"}
+                              placeholder="Enter deposit amount"
                               value={depositInput[order.id] || ''}
                               onChange={(e) => setDepositInput({ ...depositInput, [order.id]: e.target.value })}
-                              disabled={updatingOrderId === order.id || hasPendingPrice}
+                              disabled={updatingOrderId === order.id}
                               className="flex-1 px-3 py-2 border rounded focus:ring-2 focus:ring-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
                             />
                             <button
                               onClick={() => updateDeposit(order.id)}
-                              disabled={updatingOrderId === order.id || !depositInput[order.id] || hasPendingPrice}
+                              disabled={updatingOrderId === order.id || !depositInput[order.id]}
                               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               Set Deposit
@@ -1582,7 +1710,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
 
                       {/* Custom Item Price Setting */}
                       {order.order_items?.some(item => item.custom_order_type && item.price === null) && (
-                        <div className="bg-white p-3 rounded border">
+                        <div className="bg-white p-3 rounded border mb-4">
                           <label className="block text-sm font-medium mb-3">Set Custom Item Prices</label>
                           <div className="space-y-3">
                             {order.order_items
@@ -1624,6 +1752,41 @@ const OrdersTab = ({ orders, onRefresh }) => {
                           </div>
                         </div>
                       )}
+
+                      {/* Admin Note Section */}
+                      <div className="bg-white p-3 rounded border">
+                        <label className="text-sm font-medium mb-2 flex items-center gap-2">
+                          <span>📝</span>
+                          Admin Note
+                          {(order.status === 'cancelled' || order.status === 'done') && (
+                            <span className="text-xs text-red-600 font-normal">
+                              (Read-only - order is {order.status})
+                            </span>
+                          )}
+                        </label>
+                        <div className="space-y-2">
+                          <textarea
+                            rows="3"
+                            placeholder={order.status === 'cancelled' || order.status === 'done' 
+                              ? "Cannot edit admin note for completed or cancelled orders" 
+                              : "Add a note about this order..."}
+                            value={adminNoteInput[order.id] !== undefined ? adminNoteInput[order.id] : (order.admin_note || '')}
+                            onChange={(e) => setAdminNoteInput({ ...adminNoteInput, [order.id]: e.target.value })}
+                            disabled={updatingOrderId === order.id || order.status === 'cancelled' || order.status === 'done'}
+                            className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+                          />
+                          {order.status !== 'cancelled' && order.status !== 'done' && (
+                            <button
+                              onClick={() => updateAdminNote(order.id, order)}
+                              disabled={updatingOrderId === order.id}
+                              className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                              <FiSave />
+                              {order.admin_note ? 'Update Note' : 'Save Note'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
                         </div>
                       )}
                     </div>
