@@ -73,7 +73,10 @@ router.post('/',
           *,
           order_items (
             *,
-            products (*)
+            products (
+              *,
+              product_images (*)
+            )
           )
         `)
         .eq('id', order.id)
@@ -101,7 +104,10 @@ router.get('/',
           *,
           order_items (
             *,
-            products (*)
+            products (
+              *,
+              product_images (*)
+            )
           )
         `)
         .order('created_at', { ascending: false });
@@ -132,7 +138,10 @@ router.get('/:id',
           *,
           order_items (
             *,
-            products (*)
+            products (
+              *,
+              product_images (*)
+            )
           )
         `)
         .eq('id', req.params.id)
@@ -392,7 +401,10 @@ router.patch('/:id/custom-price',
           *,
           order_items (
             *,
-            products (*)
+            products (
+              *,
+              product_images (*)
+            )
           )
         `)
         .single();
@@ -487,7 +499,10 @@ router.patch('/:id/item-price',
           *,
           order_items (
             *,
-            products (*)
+            products (
+              *,
+              product_images (*)
+            )
           )
         `)
         .single();

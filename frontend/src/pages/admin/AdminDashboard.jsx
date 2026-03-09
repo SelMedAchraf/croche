@@ -1512,11 +1512,11 @@ const OrdersTab = ({ orders, onRefresh }) => {
                           ) : (
                             /* Regular Product Item - Enhanced Display */
                             <div className="flex items-center gap-4">
-                              {(item.product?.product_images?.[0]?.image_url || item.image_url) && (
-                                <div className="relative group cursor-pointer" onClick={() => setZoomedImage(item.product?.product_images?.[0]?.image_url || item.image_url)}>
+                              {(item.products?.product_images?.[0]?.image_url || item.image_url) && (
+                                <div className="relative group cursor-pointer" onClick={() => setZoomedImage(item.products?.product_images?.[0]?.image_url || item.image_url)}>
                                   <img 
-                                    src={item.product?.product_images?.[0]?.image_url || item.image_url} 
-                                    alt={item.product?.category || item.product?.name || 'Product'}
+                                    src={item.products?.product_images?.[0]?.image_url || item.image_url} 
+                                    alt={item.products?.category || 'Product'}
                                     className="w-20 h-20 object-cover rounded-lg shadow-md"
                                   />
                                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
@@ -1525,6 +1525,9 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                 </div>
                               )}
                               <div className="flex-grow">
+                                <h5 className="font-bold text-base mb-1">
+                                  {item.products?.category || 'Product'}
+                                </h5>
                                 <div className="flex items-center gap-4 text-sm text-text/60">
                                   <span>{item.quantity} × {item.price} DA</span>
                                 </div>
