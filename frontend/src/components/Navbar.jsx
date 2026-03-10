@@ -89,8 +89,8 @@ const Navbar = () => {
                 key={link.path}
                 to={link.path}
                 className={`text-sm font-medium transition-colors hover:text-primary ${location.pathname === link.path
-                    ? 'text-primary'
-                    : 'text-text'
+                  ? 'text-primary'
+                  : 'text-text'
                   }`}
               >
                 {link.label}
@@ -130,7 +130,9 @@ const Navbar = () => {
                       </div>
                     )}
                     <span className="text-sm font-medium hidden xl:block">
-                      {user.user_metadata?.full_name?.split(' ')[0] || 'User'}
+                      {user.user_metadata?.full_name?.split(' ')[0] ||
+                        (user.email?.includes('admin') ? 'Admin' : user.email?.split('@')[0]) ||
+                        'User'}
                     </span>
                   </div>
                   <button
@@ -184,8 +186,8 @@ const Navbar = () => {
                   to={link.path}
                   onClick={() => setIsMenuOpen(false)}
                   className={`block py-2 px-4 rounded-lg transition-colors ${location.pathname === link.path
-                      ? 'bg-primary text-white'
-                      : 'hover:bg-gray-100'
+                    ? 'bg-primary text-white'
+                    : 'hover:bg-gray-100'
                     }`}
                 >
                   {link.label}
@@ -203,7 +205,11 @@ const Navbar = () => {
                           <FiUser />
                         </div>
                       )}
-                      <span className="font-medium">{user.user_metadata?.full_name || 'User'}</span>
+                      <span className="font-medium">
+                        {user.user_metadata?.full_name ||
+                          (user.email?.includes('admin') ? 'Admin' : user.email?.split('@')[0]) ||
+                          'User'}
+                      </span>
                     </div>
                     <button
                       onClick={handleLogout}

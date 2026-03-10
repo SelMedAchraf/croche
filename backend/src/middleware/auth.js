@@ -16,6 +16,11 @@ export const authenticateAdmin = async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
+    // Google authenticated users are customers, not admins
+    if (user.app_metadata?.provider === 'google') {
+      return res.status(403).json({ error: 'Forbidden. Admin access only.' });
+    }
+
     // Attach user to request
     req.user = user;
     next();

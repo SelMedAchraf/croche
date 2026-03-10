@@ -45,6 +45,19 @@ const Checkout = () => {
       setCheckingAuth(false);
     };
     checkAuth();
+
+    // Listen for real-time auth changes (e.g., logging out while in the checkout page)
+    const { data } = authService.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        navigate('/cart');
+      }
+    });
+
+    return () => {
+      if (data?.subscription) {
+        data.subscription.unsubscribe();
+      }
+    };
   }, [navigate]);
 
   const handleChange = (e) => {

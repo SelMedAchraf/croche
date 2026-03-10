@@ -45,6 +45,13 @@ const AdminDashboard = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate('/admin/login');
+      return;
+    }
+
+    // Additional check: redirect strictly if it's a customer (Google user) trying to access the admin panel
+    if (session.user?.app_metadata?.provider === 'google') {
+      alert('Access Denied. You are logged in with a Customer Account, not an Admin account.');
+      navigate('/');
     }
   };
 
@@ -52,14 +59,19 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      
+
       // Get token from session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/admin/login');
         return;
       }
-      
+
+      if (session.user?.app_metadata?.provider === 'google') {
+        navigate('/');
+        return;
+      }
+
       const token = session.access_token;
       const config = {
         headers: { Authorization: `Bearer ${token}` }
@@ -220,11 +232,10 @@ const StatCard = ({ icon, title, value, color }) => (
 const TabButton = ({ active, onClick, icon, label }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors whitespace-nowrap ${
-      active
+    className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors whitespace-nowrap ${active
         ? 'text-primary border-b-2 border-primary'
         : 'text-text/60 hover:text-text'
-    }`}
+      }`}
   >
     {icon}
     {label}
@@ -333,7 +344,7 @@ const ProductsTab = ({ products, onRefresh }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       alert('Session expired. Please login again.');
@@ -341,7 +352,7 @@ const ProductsTab = ({ products, onRefresh }) => {
       return;
     }
     const token = session.access_token;
-    
+
     try {
       const imageUrl = await uploadImage();
       const productData = {
@@ -351,7 +362,7 @@ const ProductsTab = ({ products, onRefresh }) => {
       };
 
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      
+
       if (editingProduct) {
         // Update product
         await axios.put(
@@ -367,7 +378,7 @@ const ProductsTab = ({ products, onRefresh }) => {
             `${apiUrl}/products/${editingProduct.id}/images`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          
+
           // Add new image
           await axios.post(
             `${apiUrl}/products/${editingProduct.id}/images`,
@@ -396,9 +407,9 @@ const ProductsTab = ({ products, onRefresh }) => {
 
       setShowModal(false);
       setEditingProduct(null);
-      setFormData({ 
-        price: '', 
-        category: categories.length > 0 ? categories[0].name : '' 
+      setFormData({
+        price: '',
+        category: categories.length > 0 ? categories[0].name : ''
       });
       setSelectedImage(null);
       setImagePreview(null);
@@ -431,7 +442,7 @@ const ProductsTab = ({ products, onRefresh }) => {
         return;
       }
       const token = session.access_token;
-      
+
       try {
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
         await axios.delete(`${apiUrl}/products/${id}`, {
@@ -446,8 +457,8 @@ const ProductsTab = ({ products, onRefresh }) => {
   };
 
   // Filter products by category
-  const filteredProducts = categoryFilter === 'all' 
-    ? products 
+  const filteredProducts = categoryFilter === 'all'
+    ? products
     : products.filter(product => product.category === categoryFilter);
 
   return (
@@ -474,13 +485,13 @@ const ProductsTab = ({ products, onRefresh }) => {
               </svg>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => {
               setEditingProduct(null);
-              setFormData({ 
-                name: '', 
-                price: '', 
-                category: categories.length > 0 ? categories[0].name : '' 
+              setFormData({
+                name: '',
+                price: '',
+                category: categories.length > 0 ? categories[0].name : ''
               });
               setSelectedImage(null);
               setImagePreview(null);
@@ -503,8 +514,8 @@ const ProductsTab = ({ products, onRefresh }) => {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredProducts.map((product) => (
-            <div 
-              key={product.id} 
+            <div
+              key={product.id}
               className="group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100"
             >
               {/* Product Image */}
@@ -515,7 +526,7 @@ const ProductsTab = ({ products, onRefresh }) => {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 />
               </div>
-              
+
               {/* Product Info */}
               <div className="p-4">
                 <div className="flex justify-between items-center">
@@ -526,14 +537,14 @@ const ProductsTab = ({ products, onRefresh }) => {
 
               {/* Action Buttons - Show on hover */}
               <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <button 
+                <button
                   onClick={() => handleEdit(product)}
                   className="p-2 bg-white text-blue-600 hover:bg-blue-50 rounded-lg shadow-md transition-colors"
                   title="Edit product"
                 >
                   <FiEdit className="w-4 h-4" />
                 </button>
-                <button 
+                <button
                   onClick={() => handleDelete(product.id)}
                   className="p-2 bg-white text-red-600 hover:bg-red-50 rounded-lg shadow-md transition-colors"
                   title="Delete product"
@@ -592,11 +603,10 @@ const ProductsTab = ({ products, onRefresh }) => {
                 <label className="block text-sm font-medium mb-2">Image *</label>
                 {!imagePreview ? (
                   <div
-                    className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                      dragActive
+                    className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive
                         ? 'border-primary bg-primary/5'
                         : 'border-gray-300 hover:border-primary/50'
-                    }`}
+                      }`}
                     onDragEnter={handleDrag}
                     onDragLeave={handleDrag}
                     onDragOver={handleDrag}
@@ -649,10 +659,10 @@ const ProductsTab = ({ products, onRefresh }) => {
                   onClick={() => {
                     setShowModal(false);
                     setEditingProduct(null);
-                    setFormData({ 
-                      name: '', 
-                      price: '', 
-                      category: categories.length > 0 ? categories[0].name : '' 
+                    setFormData({
+                      name: '',
+                      price: '',
+                      category: categories.length > 0 ? categories[0].name : ''
                     });
                     setSelectedImage(null);
                     setImagePreview(null);
@@ -663,8 +673,8 @@ const ProductsTab = ({ products, onRefresh }) => {
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="flex-1 btn-primary"
                   disabled={uploading}
                 >
@@ -700,7 +710,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
   const toggleOrderManagement = (orderId) => {
     setExpandedOrderManagement(prev => ({ ...prev, [orderId]: !prev[orderId] }));
   };
-  
+
   const getStatusColor = (status) => {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-800',
@@ -965,12 +975,12 @@ const OrdersTab = ({ orders, onRefresh }) => {
   const filteredOrders = orders.filter(order => {
     // Status filter
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    
+
     // Search filter (customer name or phone)
-    const matchesSearch = searchTerm === '' || 
+    const matchesSearch = searchTerm === '' ||
       order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customer_phone?.includes(searchTerm);
-    
+
     return matchesStatus && matchesSearch;
   });
 
@@ -980,7 +990,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Orders Management</h2>
         </div>
-        
+
         {/* Filters Row */}
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search Input */}
@@ -1028,10 +1038,10 @@ const OrdersTab = ({ orders, onRefresh }) => {
               </svg>
             </div>
           </div>
-          
-          
+
+
         </div>
-        
+
         {/* Results Count */}
         {(statusFilter !== 'all' || searchTerm !== '') && (
           <div className="text-sm text-gray-600">
@@ -1050,10 +1060,10 @@ const OrdersTab = ({ orders, onRefresh }) => {
           {filteredOrders.map((order) => {
             const isExpanded = expandedOrder === order.id;
             const hasPendingPrice = order.order_items?.some(item => item.price === null);
-            
+
             return (
               <div key={order.id} className="bg-white">
-                <div 
+                <div
                   className={`p-5 cursor-pointer hover:bg-gray-50 transition-colors border-2 border-gray-300 ${isExpanded ? 'rounded-lg rounded-b-none' : 'rounded-lg'}`}
                   onClick={() => toggleOrderExpansion(order.id)}
                 >
@@ -1065,7 +1075,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                           Order
                         </h3>
                       </div>
-                      
+
                       {/* Info Cards Grid */}
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                         {/* Customer Name Card */}
@@ -1173,10 +1183,10 @@ const OrdersTab = ({ orders, onRefresh }) => {
                     <div className="text-right">
                       <span className="text-xs text-gray-500">Order Date</span>
                       <div className="text-sm font-semibold text-gray-700">
-                        {new Date(order.created_at).toLocaleDateString('en-GB', { 
-                          day: '2-digit', 
-                          month: 'short', 
-                          year: 'numeric' 
+                        {new Date(order.created_at).toLocaleDateString('en-GB', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric'
                         })}
                       </div>
                     </div>
@@ -1194,7 +1204,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                           {item.custom_order_type ? (
                             <div>
                               {/* Header - Clickable */}
-                              <div 
+                              <div
                                 className="flex items-start gap-4 mb-4 pb-4 border-b cursor-pointer hover:bg-gray-50/50 -m-4 p-4 rounded-t-xl transition-colors"
                                 onClick={() => toggleCustomDetails(order.id, idx)}
                               >
@@ -1205,8 +1215,8 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                 </div>
                                 <div className="flex-grow">
                                   <h5 className="font-bold text-lg mb-1">
-                                    {item.custom_order_type === 'custom_bouquet' 
-                                      ? 'Custom Flower Bouquet' 
+                                    {item.custom_order_type === 'custom_bouquet'
+                                      ? 'Custom Flower Bouquet'
                                       : 'Custom Crochet Request'}
                                   </h5>
                                   <p className="text-sm text-text/60 mb-2">
@@ -1247,8 +1257,8 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                                 <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                                                   {f.image_url && (
                                                     <div className="relative group cursor-pointer" onClick={() => setZoomedImage(f.image_url)}>
-                                                      <img 
-                                                        src={f.image_url} 
+                                                      <img
+                                                        src={f.image_url}
                                                         alt={f.name}
                                                         className="w-14 h-14 object-cover rounded-lg shadow-sm flex-shrink-0"
                                                       />
@@ -1285,8 +1295,8 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                                 <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                                                   {a.image_url && (
                                                     <div className="relative group cursor-pointer" onClick={() => setZoomedImage(a.image_url)}>
-                                                      <img 
-                                                        src={a.image_url} 
+                                                      <img
+                                                        src={a.image_url}
                                                         alt={a.name}
                                                         className="w-14 h-14 object-cover rounded-lg shadow-sm flex-shrink-0"
                                                       />
@@ -1334,8 +1344,8 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                             <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                                               {item.custom_data.wrapping.image_url && (
                                                 <div className="relative group cursor-pointer" onClick={() => setZoomedImage(item.custom_data.wrapping.image_url)}>
-                                                  <img 
-                                                    src={item.custom_data.wrapping.image_url} 
+                                                  <img
+                                                    src={item.custom_data.wrapping.image_url}
                                                     alt={item.custom_data.wrapping.name}
                                                     className="w-14 h-14 object-cover rounded-lg shadow-sm flex-shrink-0"
                                                   />
@@ -1368,8 +1378,8 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                                 <div key={i} className="bg-white p-2 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                                                   {color.image_url ? (
                                                     <div className="relative group cursor-pointer" onClick={() => setZoomedImage(color.image_url)}>
-                                                      <img 
-                                                        src={color.image_url} 
+                                                      <img
+                                                        src={color.image_url}
                                                         alt={color.name || 'Color'}
                                                         className="w-full h-16 object-cover rounded-lg mb-1.5"
                                                       />
@@ -1378,7 +1388,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                                       </div>
                                                     </div>
                                                   ) : (
-                                                    <div 
+                                                    <div
                                                       className="w-full h-16 rounded-lg mb-1.5"
                                                       style={{ backgroundColor: color.id || color }}
                                                     />
@@ -1403,9 +1413,9 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                                 const imgUrl = typeof img === 'string' ? img : img.url || img.image_url;
                                                 return (
                                                   <div key={imgIdx} className="relative group cursor-pointer" onClick={() => setZoomedImage(imgUrl)}>
-                                                    <img 
-                                                      src={imgUrl} 
-                                                      alt={`Reference ${imgIdx + 1}`} 
+                                                    <img
+                                                      src={imgUrl}
+                                                      alt={`Reference ${imgIdx + 1}`}
                                                       className="w-full h-64 object-cover rounded-lg shadow-md"
                                                     />
                                                     <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-xs font-medium">
@@ -1447,9 +1457,9 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                                 const imgUrl = typeof img === 'string' ? img : img.url || img.image_url;
                                                 return (
                                                   <div key={imgIdx} className="relative group cursor-pointer" onClick={() => setZoomedImage(imgUrl)}>
-                                                    <img 
-                                                      src={imgUrl} 
-                                                      alt={`Reference ${imgIdx + 1}`} 
+                                                    <img
+                                                      src={imgUrl}
+                                                      alt={`Reference ${imgIdx + 1}`}
                                                       className="w-full h-64 object-cover rounded-lg shadow-md"
                                                     />
                                                     <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-xs font-medium">
@@ -1465,7 +1475,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                           </div>
                                         )}
                                       </div>
-                                      
+
                                       {/* Right Column: Selected Colors */}
                                       <div className="space-y-4">
                                         {item.custom_data.colors && item.custom_data.colors.length > 0 && (
@@ -1478,8 +1488,8 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                                 <div key={i} className="bg-white p-2 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                                                   {color.image_url ? (
                                                     <div className="relative group cursor-pointer" onClick={() => setZoomedImage(color.image_url)}>
-                                                      <img 
-                                                        src={color.image_url} 
+                                                      <img
+                                                        src={color.image_url}
                                                         alt={color.name || 'Color'}
                                                         className="w-full h-16 object-cover rounded-lg mb-1.5"
                                                       />
@@ -1488,7 +1498,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                                       </div>
                                                     </div>
                                                   ) : (
-                                                    <div 
+                                                    <div
                                                       className="w-full h-16 rounded-lg mb-1.5"
                                                       style={{ backgroundColor: color.id || color }}
                                                     />
@@ -1502,7 +1512,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
                                           </div>
                                         )}
 
-                                        
+
                                       </div>
                                     </>
                                   )}
@@ -1514,8 +1524,8 @@ const OrdersTab = ({ orders, onRefresh }) => {
                             <div className="flex items-center gap-4">
                               {(item.products?.product_images?.[0]?.image_url || item.image_url) && (
                                 <div className="relative group cursor-pointer" onClick={() => setZoomedImage(item.products?.product_images?.[0]?.image_url || item.image_url)}>
-                                  <img 
-                                    src={item.products?.product_images?.[0]?.image_url || item.image_url} 
+                                  <img
+                                    src={item.products?.product_images?.[0]?.image_url || item.image_url}
                                     alt={item.products?.category || 'Product'}
                                     className="w-20 h-20 object-cover rounded-lg shadow-md"
                                   />
@@ -1545,7 +1555,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
 
                     {/* Order Lifecycle Management Panel */}
                     <div className="mt-6 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border-2 border-primary/20">
-                      <div 
+                      <div
                         className="p-4 cursor-pointer hover:bg-primary/5 rounded-t-lg transition-colors"
                         onClick={() => toggleOrderManagement(order.id)}
                       >
@@ -1561,235 +1571,235 @@ const OrdersTab = ({ orders, onRefresh }) => {
                       {expandedOrderManagement[order.id] && (
                         <div className="p-4 pt-0">
 
-                      {/* Order State & Financial Overview */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        {/* Order State Actions */}
-                        <div className="bg-white p-4 rounded border">
-                          <div className="flex items-center justify-between mb-3">
-                            <label className="text-sm font-medium">Order State Management</label>
-                            <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getOrderStateColor(order.status || 'pending')}`}>
-                              {formatOrderState(order.status || 'pending')}
-                            </span>
-                          </div>
+                          {/* Order State & Financial Overview */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            {/* Order State Actions */}
+                            <div className="bg-white p-4 rounded border">
+                              <div className="flex items-center justify-between mb-3">
+                                <label className="text-sm font-medium">Order State Management</label>
+                                <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getOrderStateColor(order.status || 'pending')}`}>
+                                  {formatOrderState(order.status || 'pending')}
+                                </span>
+                              </div>
 
-                          {/* Action Buttons */}
-                          {(order.status !== 'done' && order.status !== 'cancelled') && (
-                            <div className="space-y-2">
-                              <p className="text-xs text-gray-600 mb-2">Available Actions:</p>
-                              
-                              {/* Waiting Deposit Info Message */}
-                              {order.status === 'waiting_deposit' && getNextStates(order.status).length === 0 && (
-                                <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                                  <p className="text-sm font-medium text-blue-800">
-                                    💰 Awaiting Deposit
+                              {/* Action Buttons */}
+                              {(order.status !== 'done' && order.status !== 'cancelled') && (
+                                <div className="space-y-2">
+                                  <p className="text-xs text-gray-600 mb-2">Available Actions:</p>
+
+                                  {/* Waiting Deposit Info Message */}
+                                  {order.status === 'waiting_deposit' && getNextStates(order.status).length === 0 && (
+                                    <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                                      <p className="text-sm font-medium text-blue-800">
+                                        💰 Awaiting Deposit
+                                      </p>
+                                      <p className="text-xs mt-1 text-blue-600">
+                                        Use the deposit section below to set the deposit amount and automatically confirm this order.
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  {/* Next State Buttons */}
+                                  {getNextStates(order.status || 'pending').map((nextState) => {
+                                    // Check if button should be disabled based on validation rules
+                                    const isDisabled = (() => {
+                                      if (order.status === 'pending' && nextState === 'waiting_deposit') {
+                                        return hasPendingPrice;
+                                      }
+                                      return false;
+                                    })();
+
+                                    return (
+                                      <div key={nextState}>
+                                        <button
+                                          onClick={() => updateOrderState(order.id, nextState, order)}
+                                          disabled={updatingOrderId === order.id || isDisabled}
+                                          className={`w-full px-4 py-2.5 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${getStateButtonStyle(nextState)} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                        >
+                                          <span>{getStateIcon(nextState)}</span>
+                                          <span>Move to {formatOrderState(nextState)}</span>
+                                        </button>
+                                        {isDisabled && (
+                                          <p className="text-xs text-red-600 mt-1 ml-1">
+                                            {order.status === 'pending' && nextState === 'waiting_deposit'
+                                              ? '⚠️ Set all pending prices first'
+                                              : ''}
+                                          </p>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+
+                                  {/* Cancel Button - Always available except for done state */}
+                                  <button
+                                    onClick={() => {
+                                      if (confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+                                        updateOrderState(order.id, 'cancelled', order);
+                                      }
+                                    }}
+                                    disabled={updatingOrderId === order.id}
+                                    className="w-full px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-red-600"
+                                  >
+                                    <span>❌</span>
+                                    <span>Cancel Order</span>
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* Final State Message */}
+                              {(order.status === 'done' || order.status === 'cancelled') && (
+                                <div className={`p-3 rounded-lg ${order.status === 'done' ? 'bg-teal-50 border border-teal-200' : 'bg-red-50 border border-red-200'}`}>
+                                  <p className={`text-sm font-medium ${order.status === 'done' ? 'text-teal-800' : 'text-red-800'}`}>
+                                    {order.status === 'done' ? '✅ Order completed' : '❌ Order cancelled'}
                                   </p>
-                                  <p className="text-xs mt-1 text-blue-600">
-                                    Use the deposit section below to set the deposit amount and automatically confirm this order.
+                                  <p className={`text-xs mt-1 ${order.status === 'done' ? 'text-teal-600' : 'text-red-600'}`}>
+                                    This is a final state. No further actions available.
                                   </p>
                                 </div>
                               )}
-                              
-                              {/* Next State Buttons */}
-                              {getNextStates(order.status || 'pending').map((nextState) => {
-                                // Check if button should be disabled based on validation rules
-                                const isDisabled = (() => {
-                                  if (order.status === 'pending' && nextState === 'waiting_deposit') {
-                                    return hasPendingPrice;
-                                  }
-                                  return false;
-                                })();
-
-                                return (
-                                  <div key={nextState}>
-                                    <button
-                                      onClick={() => updateOrderState(order.id, nextState, order)}
-                                      disabled={updatingOrderId === order.id || isDisabled}
-                                      className={`w-full px-4 py-2.5 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${getStateButtonStyle(nextState)} disabled:opacity-50 disabled:cursor-not-allowed`}
-                                    >
-                                      <span>{getStateIcon(nextState)}</span>
-                                      <span>Move to {formatOrderState(nextState)}</span>
-                                    </button>
-                                    {isDisabled && (
-                                      <p className="text-xs text-red-600 mt-1 ml-1">
-                                        {order.status === 'pending' && nextState === 'waiting_deposit' 
-                                          ? '⚠️ Set all pending prices first'
-                                          : ''}
-                                      </p>
-                                    )}
-                                  </div>
-                                );
-                              })}
-
-                              {/* Cancel Button - Always available except for done state */}
-                              <button
-                                onClick={() => {
-                                  if (confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
-                                    updateOrderState(order.id, 'cancelled', order);
-                                  }
-                                }}
-                                disabled={updatingOrderId === order.id}
-                                className="w-full px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-red-600"
-                              >
-                                <span>❌</span>
-                                <span>Cancel Order</span>
-                              </button>
                             </div>
-                          )}
 
-                          {/* Final State Message */}
-                          {(order.status === 'done' || order.status === 'cancelled') && (
-                            <div className={`p-3 rounded-lg ${order.status === 'done' ? 'bg-teal-50 border border-teal-200' : 'bg-red-50 border border-red-200'}`}>
-                              <p className={`text-sm font-medium ${order.status === 'done' ? 'text-teal-800' : 'text-red-800'}`}>
-                                {order.status === 'done' ? '✅ Order completed' : '❌ Order cancelled'}
-                              </p>
-                              <p className={`text-xs mt-1 ${order.status === 'done' ? 'text-teal-600' : 'text-red-600'}`}>
-                                This is a final state. No further actions available.
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Financial Summary */}
-                        <div className="bg-white p-3 rounded border">
-                          <label className="block text-sm font-medium mb-2">Financial Status</label>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-text/60">Total Amount:</span>
-                              <span className="font-semibold">{order.total_amount || 0} DA</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-text/60">Deposit Paid:</span>
-                              <span className="font-semibold text-green-600">
-                                {order.deposit_value || 0} DA
-                              </span>
-                            </div>
-                            <div className="flex justify-between pt-2 border-t">
-                              <span className="font-medium">Remaining:</span>
-                              <span className="font-bold text-red-600">
-                                {(order.remaining_balance !== null && order.remaining_balance !== undefined) 
-                                  ? `${order.remaining_balance} DA`
-                                  : `${(order.total_amount || 0) - (order.deposit_value || 0)} DA`}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Set Deposit */}
-                      {(!order.deposit_value || order.deposit_value === 0) && order.status === 'waiting_deposit' && (
-                        <div className="bg-white p-3 rounded border mb-4">
-                          <label className="block text-sm font-medium mb-2">Set Deposit Amount</label>
-                          <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded flex items-center gap-2">
-                            <span className="text-blue-600">ℹ️</span>
-                            <p className="text-xs text-blue-800">
-                              Setting a deposit will automatically move the order to <strong>Confirmed</strong> status.
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              min="0"
-                              max={order.total_amount}
-                              step="0.01"
-                              placeholder="Enter deposit amount"
-                              value={depositInput[order.id] || ''}
-                              onChange={(e) => setDepositInput({ ...depositInput, [order.id]: e.target.value })}
-                              disabled={updatingOrderId === order.id}
-                              className="flex-1 px-3 py-2 border rounded focus:ring-2 focus:ring-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
-                            />
-                            <button
-                              onClick={() => updateDeposit(order.id)}
-                              disabled={updatingOrderId === order.id || !depositInput[order.id]}
-                              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              Set Deposit
-                            </button>
-                          </div>
-                          <p className="text-xs text-text/60 mt-1">
-                            Maximum: {order.total_amount} DA
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Custom Item Price Setting */}
-                      {order.order_items?.some(item => item.custom_order_type && item.price === null) && (
-                        <div className="bg-white p-3 rounded border mb-4">
-                          <label className="block text-sm font-medium mb-3">Set Custom Item Prices</label>
-                          <div className="space-y-3">
-                            {order.order_items
-                              .filter(item => item.custom_order_type && item.price === null)
-                              .map(item => (
-                                <div key={item.id} className="flex items-start gap-3 p-2 bg-yellow-50 rounded">
-                                  <div className="flex-1">
-                                    <p className="font-medium text-sm">
-                                      {item.custom_order_type === 'custom_bouquet' 
-                                        ? '🌹 Custom Flower Bouquet' 
-                                        : '🧶 Custom Crochet Request'}
-                                    </p>
-                                    <p className="text-xs text-text/60 mt-1">
-                                      ⚠️ Price not set - please contact customer and set price
-                                    </p>
-                                  </div>
-                                  <div className="flex gap-2 items-center">
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      placeholder="Price"
-                                      value={itemPriceInput[item.id] || ''}
-                                      onChange={(e) => setItemPriceInput({ ...itemPriceInput, [item.id]: e.target.value })}
-                                      disabled={updatingOrderId === order.id}
-                                      className="w-32 px-3 py-1 text-sm border rounded focus:ring-2 focus:ring-primary"
-                                    />
-                                    <span className="text-sm text-text/60">DA</span>
-                                    <button
-                                      onClick={() => updateItemPrice(order.id, item.id)}
-                                      disabled={updatingOrderId === order.id || !itemPriceInput[item.id]}
-                                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                      Set Price
-                                    </button>
-                                  </div>
+                            {/* Financial Summary */}
+                            <div className="bg-white p-3 rounded border">
+                              <label className="block text-sm font-medium mb-2">Financial Status</label>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-text/60">Total Amount:</span>
+                                  <span className="font-semibold">{order.total_amount || 0} DA</span>
                                 </div>
-                              ))}
+                                <div className="flex justify-between">
+                                  <span className="text-text/60">Deposit Paid:</span>
+                                  <span className="font-semibold text-green-600">
+                                    {order.deposit_value || 0} DA
+                                  </span>
+                                </div>
+                                <div className="flex justify-between pt-2 border-t">
+                                  <span className="font-medium">Remaining:</span>
+                                  <span className="font-bold text-red-600">
+                                    {(order.remaining_balance !== null && order.remaining_balance !== undefined)
+                                      ? `${order.remaining_balance} DA`
+                                      : `${(order.total_amount || 0) - (order.deposit_value || 0)} DA`}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      )}
 
-                      {/* Admin Note Section */}
-                      <div className="bg-white p-3 rounded border">
-                        <label className="text-sm font-medium mb-2 flex items-center gap-2">
-                          <span>📝</span>
-                          Admin Note
-                          {(order.status === 'cancelled' || order.status === 'done') && (
-                            <span className="text-xs text-red-600 font-normal">
-                              (Read-only - order is {order.status})
-                            </span>
+                          {/* Set Deposit */}
+                          {(!order.deposit_value || order.deposit_value === 0) && order.status === 'waiting_deposit' && (
+                            <div className="bg-white p-3 rounded border mb-4">
+                              <label className="block text-sm font-medium mb-2">Set Deposit Amount</label>
+                              <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded flex items-center gap-2">
+                                <span className="text-blue-600">ℹ️</span>
+                                <p className="text-xs text-blue-800">
+                                  Setting a deposit will automatically move the order to <strong>Confirmed</strong> status.
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max={order.total_amount}
+                                  step="0.01"
+                                  placeholder="Enter deposit amount"
+                                  value={depositInput[order.id] || ''}
+                                  onChange={(e) => setDepositInput({ ...depositInput, [order.id]: e.target.value })}
+                                  disabled={updatingOrderId === order.id}
+                                  className="flex-1 px-3 py-2 border rounded focus:ring-2 focus:ring-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                />
+                                <button
+                                  onClick={() => updateDeposit(order.id)}
+                                  disabled={updatingOrderId === order.id || !depositInput[order.id]}
+                                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  Set Deposit
+                                </button>
+                              </div>
+                              <p className="text-xs text-text/60 mt-1">
+                                Maximum: {order.total_amount} DA
+                              </p>
+                            </div>
                           )}
-                        </label>
-                        <div className="space-y-2">
-                          <textarea
-                            rows="3"
-                            placeholder={order.status === 'cancelled' || order.status === 'done' 
-                              ? "Cannot edit admin note for completed or cancelled orders" 
-                              : "Add a note about this order..."}
-                            value={adminNoteInput[order.id] !== undefined ? adminNoteInput[order.id] : (order.admin_note || '')}
-                            onChange={(e) => setAdminNoteInput({ ...adminNoteInput, [order.id]: e.target.value })}
-                            disabled={updatingOrderId === order.id || order.status === 'cancelled' || order.status === 'done'}
-                            className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
-                          />
-                          {order.status !== 'cancelled' && order.status !== 'done' && (
-                            <button
-                              onClick={() => updateAdminNote(order.id, order)}
-                              disabled={updatingOrderId === order.id}
-                              className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                            >
-                              <FiSave />
-                              {order.admin_note ? 'Update Note' : 'Save Note'}
-                            </button>
+
+                          {/* Custom Item Price Setting */}
+                          {order.order_items?.some(item => item.custom_order_type && item.price === null) && (
+                            <div className="bg-white p-3 rounded border mb-4">
+                              <label className="block text-sm font-medium mb-3">Set Custom Item Prices</label>
+                              <div className="space-y-3">
+                                {order.order_items
+                                  .filter(item => item.custom_order_type && item.price === null)
+                                  .map(item => (
+                                    <div key={item.id} className="flex items-start gap-3 p-2 bg-yellow-50 rounded">
+                                      <div className="flex-1">
+                                        <p className="font-medium text-sm">
+                                          {item.custom_order_type === 'custom_bouquet'
+                                            ? '🌹 Custom Flower Bouquet'
+                                            : '🧶 Custom Crochet Request'}
+                                        </p>
+                                        <p className="text-xs text-text/60 mt-1">
+                                          ⚠️ Price not set - please contact customer and set price
+                                        </p>
+                                      </div>
+                                      <div className="flex gap-2 items-center">
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          placeholder="Price"
+                                          value={itemPriceInput[item.id] || ''}
+                                          onChange={(e) => setItemPriceInput({ ...itemPriceInput, [item.id]: e.target.value })}
+                                          disabled={updatingOrderId === order.id}
+                                          className="w-32 px-3 py-1 text-sm border rounded focus:ring-2 focus:ring-primary"
+                                        />
+                                        <span className="text-sm text-text/60">DA</span>
+                                        <button
+                                          onClick={() => updateItemPrice(order.id, item.id)}
+                                          disabled={updatingOrderId === order.id || !itemPriceInput[item.id]}
+                                          className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                          Set Price
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
                           )}
-                        </div>
-                      </div>
+
+                          {/* Admin Note Section */}
+                          <div className="bg-white p-3 rounded border">
+                            <label className="text-sm font-medium mb-2 flex items-center gap-2">
+                              <span>📝</span>
+                              Admin Note
+                              {(order.status === 'cancelled' || order.status === 'done') && (
+                                <span className="text-xs text-red-600 font-normal">
+                                  (Read-only - order is {order.status})
+                                </span>
+                              )}
+                            </label>
+                            <div className="space-y-2">
+                              <textarea
+                                rows="3"
+                                placeholder={order.status === 'cancelled' || order.status === 'done'
+                                  ? "Cannot edit admin note for completed or cancelled orders"
+                                  : "Add a note about this order..."}
+                                value={adminNoteInput[order.id] !== undefined ? adminNoteInput[order.id] : (order.admin_note || '')}
+                                onChange={(e) => setAdminNoteInput({ ...adminNoteInput, [order.id]: e.target.value })}
+                                disabled={updatingOrderId === order.id || order.status === 'cancelled' || order.status === 'done'}
+                                className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+                              />
+                              {order.status !== 'cancelled' && order.status !== 'done' && (
+                                <button
+                                  onClick={() => updateAdminNote(order.id, order)}
+                                  disabled={updatingOrderId === order.id}
+                                  className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                  <FiSave />
+                                  {order.admin_note ? 'Update Note' : 'Save Note'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1802,7 +1812,7 @@ const OrdersTab = ({ orders, onRefresh }) => {
       )}
 
       {/* Image Zoom Modal */}
-      <ImageZoomModal 
+      <ImageZoomModal
         imageUrl={zoomedImage}
         onClose={() => setZoomedImage(null)}
       />
@@ -1819,7 +1829,7 @@ const CategoriesTab = ({ onRefresh }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Get token from session
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -1828,7 +1838,7 @@ const CategoriesTab = ({ onRefresh }) => {
       return;
     }
     const token = session.access_token;
-    
+
     try {
       if (editingCategory) {
         await updateCategory(editingCategory.id, formData, token);
@@ -1861,7 +1871,7 @@ const CategoriesTab = ({ onRefresh }) => {
         return;
       }
       const token = session.access_token;
-      
+
       try {
         await deleteCategory(id, token);
       } catch (error) {
@@ -1874,7 +1884,7 @@ const CategoriesTab = ({ onRefresh }) => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Product Categories Management</h2>
-        <button 
+        <button
           onClick={() => {
             setEditingCategory(null);
             setFormData({ name: '' });
@@ -2062,7 +2072,7 @@ const ItemsTab = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Get token from session
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -2071,11 +2081,11 @@ const ItemsTab = () => {
       return;
     }
     const token = session.access_token;
-    
+
     try {
       const imageUrl = await uploadImage();
       const dataToSubmit = { ...formData, image_url: imageUrl };
-      
+
       if (editingItem) {
         await updateItem(editingItem.id, dataToSubmit, token);
       } else {
@@ -2116,7 +2126,7 @@ const ItemsTab = () => {
         return;
       }
       const token = session.access_token;
-      
+
       try {
         await deleteItem(id, token);
       } catch (error) {
@@ -2126,8 +2136,8 @@ const ItemsTab = () => {
   };
 
   // Filter items by category
-  const filteredItems = categoryFilter === 'all' 
-    ? items 
+  const filteredItems = categoryFilter === 'all'
+    ? items
     : items.filter(item => item.category === categoryFilter);
 
   return (
@@ -2152,7 +2162,7 @@ const ItemsTab = () => {
               </svg>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => {
               setEditingItem(null);
               setFormData({ name: '', category: 'flower', image_url: '', price: '' });
@@ -2179,8 +2189,8 @@ const ItemsTab = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredItems.map((item) => (
-            <div 
-              key={item.id} 
+            <div
+              key={item.id}
               className="group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100"
             >
               {/* Item Image */}
@@ -2191,7 +2201,7 @@ const ItemsTab = () => {
                   className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-200"
                 />
               </div>
-              
+
               {/* Item Info */}
               <div className="p-4">
                 <div className="flex justify-between items-start mb-1">
@@ -2205,14 +2215,14 @@ const ItemsTab = () => {
 
               {/* Action Buttons - Show on hover */}
               <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <button 
+                <button
                   onClick={() => handleEdit(item)}
                   className="p-2 bg-white text-blue-600 hover:bg-blue-50 rounded-lg shadow-md transition-colors"
                   title="Edit item"
                 >
                   <FiEdit className="w-4 h-4" />
                 </button>
-                <button 
+                <button
                   onClick={() => handleDelete(item.id)}
                   className="p-2 bg-white text-red-600 hover:bg-red-50 rounded-lg shadow-md transition-colors"
                   title="Delete item"
@@ -2267,11 +2277,10 @@ const ItemsTab = () => {
                 <label className="block text-sm font-medium mb-2">Image *</label>
                 {!imagePreview ? (
                   <div
-                    className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                      dragActive
+                    className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive
                         ? 'border-primary bg-primary/5'
                         : 'border-gray-300 hover:border-primary/50'
-                    }`}
+                      }`}
                     onDragEnter={handleDrag}
                     onDragLeave={handleDrag}
                     onDragOver={handleDrag}
@@ -2390,7 +2399,7 @@ const DeliveryPricesTab = () => {
       return;
     }
     const token = session.access_token;
-    
+
     try {
       await updateDeliveryPrice(id, editForm, token);
       setEditingId(null);
@@ -2492,7 +2501,7 @@ const ColorsTab = () => {
   const { colors, loading, createColor, updateColor, deleteColor, refetch } = useColors(
     filter === 'all' ? null : filter
   );
-  
+
   const [showModal, setShowModal] = useState(false);
   const [editingColor, setEditingColor] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -2574,7 +2583,7 @@ const ColorsTab = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       alert('Session expired. Please login again.');
@@ -2582,20 +2591,20 @@ const ColorsTab = () => {
       return;
     }
     const token = session.access_token;
-    
+
     try {
       const imageUrl = await uploadImage();
-      
+
       if (!imageUrl) {
         alert('Please select an image');
         return;
       }
-      
+
       if (!formData.name || !formData.name.trim()) {
         alert('Please enter a color name');
         return;
       }
-      
+
       const colorData = {
         name: formData.name.trim(),
         image_url: imageUrl,
@@ -2607,7 +2616,7 @@ const ColorsTab = () => {
       } else {
         await createColor(colorData, token);
       }
-      
+
       setShowModal(false);
       setEditingColor(null);
       setFormData({ name: '', available: true });
@@ -2638,7 +2647,7 @@ const ColorsTab = () => {
         return;
       }
       const token = session.access_token;
-      
+
       try {
         await deleteColor(id, token);
       } catch (error) {
@@ -2674,7 +2683,7 @@ const ColorsTab = () => {
               </svg>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => {
               setEditingColor(null);
               setFormData({ name: '', available: true });
@@ -2713,19 +2722,18 @@ const ColorsTab = () => {
                   alt={color.name}
                   className="w-full h-full object-cover"
                 />
-                
+
                 {/* Color Name */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
                   <p className="text-white font-medium text-sm truncate">{color.name}</p>
                 </div>
-                
+
                 {/* Availability Badge */}
                 <div className="absolute top-2 left-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    color.available 
-                      ? 'bg-green-100 text-green-700' 
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${color.available
+                      ? 'bg-green-100 text-green-700'
                       : 'bg-red-100 text-red-700'
-                  }`}>
+                    }`}>
                     {color.available ? 'Available' : 'Unavailable'}
                   </span>
                 </div>
@@ -2763,7 +2771,7 @@ const ColorsTab = () => {
               <h3 className="text-xl font-semibold mb-4">
                 {editingColor ? 'Edit Color' : 'Add New Color'}
               </h3>
-              
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Color Name */}
                 <div>
@@ -2785,7 +2793,7 @@ const ColorsTab = () => {
                   <label className="block text-sm font-medium text-text/70 mb-2">
                     Color Image *
                   </label>
-                  
+
                   {imagePreview ? (
                     <div className="relative">
                       <img
@@ -2807,11 +2815,10 @@ const ColorsTab = () => {
                       onDragLeave={handleDrag}
                       onDragOver={handleDrag}
                       onDrop={handleDrop}
-                      className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                        dragActive 
-                          ? 'border-primary bg-primary/5' 
+                      className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive
+                          ? 'border-primary bg-primary/5'
                           : 'border-gray-300 hover:border-primary'
-                      }`}
+                        }`}
                     >
                       <FiUpload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                       <p className="text-sm text-text/60 mb-2">
@@ -2847,14 +2854,12 @@ const ColorsTab = () => {
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, available: !formData.available })}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      formData.available ? 'bg-green-500' : 'bg-gray-300'
-                    }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.available ? 'bg-green-500' : 'bg-gray-300'
+                      }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        formData.available ? 'translate-x-6' : 'translate-x-1'
-                      }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.available ? 'translate-x-6' : 'translate-x-1'
+                        }`}
                     />
                   </button>
                 </div>

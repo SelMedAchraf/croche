@@ -2,6 +2,7 @@ import express from 'express';
 import { supabase } from '../config/supabase.js';
 import { authenticateAdmin } from '../middleware/auth.js';
 import { body, validationResult } from 'express-validator';
+import { sendNewOrderNotification, sendCustomerOrderConfirmation } from '../utils/emailService.js';
 
 const router = express.Router();
 
@@ -85,6 +86,10 @@ router.post('/',
         .single();
 
       if (fetchError) throw fetchError;
+
+      // Trigger Email Notifications (non-blocking)
+      sendNewOrderNotification(completeOrder).catch(console.error);
+      sendCustomerOrderConfirmation(completeOrder).catch(console.error);
 
       res.status(201).json(completeOrder);
     } catch (error) {
