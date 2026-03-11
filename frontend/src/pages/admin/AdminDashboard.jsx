@@ -843,7 +843,6 @@ const OrdersTab = ({ orders, onRefresh }) => {
       }
 
       await onRefresh();
-      alert('Order status updated successfully!');
     } catch (error) {
       console.error('Error updating order status:', error);
       alert(error.message || 'Failed to update order status');
@@ -876,7 +875,6 @@ const OrdersTab = ({ orders, onRefresh }) => {
       }
 
       await onRefresh();
-      alert(requested ? 'Cancellation requested tagged.' : 'Cancellation request removed. Order is now active again.');
     } catch (error) {
       console.error('Error updating cancel request status:', error);
       alert(error.message || 'Failed to update cancel request status');

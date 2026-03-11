@@ -71,7 +71,6 @@ const MyOrders = () => {
 
             if (response.data) {
                 setOrders(prev => prev.map(o => o.id === orderId ? response.data : o));
-                alert('Order successfully cancelled.');
             }
         } catch (error) {
             console.error('Error cancelling order:', error);
@@ -94,7 +93,6 @@ const MyOrders = () => {
 
             if (response.data) {
                 setOrders(prev => prev.map(o => o.id === orderId ? response.data : o));
-                alert('Cancellation request submitted successfully.');
             }
         } catch (error) {
             console.error('Error requesting cancellation:', error);

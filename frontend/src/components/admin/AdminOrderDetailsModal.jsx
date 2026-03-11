@@ -98,7 +98,6 @@ const AdminOrderDetailsModal = ({ order: initialOrder, isOpen, onClose, onRefres
 
             await onRefresh();
             setDepositInput('');
-            alert('Deposit set successfully and order status updated to Confirmed!');
             onClose();
         } catch (error) {
             console.error('Error setting deposit:', error);
@@ -141,8 +140,6 @@ const AdminOrderDetailsModal = ({ order: initialOrder, isOpen, onClose, onRefres
 
             // Refresh parent data in background
             onRefresh();
-
-            alert('Admin note updated successfully!');
         } catch (error) {
             console.error('Error updating admin note:', error);
             alert(error.message || 'Failed to update admin note');
@@ -197,9 +194,6 @@ const AdminOrderDetailsModal = ({ order: initialOrder, isOpen, onClose, onRefres
 
             // Refresh parent data in background
             onRefresh();
-
-            // Show success message
-            alert('Price set successfully!');
         } catch (error) {
             console.error('Error setting price:', error);
             alert(error.message || 'Failed to set price');

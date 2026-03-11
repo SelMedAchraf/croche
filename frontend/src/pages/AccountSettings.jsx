@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiUser, FiMail, FiPhone, FiLock, FiCheckCircle, FiMapPin, FiSave, FiKey } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiLock, FiCheckCircle, FiMapPin, FiSave, FiKey, FiEye, FiEyeOff } from 'react-icons/fi';
 import axios from 'axios';
 import { supabase } from '../config/supabase';
 import { authService } from '../services/authService';
@@ -28,6 +28,8 @@ const AccountSettings = () => {
     const [verificationCode, setVerificationCode] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -306,27 +308,49 @@ const AccountSettings = () => {
                                             <label className="block text-sm font-medium text-text mb-2">
                                                 New Password
                                             </label>
-                                            <input
-                                                type="password"
-                                                value={newPassword}
-                                                onChange={(e) => setNewPassword(e.target.value)}
-                                                required
-                                                className="input-field"
-                                                placeholder="••••••••"
-                                            />
+                                            <div className="relative">
+                                                <input
+                                                    type={showNewPassword ? 'text' : 'password'}
+                                                    value={newPassword}
+                                                    onChange={(e) => setNewPassword(e.target.value)}
+                                                    required
+                                                    className="input-field pr-11"
+                                                    placeholder="••••••••"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowNewPassword(v => !v)}
+                                                    className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                                    tabIndex={-1}
+                                                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                                                >
+                                                    {showNewPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                                                </button>
+                                            </div>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-text mb-2">
                                                 Confirm New Password
                                             </label>
-                                            <input
-                                                type="password"
-                                                value={confirmPassword}
-                                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                                required
-                                                className="input-field"
-                                                placeholder="••••••••"
-                                            />
+                                            <div className="relative">
+                                                <input
+                                                    type={showConfirmPassword ? 'text' : 'password'}
+                                                    value={confirmPassword}
+                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                    required
+                                                    className="input-field pr-11"
+                                                    placeholder="••••••••"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowConfirmPassword(v => !v)}
+                                                    className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                                    tabIndex={-1}
+                                                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                                                >
+                                                    {showConfirmPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                                                </button>
+                                            </div>
                                         </div>
                                         <button
                                             type="submit"
