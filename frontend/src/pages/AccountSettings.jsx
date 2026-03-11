@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FiUser, FiMail, FiPhone, FiLock, FiCheckCircle, FiMapPin, FiSave, FiKey, FiEye, FiEyeOff } from 'react-icons/fi';
 import axios from 'axios';

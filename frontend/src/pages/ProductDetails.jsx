@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiShoppingCart, FiHeart, FiZoomIn, FiX } from 'react-icons/fi';
+import { FiShoppingCart, FiZoomIn, FiX } from 'react-icons/fi';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
 

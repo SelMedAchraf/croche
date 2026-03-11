@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { FiClock, FiCheckCircle, FiInfo, FiTruck, FiXCircle } from 'react-icons/fi';
+import { FiClock, FiInfo, FiTruck, FiXCircle } from 'react-icons/fi';
 
 const OrderCard = ({ order, onCancel, onRequestCancel, onViewDetails }) => {
     const { t } = useTranslation();
