@@ -49,7 +49,7 @@ export const CartProvider = ({ children }) => {
       return [...prevItems, { ...product, quantity, selectedColor }];
     });
 
-    toast.success(`${product.name} added to cart!`, {
+    toast.success(`${product.category} added to cart!`, {
       description: quantity > 1 ? `${quantity} items added` : 'Product successfully added',
       duration: 3000,
     });

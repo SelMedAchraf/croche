@@ -389,54 +389,6 @@ router.patch('/:id/status',
   }
 );
 
-// ============================================================
-// LIFECYCLE MANAGEMENT ENDPOINTS
-// ============================================================
-
-// Update order status (admin only)
-router.patch('/:id/state',
-  authenticateAdmin,
-  async (req, res) => {
-    try {
-      const { status } = req.body;
-
-      const validStatuses = [
-        'pending',
-        'waiting_deposit',
-        'confirmed',
-        'in_progress',
-        'ready_for_delivery',
-        'delivered',
-        'cancelled'
-      ];
-
-      if (!validStatuses.includes(status)) {
-        return res.status(400).json({ 
-          error: 'Invalid order status',
-          validStatuses 
-        });
-      }
-
-      const { data, error } = await supabase
-        .from('orders')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', req.params.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (!data) {
-        return res.status(404).json({ error: 'Order not found' });
-      }
-
-      res.json(data);
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      res.status(500).json({ error: 'Failed to update order status' });
-    }
-  }
-);
-
 // Set deposit value (admin only)
 router.patch('/:id/deposit',
   authenticateAdmin,

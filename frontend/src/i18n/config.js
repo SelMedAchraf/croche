@@ -37,7 +37,6 @@ const resources = {
       products: {
         title: 'Our Products',
         all: 'All Products',
-        search: 'Search products...',
         filter: 'Filter by Category',
         addToCart: 'Add to Cart',
         outOfStock: 'Out of Stock',

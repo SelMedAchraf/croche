@@ -9,12 +9,14 @@ const Products = () => {
   const { t } = useTranslation();
   const { addToCart } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   useEffect(() => {
     fetchCategories();
@@ -25,7 +27,7 @@ const Products = () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const response = await axios.get(`${apiUrl}/categories`);
-      
+
       // Build categories array with "All" option first
       const categoriesData = [
         { value: 'all', label: t('products.categories.all') },
@@ -44,6 +46,7 @@ const Products = () => {
 
   useEffect(() => {
     filterProducts();
+    setCurrentPage(1); // Reset to first page when category changes
   }, [products, selectedCategory]);
 
   const fetchProducts = async () => {
@@ -68,6 +71,17 @@ const Products = () => {
     }
 
     setFilteredProducts(filtered);
+  };
+
+  // Pagination logic
+  const indexOfLastProduct = currentPage * itemsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCategoryChange = (category) => {
@@ -102,11 +116,10 @@ const Products = () => {
               <button
                 key={category.value}
                 onClick={() => handleCategoryChange(category.value)}
-                className={`px-6 py-2 rounded-full font-medium transition-all ${
-                  selectedCategory === category.value
-                    ? 'bg-primary text-white shadow-lg'
-                    : 'bg-white text-text hover:bg-gray-100'
-                }`}
+                className={`px-6 py-2 rounded-full font-medium transition-all ${selectedCategory === category.value
+                  ? 'bg-primary text-white shadow-lg'
+                  : 'bg-white text-text hover:bg-gray-100'
+                  }`}
               >
                 {category.label}
               </button>
@@ -128,23 +141,57 @@ const Products = () => {
               </div>
             ))}
           </div>
-        ) : filteredProducts.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-          >
-            {filteredProducts.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <ProductCard product={product} addToCart={addToCart} />
-              </motion.div>
-            ))}
-          </motion.div>
+        ) : currentProducts.length > 0 ? (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
+              {currentProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: (index % 8) * 0.05 }}
+                >
+                  <ProductCard product={product} addToCart={addToCart} />
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-16 gap-2">
+                <button
+                  onClick={() => paginate(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-lg border border-primary/20 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => paginate(i + 1)}
+                    className={`w-10 h-10 rounded-lg transition-all ${currentPage === i + 1
+                      ? 'bg-primary text-white shadow-lg'
+                      : 'border border-primary/20 hover:bg-primary/5'
+                      }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 rounded-lg border border-primary/20 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🔍</div>
@@ -191,7 +238,7 @@ const ProductCard = ({ product, addToCart }) => {
           </div>
         )}
       </div>
-      
+
       <div className="p-4 flex-grow flex flex-col">
         {product.colors && product.colors.length > 0 && (
           <div className="flex gap-2 mb-3">
@@ -210,7 +257,7 @@ const ProductCard = ({ product, addToCart }) => {
             )}
           </div>
         )}
-        
+
         <div className="mt-auto">
           <div className="flex items-center justify-between mb-3">
             <span className="text-primary font-bold text-xl">
@@ -220,7 +267,7 @@ const ProductCard = ({ product, addToCart }) => {
               {product.category}
             </span>
           </div>
-          
+
           <button
             onClick={handleAddToCart}
             className="w-full py-2 rounded-lg font-medium transition-all bg-primary text-white hover:bg-highlight hover:shadow-lg"

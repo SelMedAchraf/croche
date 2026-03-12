@@ -51,7 +51,7 @@ const Contact = () => {
       setSubmitted(true);
       setTimeout(() => {
         setSubmitted(false);
-        setFormData({ name: '', email: '', message: '' });
+        setFormData(prev => ({ ...prev, message: '' }));
       }, 5000);
     } catch (err) {
       console.error('Error submitting contact form:', err);

@@ -406,7 +406,6 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                           <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-primary/5 relative overflow-hidden group hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all">
                             <div className="absolute top-0 left-0 w-1 h-full bg-pink-400"></div>
                             <h3 className="text-xl font-display font-bold mb-5 flex items-center gap-3 text-text">
-                              <span className="text-2xl bg-pink-50 p-2 rounded-xl">🌸</span>
                               Selected Flowers
                             </h3>
                             <div className="space-y-4">
@@ -447,7 +446,6 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                           <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-primary/5 relative overflow-hidden group hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all">
                             <div className="absolute top-0 left-0 w-1 h-full bg-purple-400"></div>
                             <h3 className="text-xl font-display font-bold mb-4 flex items-center gap-3 text-text">
-                              <span className="text-2xl bg-purple-50 p-2 rounded-xl">🎁</span>
                               Wrapping
                             </h3>
                             <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
@@ -478,7 +476,6 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                           <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-primary/5 relative overflow-hidden group hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all">
                             <div className="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>
                             <h3 className="text-xl font-display font-bold mb-5 flex items-center gap-3 text-text">
-                              <span className="text-2xl bg-yellow-50 p-2 rounded-xl">✨</span>
                               Accessories
                             </h3>
                             <div className="space-y-4">
@@ -521,7 +518,6 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                           <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-primary/5 relative overflow-hidden group hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all">
                             <div className="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
                             <h3 className="text-xl font-display font-bold mb-4 flex items-center gap-3 text-text">
-                              <span className="text-2xl bg-blue-50 p-2 rounded-xl">📸</span>
                               Inspiration Images
                             </h3>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -545,7 +541,6 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                         <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-primary/5 relative overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all">
                           <div className="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
                           <h3 className="text-xl font-display font-bold mb-4 flex items-center gap-3 text-text">
-                            <span className="text-2xl bg-orange-50 p-2 rounded-xl">✍️</span>
                             Details
                           </h3>
                           <div className="space-y-4 flex flex-col">
@@ -587,7 +582,7 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                     {selectedColorObjects.length > 0 && (
                       <div className="bg-white rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-primary/5">
                         <h3 className="text-lg font-display font-bold mb-4 flex items-center gap-2 text-text">
-                          <span className="text-xl">🎨</span> Colors
+                          Colors
                         </h3>
                         <div className="grid grid-cols-3 gap-2">
                           {selectedColorObjects.map(color => (
@@ -612,17 +607,17 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                     {isBouquet && order.referenceImageUrl && (
                       <div className="bg-white rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-primary/5 relative overflow-hidden group hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all">
                         <h3 className="text-lg font-display font-bold mb-3 flex items-center gap-2 text-text">
-                          <span className="text-xl">📸</span> Reference
+                          Reference Image
                         </h3>
-                        <div className="rounded-xl overflow-hidden shadow-inner border border-gray-100 bg-gray-50 p-2 relative group/ref cursor-pointer" onClick={() => onZoomImage(order.referenceImageUrl)}>
+                        <div className="rounded-2xl overflow-hidden relative group/ref cursor-pointer shadow-md" onClick={() => onZoomImage(order.referenceImageUrl)}>
                           <img
                             src={order.referenceImageUrl}
                             alt="Reference"
-                            className="w-full h-32 object-contain rounded-lg group-hover/ref:scale-[1.02] transition-transform duration-500"
+                            className="w-full h-44 object-cover group-hover/ref:scale-110 transition-transform duration-500"
                           />
-                          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/ref:opacity-100 transition-opacity rounded-xl flex items-center justify-center pointer-events-none">
-                            <div className="bg-white/90 p-2 rounded-full shadow-lg">
-                              <FiZoomIn className="w-4 h-4 text-text" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/ref:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                            <div className="bg-black/20 backdrop-blur-sm p-3 rounded-full border border-white/30">
+                              <FiZoomIn className="w-6 h-6 text-white" />
                             </div>
                           </div>
                         </div>
@@ -633,7 +628,7 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                     {isBouquet && order.customData?.description && (
                       <div className="bg-white rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-primary/5">
                         <h3 className="text-lg font-display font-bold mb-3 flex items-center gap-2 text-text">
-                          <span className="text-xl">✍️</span> Notes
+                          Notes
                         </h3>
                         <div className="bg-orange-50/50 rounded-xl p-3 border border-orange-100/50">
                           <p className="text-text/80 text-xs leading-relaxed whitespace-pre-wrap italic">

@@ -5,7 +5,6 @@ import { authService } from '../services/authService';
 import OrderTable from '../components/orders/OrderTable';
 import OrderDetailsModal from '../components/orders/OrderDetailsModal';
 import { FiSearch, FiChevronDown, FiShoppingBag, FiPackage } from 'react-icons/fi';
-// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 
 const MyOrders = () => {

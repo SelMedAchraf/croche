@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiCheck, FiChevronLeft, FiChevronRight, FiShoppingCart,
-  FiUpload, FiX, FiPlus, FiMinus
+  FiUpload, FiX, FiPlus, FiMinus, FiZoomIn, FiSearch
 } from 'react-icons/fi';
 import { useItems } from '../hooks/useItems';
 import { useColors } from '../hooks/useColors';
@@ -14,10 +14,17 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const CustomOrders = () => {
-  const [selectedOption, setSelectedOption] = useState(null);
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedOption = searchParams.get('type');
+  const [previewImage, setPreviewImage] = useState(null);
 
   const handleReset = () => {
-    setSelectedOption(null);
+    if (selectedOption) {
+      navigate(-1);
+    } else {
+      setSearchParams({});
+    }
   };
 
   return (
@@ -38,12 +45,17 @@ const CustomOrders = () => {
         </motion.div>
 
         {!selectedOption ? (
-          <OptionSelection onSelectOption={setSelectedOption} />
+          <OptionSelection onSelectOption={(id) => setSearchParams({ type: id, step: '1' })} />
         ) : selectedOption === 'bouquet' ? (
-          <CustomFlowerBouquet onBack={handleReset} />
+          <CustomFlowerBouquet onBack={handleReset} onPreviewImage={setPreviewImage} />
         ) : (
-          <CustomCrochetRequest onBack={handleReset} />
+          <CustomCrochetRequest onBack={handleReset} onPreviewImage={setPreviewImage} />
         )}
+
+        <ImageModal
+          image={previewImage}
+          onClose={() => setPreviewImage(null)}
+        />
       </div>
     </div>
   );
@@ -130,12 +142,54 @@ const OptionSelection = ({ onSelectOption }) => {
   );
 };
 
+// Image Modal Component
+const ImageModal = ({ image, onClose }) => {
+  if (!image) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/90 z-[110] flex items-center justify-center p-4 backdrop-blur-sm cursor-pointer"
+        onClick={onClose}
+      >
+        <button
+          className="absolute top-4 right-4 text-white bg-white/20 p-3 rounded-full hover:bg-white/30 transition-colors shadow-lg"
+          onClick={onClose}
+        >
+          <FiX className="w-6 h-6" />
+        </button>
+        <img
+          src={image}
+          alt="Zoomed"
+          className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        />
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 // Custom Flower Bouquet Component
-const CustomFlowerBouquet = ({ onBack }) => {
+const CustomFlowerBouquet = ({ onBack, onPreviewImage }) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentStep = parseInt(searchParams.get('step') || '1');
   const { addToCart } = useCart();
   const { colors } = useColors();
-  const [currentStep, setCurrentStep] = useState(1);
+  const scrollRef = useRef(null);
+  const [isAdding, setIsAdding] = useState(false);
+
+  const updateStep = (newStep) => {
+    setSearchParams(prev => {
+      const params = new URLSearchParams(prev);
+      params.set('step', newStep.toString());
+      return params;
+    });
+  };
+
   const [bouquetData, setBouquetData] = useState({
     flowers: {},
     colors: [],
@@ -145,9 +199,17 @@ const CustomFlowerBouquet = ({ onBack }) => {
     description: ''
   });
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      const yOffset = -100;
+      const y = scrollRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  }, [currentStep]);
+
   const steps = [
     { number: 1, title: 'Select Flowers' },
-    { number: 2, title: 'Choose Colors' },
+    { number: 2, title: 'Select Colors' },
     { number: 3, title: 'Pick Wrapping' },
     { number: 4, title: 'Add Accessories' },
     { number: 5, title: 'Reference Image' },
@@ -156,14 +218,42 @@ const CustomFlowerBouquet = ({ onBack }) => {
   ];
 
   const handleNext = () => {
-    if (currentStep < 7) setCurrentStep(currentStep + 1);
+    if (currentStep < 7) updateStep(currentStep + 1);
   };
 
   const handleBack = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
+    if (currentStep > 1) {
+      navigate(-1);
+    } else {
+      onBack();
+    }
   };
 
+  const isStepValid = (stepNumber) => {
+    switch (stepNumber) {
+      case 1: return Object.keys(bouquetData.flowers).length > 0;
+      case 2: return bouquetData.colors.length > 0;
+      case 3: return bouquetData.wrapping !== null;
+      case 4: return true;
+      case 5: return true;
+      case 6: return bouquetData.description.trim().length > 0;
+      default: return true;
+    }
+  };
+
+  useEffect(() => {
+    if (currentStep > 1) {
+      for (let i = 1; i < currentStep; i++) {
+        if (!isStepValid(i)) {
+          updateStep(i);
+          break;
+        }
+      }
+    }
+  }, [currentStep, bouquetData]);
+
   const handleAddToCart = async () => {
+    setIsAdding(true);
     // Upload reference image if exists
     let referenceImageUrl = null;
     if (bouquetData.referenceImage) {
@@ -229,20 +319,11 @@ const CustomFlowerBouquet = ({ onBack }) => {
     };
 
     addToCart(customOrder);
+    setIsAdding(false);
     navigate('/cart');
   };
 
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1: return Object.keys(bouquetData.flowers).length > 0;
-      case 2: return bouquetData.colors.length > 0;
-      case 3: return bouquetData.wrapping !== null;
-      case 4: return true; // Accessories are optional
-      case 5: return true; // Reference image is optional
-      case 6: return bouquetData.description.trim().length > 0; // Description is required
-      default: return true;
-    }
-  };
+  const canProceed = () => isStepValid(currentStep);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -258,13 +339,14 @@ const CustomFlowerBouquet = ({ onBack }) => {
       <Stepper steps={steps} currentStep={currentStep} />
 
       {/* Step Content */}
-      <div className="mt-8">
+      <div className="mt-8" ref={scrollRef}>
         <AnimatePresence mode="wait">
           {currentStep === 1 && (
             <FlowerSelection
               key="step1"
               selectedFlowers={bouquetData.flowers}
               onUpdateFlowers={(flowers) => setBouquetData({ ...bouquetData, flowers })}
+              onPreviewImage={onPreviewImage}
             />
           )}
           {currentStep === 2 && (
@@ -272,6 +354,7 @@ const CustomFlowerBouquet = ({ onBack }) => {
               key="step2"
               selectedColors={bouquetData.colors}
               onUpdateColors={(colors) => setBouquetData({ ...bouquetData, colors })}
+              onPreviewImage={onPreviewImage}
             />
           )}
           {currentStep === 3 && (
@@ -279,6 +362,7 @@ const CustomFlowerBouquet = ({ onBack }) => {
               key="step3"
               selectedWrapping={bouquetData.wrapping}
               onSelectWrapping={(wrapping) => setBouquetData({ ...bouquetData, wrapping })}
+              onPreviewImage={onPreviewImage}
             />
           )}
           {currentStep === 4 && (
@@ -286,6 +370,7 @@ const CustomFlowerBouquet = ({ onBack }) => {
               key="step4"
               selectedAccessories={bouquetData.accessories}
               onUpdateAccessories={(accessories) => setBouquetData({ ...bouquetData, accessories })}
+              onPreviewImage={onPreviewImage}
             />
           )}
           {currentStep === 5 && (
@@ -331,9 +416,19 @@ const CustomFlowerBouquet = ({ onBack }) => {
         ) : (
           <button
             onClick={handleAddToCart}
-            className="btn-primary flex items-center gap-2"
+            disabled={isAdding}
+            className={`btn-primary flex items-center gap-2 ${isAdding ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            <FiShoppingCart /> Add to Cart
+            {isAdding ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Adding...
+              </>
+            ) : (
+              <>
+                <FiShoppingCart /> Add to Cart
+              </>
+            )}
           </button>
         )}
       </div>
@@ -342,16 +437,36 @@ const CustomFlowerBouquet = ({ onBack }) => {
 };
 
 // Custom Crochet Request Component
-const CustomCrochetRequest = ({ onBack }) => {
+const CustomCrochetRequest = ({ onBack, onPreviewImage }) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentStep = parseInt(searchParams.get('step') || '1');
   const { addToCart } = useCart();
   const { colors } = useColors();
-  const [currentStep, setCurrentStep] = useState(1);
+  const scrollRef = useRef(null);
+  const [isAdding, setIsAdding] = useState(false);
+
+  const updateStep = (newStep) => {
+    setSearchParams(prev => {
+      const params = new URLSearchParams(prev);
+      params.set('step', newStep.toString());
+      return params;
+    });
+  };
+
   const [requestData, setRequestData] = useState({
     referenceImages: [],
     colors: [],
     description: ''
   });
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      const yOffset = -100;
+      const y = scrollRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  }, [currentStep]);
 
   const steps = [
     { number: 1, title: 'Upload Reference' },
@@ -361,14 +476,40 @@ const CustomCrochetRequest = ({ onBack }) => {
   ];
 
   const handleNext = () => {
-    if (currentStep < 4) setCurrentStep(currentStep + 1);
+    if (currentStep < 4) updateStep(currentStep + 1);
   };
 
   const handleBack = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
+    if (currentStep > 1) {
+      navigate(-1);
+    } else {
+      onBack();
+    }
   };
 
+  const isStepValid = (stepNumber) => {
+    switch (stepNumber) {
+      case 1: return requestData.referenceImages.length > 0;
+      case 2: return requestData.colors.length > 0;
+      case 3: return requestData.description.trim() !== '';
+      default: return true;
+    }
+  };
+
+  // Validation guard: ensure user can't skip ahead via URL or browser forward
+  useEffect(() => {
+    if (currentStep > 1) {
+      for (let i = 1; i < currentStep; i++) {
+        if (!isStepValid(i)) {
+          updateStep(i);
+          break;
+        }
+      }
+    }
+  }, [currentStep, requestData]);
+
   const handleAddToCart = async () => {
+    setIsAdding(true);
     // Upload reference images
     const referenceImageUrls = [];
     for (const image of requestData.referenceImages) {
@@ -405,17 +546,11 @@ const CustomCrochetRequest = ({ onBack }) => {
     };
 
     addToCart(customOrder);
+    setIsAdding(false);
     navigate('/cart');
   };
 
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1: return requestData.referenceImages.length > 0;
-      case 2: return requestData.colors.length > 0;
-      case 3: return requestData.description.trim() !== '';
-      default: return true;
-    }
-  };
+  const canProceed = () => isStepValid(currentStep);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -431,7 +566,7 @@ const CustomCrochetRequest = ({ onBack }) => {
       <Stepper steps={steps} currentStep={currentStep} />
 
       {/* Step Content */}
-      <div className="mt-8">
+      <div className="mt-8" ref={scrollRef}>
         <AnimatePresence mode="wait">
           {currentStep === 1 && (
             <ReferenceImagesUpload
@@ -445,6 +580,7 @@ const CustomCrochetRequest = ({ onBack }) => {
               key="step2"
               selectedColors={requestData.colors}
               onUpdateColors={(colors) => setRequestData({ ...requestData, colors })}
+              onPreviewImage={onPreviewImage}
             />
           )}
           {currentStep === 3 && (
@@ -483,9 +619,19 @@ const CustomCrochetRequest = ({ onBack }) => {
         ) : (
           <button
             onClick={handleAddToCart}
-            className="btn-primary flex items-center gap-2"
+            disabled={isAdding}
+            className={`btn-primary flex items-center gap-2 ${isAdding ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            <FiShoppingCart /> Add to Cart
+            {isAdding ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Adding...
+              </>
+            ) : (
+              <>
+                <FiShoppingCart /> Add to Cart
+              </>
+            )}
           </button>
         )}
       </div>
@@ -526,9 +672,22 @@ const Stepper = ({ steps, currentStep }) => {
 };
 
 // Flower Selection Component
-const FlowerSelection = ({ selectedFlowers, onUpdateFlowers }) => {
+const FlowerSelection = ({ selectedFlowers, onUpdateFlowers, onPreviewImage }) => {
   const { items, loading } = useItems();
-  const flowers = items.filter(item => item.category === 'flower');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  const flowers = items.filter(item =>
+    item.category === 'flower' &&
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Pagination logic
+  const totalPages = Math.ceil(flowers.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = flowers.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleAdd = (flower) => {
     const updated = { ...selectedFlowers };
@@ -556,40 +715,267 @@ const FlowerSelection = ({ selectedFlowers, onUpdateFlowers }) => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
     >
-      <h2 className="text-3xl font-display font-bold text-primary mb-6">
-        🌸 Select Your Flowers
-      </h2>
-      <p className="text-text/70 mb-8">
-        Choose the flowers you'd like in your custom bouquet and specify quantities
-      </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-3xl font-display font-bold text-primary mb-2">
+            Select Your Flowers
+          </h2>
+          <p className="text-text/70">
+            Choose the flowers you'd like in your custom bouquet
+          </p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative w-full md:w-64">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text/40" />
+          <input
+            type="text"
+            placeholder="Search flowers..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1); // Reset to first page on search
+            }}
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          />
+        </div>
+      </div>
 
       {loading ? (
-        <div className="text-center py-12">Loading flowers...</div>
-      ) : flowers.length === 0 ? (
-        <div className="text-center py-12 text-text/60">No flowers available</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {flowers.map((flower) => (
-            <ItemCard
-              key={flower.id}
-              item={flower}
-              quantity={selectedFlowers[flower.id]?.quantity || 0}
-              onAdd={() => handleAdd(flower)}
-              onRemove={() => handleRemove(flower.id)}
-            />
-          ))}
+        <div className="text-center py-12">
+          <div className="inline-block w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
+          <p className="text-text/60">Loading flowers...</p>
         </div>
+      ) : flowers.length === 0 ? (
+        <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+          <div className="text-5xl mb-4">🌸</div>
+          <p className="text-text/60 font-medium">No flowers found matching your search</p>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="text-primary hover:underline mt-2 font-medium"
+          >
+            Clear search
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentItems.map((flower) => (
+              <ItemCard
+                key={flower.id}
+                item={flower}
+                quantity={selectedFlowers[flower.id]?.quantity || 0}
+                onAdd={() => handleAdd(flower)}
+                onRemove={() => handleRemove(flower.id)}
+                onPreview={() => onPreviewImage(flower.image_url)}
+              />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-10">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-lg transition-all ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
+              >
+                <FiChevronLeft className="w-6 h-6" />
+              </button>
+
+              <div className="flex gap-1">
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-10 h-10 rounded-lg font-medium transition-all ${currentPage === i + 1 ? 'bg-primary text-white' : 'text-text/70 hover:bg-primary/5'}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-lg transition-all ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
+              >
+                <FiChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </motion.div>
+  );
+};
+
+// Wrapping Selection Component
+const WrappingSelection = ({ selectedWrapping, onSelectWrapping, onPreviewImage }) => {
+  const { items, loading } = useItems();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  const wrappingOptions = items.filter(item =>
+    item.category === 'packaging' &&
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Pagination logic
+  const totalPages = Math.ceil(wrappingOptions.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = wrappingOptions.slice(indexOfFirstItem, indexOfLastItem);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+    >
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-3xl font-display font-bold text-primary mb-2">
+            Pick Your Wrapping
+          </h2>
+          <p className="text-text/70">
+            Choose how you'd like your bouquet wrapped
+          </p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative w-full md:w-64">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text/40" />
+          <input
+            type="text"
+            placeholder="Search wrapping..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          />
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="inline-block w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
+          <p className="text-text/60">Loading wrapping options...</p>
+        </div>
+      ) : wrappingOptions.length === 0 ? (
+        <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+          <div className="text-5xl mb-4">🎁</div>
+          <p className="text-text/60 font-medium">No wrapping found matching your search</p>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="text-primary hover:underline mt-2 font-medium"
+          >
+            Clear search
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentItems.map((wrapping) => (
+              <div
+                key={wrapping.id}
+                onClick={() => onSelectWrapping(wrapping)}
+                className={`card overflow-hidden cursor-pointer transition-all ${selectedWrapping?.id === wrapping.id
+                  ? 'ring-2 ring-primary shadow-lg'
+                  : 'hover:shadow-md'
+                  }`}
+              >
+                <div
+                  className="relative h-48 group cursor-zoom-in overflow-hidden"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPreviewImage(wrapping.image_url);
+                  }}
+                >
+                  <img
+                    src={wrapping.image_url}
+                    alt={wrapping.name}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <FiZoomIn className="text-white w-8 h-8" />
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold mb-2">{wrapping.name}</h3>
+                  <p className="text-sm text-text/60 mb-3 line-clamp-2">{wrapping.description}</p>
+                  <p className="font-bold text-primary text-lg">{wrapping.price} DA</p>
+                  {selectedWrapping?.id === wrapping.id && (
+                    <div className="flex justify-center mt-3">
+                      <div className="bg-primary text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                        <FiCheck /> Selected
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-10">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-lg transition-all ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
+              >
+                <FiChevronLeft className="w-6 h-6" />
+              </button>
+
+              <div className="flex gap-1">
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-10 h-10 rounded-lg font-medium transition-all ${currentPage === i + 1 ? 'bg-primary text-white' : 'text-text/70 hover:bg-primary/5'}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-lg transition-all ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
+              >
+                <FiChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+          )}
+        </>
       )}
     </motion.div>
   );
 };
 
 // Color Selection Component
-const ColorSelection = ({ selectedColors, onUpdateColors }) => {
+const ColorSelection = ({ selectedColors, onUpdateColors, onPreviewImage }) => {
   const { colors, loading } = useColors();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
-  // Filter to show only available colors
-  const availableColors = colors.filter(color => color.available);
+  // Filter to show only available colors matching search
+  const filteredColors = colors.filter(color =>
+    color.available &&
+    color.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredColors.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredColors.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleToggleColor = (colorId) => {
     if (selectedColors.includes(colorId)) {
@@ -605,90 +991,80 @@ const ColorSelection = ({ selectedColors, onUpdateColors }) => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
     >
-      <h2 className="text-3xl font-display font-bold text-primary mb-6">
-        🎨 Choose Colors
-      </h2>
-      <p className="text-text/70 mb-8">
-        Select one or more colors for your custom order
-      </p>
-
-      {loading ? (
-        <div className="text-center py-12">Loading colors...</div>
-      ) : availableColors.length === 0 ? (
-        <div className="text-center py-12 text-text/60">No colors available</div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {availableColors.map((color) => (
-            <div
-              key={color.id}
-              onClick={() => handleToggleColor(color.id)}
-              className={`card p-4 cursor-pointer transition-all ${selectedColors.includes(color.id)
-                ? 'ring-2 ring-primary shadow-lg'
-                : 'hover:shadow-md'
-                }`}
-            >
-              <img
-                src={color.image_url}
-                alt={color.name}
-                className="w-full h-24 rounded-lg mb-3 object-cover"
-              />
-              <p className="text-center font-medium">{color.name}</p>
-              {selectedColors.includes(color.id) && (
-                <div className="flex justify-center mt-2">
-                  <FiCheck className="text-primary" />
-                </div>
-              )}
-            </div>
-          ))}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-3xl font-display font-bold text-primary mb-2">
+            Select Colors
+          </h2>
+          <p className="text-text/70">
+            Select one or more colors for your custom order
+          </p>
         </div>
-      )}
-    </motion.div>
-  );
-};
 
-// Wrapping Selection Component
-const WrappingSelection = ({ selectedWrapping, onSelectWrapping }) => {
-  const { items, loading } = useItems();
-  const wrappingOptions = items.filter(item => item.category === 'packaging');
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-    >
-      <h2 className="text-3xl font-display font-bold text-primary mb-6">
-        📦 Pick Your Wrapping
-      </h2>
-      <p className="text-text/70 mb-8">
-        Choose how you'd like your bouquet wrapped
-      </p>
+        {/* Search Bar */}
+        <div className="relative w-full md:w-64">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text/40" />
+          <input
+            type="text"
+            placeholder="Search colors..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          />
+        </div>
+      </div>
 
       {loading ? (
-        <div className="text-center py-12">Loading wrapping options...</div>
-      ) : wrappingOptions.length === 0 ? (
-        <div className="text-center py-12 text-text/60">No wrapping options available</div>
+        <div className="text-center py-12">
+          <div className="inline-block w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
+          <p className="text-text/60">Loading colors...</p>
+        </div>
+      ) : filteredColors.length === 0 ? (
+        <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+          <div className="text-5xl mb-4">🎨</div>
+          <p className="text-text/60 font-medium">No colors found matching your search</p>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="text-primary hover:underline mt-2 font-medium"
+          >
+            Clear search
+          </button>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {wrappingOptions.map((wrapping) => (
-            <div
-              key={wrapping.id}
-              onClick={() => onSelectWrapping(wrapping)}
-              className={`card overflow-hidden cursor-pointer transition-all ${selectedWrapping?.id === wrapping.id
-                ? 'ring-2 ring-primary shadow-lg'
-                : 'hover:shadow-md'
-                }`}
-            >
-              <img
-                src={wrapping.image_url}
-                alt={wrapping.name}
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4">
-                <h3 className="font-semibold mb-2">{wrapping.name}</h3>
-                <p className="text-sm text-text/60 mb-3">{wrapping.description}</p>
-                <p className="font-bold text-primary text-lg">{wrapping.price} DA</p>
-                {selectedWrapping?.id === wrapping.id && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {currentItems.map((color) => (
+              <div
+                key={color.id}
+                onClick={() => handleToggleColor(color.id)}
+                className={`card p-4 transition-all cursor-pointer ${selectedColors.includes(color.id)
+                  ? 'ring-2 ring-primary shadow-lg'
+                  : 'hover:shadow-md'
+                  }`}
+              >
+                <div
+                  className="relative group cursor-zoom-in overflow-hidden rounded-lg mb-3"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPreviewImage(color.image_url);
+                  }}
+                >
+                  <img
+                    src={color.image_url}
+                    alt={color.name}
+                    className="w-full h-24 object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <FiZoomIn className="text-white w-6 h-6" />
+                  </div>
+                </div>
+                <div className="text-center font-medium">
+                  {color.name}
+                </div>
+                {selectedColors.includes(color.id) && (
                   <div className="flex justify-center mt-3">
                     <div className="bg-primary text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
                       <FiCheck /> Selected
@@ -696,18 +1072,64 @@ const WrappingSelection = ({ selectedWrapping, onSelectWrapping }) => {
                   </div>
                 )}
               </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-10">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-lg transition-all ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
+              >
+                <FiChevronLeft className="w-6 h-6" />
+              </button>
+
+              <div className="flex gap-1">
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-10 h-10 rounded-lg font-medium transition-all ${currentPage === i + 1 ? 'bg-primary text-white' : 'text-text/70 hover:bg-primary/5'}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-lg transition-all ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
+              >
+                <FiChevronRight className="w-6 h-6" />
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </motion.div>
   );
 };
 
 // Accessory Selection Component
-const AccessorySelection = ({ selectedAccessories, onUpdateAccessories }) => {
+const AccessorySelection = ({ selectedAccessories, onUpdateAccessories, onPreviewImage }) => {
   const { items, loading } = useItems();
-  const accessories = items.filter(item => item.category === 'accessory');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  const accessories = items.filter(item =>
+    item.category === 'accessory' &&
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Pagination logic
+  const totalPages = Math.ceil(accessories.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = accessories.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleAdd = (accessory) => {
     const updated = { ...selectedAccessories };
@@ -735,29 +1157,96 @@ const AccessorySelection = ({ selectedAccessories, onUpdateAccessories }) => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
     >
-      <h2 className="text-3xl font-display font-bold text-primary mb-6">
-        ✨ Add Accessories (Optional)
-      </h2>
-      <p className="text-text/70 mb-8">
-        Enhance your bouquet with special accessories
-      </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-3xl font-display font-bold text-primary mb-2">
+            Add Accessories (Optional)
+          </h2>
+          <p className="text-text/70">
+            Enhance your bouquet with special accessories
+          </p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative w-full md:w-64">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text/40" />
+          <input
+            type="text"
+            placeholder="Search accessories..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          />
+        </div>
+      </div>
 
       {loading ? (
-        <div className="text-center py-12">Loading accessories...</div>
-      ) : accessories.length === 0 ? (
-        <div className="text-center py-12 text-text/60">No accessories available</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {accessories.map((accessory) => (
-            <ItemCard
-              key={accessory.id}
-              item={accessory}
-              quantity={selectedAccessories[accessory.id]?.quantity || 0}
-              onAdd={() => handleAdd(accessory)}
-              onRemove={() => handleRemove(accessory.id)}
-            />
-          ))}
+        <div className="text-center py-12">
+          <div className="inline-block w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
+          <p className="text-text/60">Loading accessories...</p>
         </div>
+      ) : accessories.length === 0 ? (
+        <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+          <div className="text-5xl mb-4">🎀</div>
+          <p className="text-text/60 font-medium">No accessories found matching your search</p>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="text-primary hover:underline mt-2 font-medium"
+          >
+            Clear search
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentItems.map((accessory) => (
+              <ItemCard
+                key={accessory.id}
+                item={accessory}
+                quantity={selectedAccessories[accessory.id]?.quantity || 0}
+                onAdd={() => handleAdd(accessory)}
+                onRemove={() => handleRemove(accessory.id)}
+                onPreview={() => onPreviewImage(accessory.image_url)}
+              />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-10">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-lg transition-all ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
+              >
+                <FiChevronLeft className="w-6 h-6" />
+              </button>
+
+              <div className="flex gap-1">
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-10 h-10 rounded-lg font-medium transition-all ${currentPage === i + 1 ? 'bg-primary text-white' : 'text-text/70 hover:bg-primary/5'}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-lg transition-all ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
+              >
+                <FiChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+          )}
+        </>
       )}
     </motion.div>
   );
@@ -826,7 +1315,7 @@ const ReferenceImageUpload = ({ image, onImageChange }) => {
       exit={{ opacity: 0, x: -20 }}
     >
       <h2 className="text-3xl font-display font-bold text-primary mb-6">
-        📸 Upload Reference Image (Optional)
+        Upload Reference Image (Optional)
       </h2>
       <p className="text-text/70 mb-8">
         Upload an inspiration image to help us understand your vision
@@ -887,7 +1376,7 @@ const ProvideDetails = ({ description, onDescriptionChange }) => {
       exit={{ opacity: 0, x: -20 }}
     >
       <h2 className="text-3xl font-display font-bold text-primary mb-6">
-        ✍️ Provide Details
+        Provide Details
       </h2>
       <p className="text-text/70 mb-8">
         Share your preferences, special requests, or any additional information about your custom order
@@ -1006,7 +1495,7 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
       exit={{ opacity: 0, x: -20 }}
     >
       <h2 className="text-3xl font-display font-bold text-primary mb-6">
-        📸 Upload Reference Images
+        Upload Reference Images
       </h2>
       <p className="text-text/70 mb-8">
         Upload images of designs you'd like us to recreate or use as inspiration (Maximum 4 images)
@@ -1073,75 +1562,24 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
   );
 };
 
-// Request Details Component
-const RequestDetails = ({ data, onUpdate }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-    >
-      <h2 className="text-3xl font-display font-bold text-primary mb-6">
-        ✍️ Provide Details
-      </h2>
-      <p className="text-text/70 mb-8">
-        Tell us more about what you'd like
-      </p>
-
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Description *
-          </label>
-          <textarea
-            value={data.description}
-            onChange={(e) => onUpdate({ description: e.target.value })}
-            rows="6"
-            className="input-field resize-none"
-            placeholder="Describe what you'd like us to create. Include any specific details about style, materials, or features..."
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Size (Optional)
-          </label>
-          <input
-            type="text"
-            value={data.size}
-            onChange={(e) => onUpdate({ size: e.target.value })}
-            className="input-field"
-            placeholder="e.g., Small (10cm), Medium (20cm), Large (30cm)"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Preferred Deadline (Optional)
-          </label>
-          <input
-            type="date"
-            value={data.deadline}
-            onChange={(e) => onUpdate({ deadline: e.target.value })}
-            className="input-field"
-            min={new Date().toISOString().split('T')[0]}
-          />
-        </div>
-      </div>
-    </motion.div>
-  );
-};
 
 // Item Card Component (reusable for flowers and accessories)
-const ItemCard = ({ item, quantity, onAdd, onRemove }) => {
+const ItemCard = ({ item, quantity, onAdd, onRemove, onPreview }) => {
   return (
-    <div className="card overflow-hidden">
-      <img
-        src={item.image_url}
-        alt={item.name}
-        className="w-full h-40 object-cover"
-      />
+    <div className="card overflow-hidden group">
+      <div
+        className="relative h-40 overflow-hidden cursor-zoom-in"
+        onClick={onPreview}
+      >
+        <img
+          src={item.image_url}
+          alt={item.name}
+          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+        />
+        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <FiZoomIn className="text-white w-8 h-8" />
+        </div>
+      </div>
       <div className="p-4">
         <h3 className="font-semibold mb-2">{item.name}</h3>
         {item.description && (
@@ -1233,7 +1671,6 @@ const BouquetSummary = ({ bouquetData }) => {
           <motion.div variants={itemVariants} className="bg-white rounded-2xl p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary/10 relative overflow-hidden group hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all">
             <div className="absolute top-0 left-0 w-1 h-full bg-pink-400"></div>
             <h3 className="text-2xl font-display font-bold mb-6 flex items-center gap-3 text-text">
-              <span className="text-3xl bg-pink-50 p-2 rounded-xl">🌸</span>
               Selected Flowers
             </h3>
             <div className="space-y-5">
@@ -1272,7 +1709,6 @@ const BouquetSummary = ({ bouquetData }) => {
             <motion.div variants={itemVariants} className="bg-white rounded-2xl p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary/10 relative overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all">
               <div className="absolute top-0 left-0 w-1 h-full bg-purple-400"></div>
               <h3 className="text-2xl font-display font-bold mb-6 flex items-center gap-3 text-text">
-                <span className="text-3xl bg-purple-50 p-2 rounded-xl">🎁</span>
                 Wrapping Style
               </h3>
               <div className="flex items-center gap-5 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
@@ -1300,7 +1736,6 @@ const BouquetSummary = ({ bouquetData }) => {
             <motion.div variants={itemVariants} className="bg-white rounded-2xl p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary/10 relative overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all">
               <div className="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>
               <h3 className="text-2xl font-display font-bold mb-6 flex items-center gap-3 text-text">
-                <span className="text-3xl bg-yellow-50 p-2 rounded-xl">✨</span>
                 Accessories
               </h3>
               <div className="space-y-4">
@@ -1346,7 +1781,7 @@ const BouquetSummary = ({ bouquetData }) => {
           {/* Colors Section */}
           <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary/10">
             <h3 className="text-xl font-display font-bold mb-5 flex items-center gap-2">
-              <span className="text-2xl">🎨</span> Colors
+              Colors
             </h3>
             <div className="grid grid-cols-3 gap-3">
               {selectedColorObjects.map(color => (
@@ -1370,13 +1805,13 @@ const BouquetSummary = ({ bouquetData }) => {
           {bouquetData.referenceImage && (
             <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary/10">
               <h3 className="text-xl font-display font-bold mb-4 flex items-center gap-2">
-                <span className="text-2xl">📸</span> Reference
+                Reference Image
               </h3>
-              <div className="rounded-xl overflow-hidden shadow-inner border border-gray-100 bg-gray-50 p-2">
+              <div className="rounded-2xl overflow-hidden shadow-md">
                 <img
                   src={URL.createObjectURL(bouquetData.referenceImage)}
                   alt="Reference"
-                  className="w-full h-40 object-contain rounded-lg"
+                  className="w-full h-48 object-cover"
                 />
               </div>
             </motion.div>
@@ -1386,7 +1821,7 @@ const BouquetSummary = ({ bouquetData }) => {
           {bouquetData.description && (
             <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary/10">
               <h3 className="text-xl font-display font-bold mb-4 flex items-center gap-2">
-                <span className="text-2xl">✍️</span> Notes
+                Notes
               </h3>
               <div className="bg-orange-50/50 rounded-xl p-4 border border-orange-100/50">
                 <p className="text-text/80 text-sm leading-relaxed whitespace-pre-wrap italic">
@@ -1464,7 +1899,6 @@ const RequestSummary = ({ requestData }) => {
             <motion.div variants={itemVariants} className="bg-white rounded-2xl p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary/10 relative overflow-hidden group hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all">
               <div className="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
               <h3 className="text-2xl font-display font-bold mb-6 flex items-center gap-3 text-text">
-                <span className="text-3xl bg-blue-50 p-2 rounded-xl">📸</span>
                 Inspiration Images
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -1485,7 +1919,6 @@ const RequestSummary = ({ requestData }) => {
           <motion.div variants={itemVariants} className="bg-white rounded-2xl p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary/10 relative overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all">
             <div className="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
             <h3 className="text-2xl font-display font-bold mb-6 flex items-center gap-3 text-text">
-              <span className="text-3xl bg-orange-50 p-2 rounded-xl">✍️</span>
               Creation Details
             </h3>
 
@@ -1535,7 +1968,7 @@ const RequestSummary = ({ requestData }) => {
           {selectedColorObjects.length > 0 && (
             <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary/10">
               <h3 className="text-xl font-display font-bold mb-5 flex items-center gap-2">
-                <span className="text-2xl">🎨</span> Color
+                Colors
               </h3>
               <div className="grid grid-cols-3 gap-3">
                 {selectedColorObjects.map(color => (

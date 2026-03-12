@@ -17,9 +17,15 @@ import AuthCallback from './pages/AuthCallback';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AccountSettings from './pages/AccountSettings';
 
+import { useEffect } from 'react';
+
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen flex flex-col bg-secondary">

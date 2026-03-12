@@ -109,33 +109,45 @@ const ProductDetails = () => {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <div className="mb-2">
-              <span className="px-3 py-1 bg-accent text-text rounded-full text-sm inline-block mb-4">
+            <div className="mb-6 space-y-4">
+              <span className="px-3 py-1 bg-accent text-text rounded-full text-sm inline-block">
                 {product.category}
               </span>
-              <h3 className="font-semibold mb-2">Price</h3>
-              <span className="text-4xl font-bold text-primary block">
-                {product.price} DA
-              </span>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-text/60 text-sm font-medium">Unit Price</span>
+                <span className="text-2xl font-semibold text-primary/80">
+                  {product.price} DA
+                </span>
+              </div>
             </div>
 
-            {/* Quantity */}
-            <div className="mb-6">
-              <h3 className="font-semibold mb-3">{t('productDetails.quantity')}</h3>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors font-bold"
-                >
-                  -
-                </button>
-                <span className="w-16 text-center font-semibold text-lg">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors font-bold"
-                >
-                  +
-                </button>
+            {/* Quantity and Total Price */}
+            <div className="mb-8 p-4 bg-primary/5 rounded-2xl flex flex-wrap items-center justify-between gap-6 border border-primary/10">
+              <div>
+                <h3 className="font-semibold mb-3">{t('productDetails.quantity')}</h3>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-10 rounded-lg bg-white shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors font-bold text-primary"
+                  >
+                    -
+                  </button>
+                  <span className="w-10 text-center font-bold text-xl">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-10 h-10 rounded-lg bg-white shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors font-bold text-primary"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-end">
+                <span className="text-text/60 text-sm font-medium mb-1">Total Amount</span>
+                <span className="text-4xl font-bold text-primary">
+                  {(product.price * quantity).toFixed(2)} <span className="text-lg">DA</span>
+                </span>
               </div>
             </div>
 

@@ -173,7 +173,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                     {data.flowers?.length > 0 && (
                                                                         <div className="md:col-span-2 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                                                             <h5 className="font-bold text-text mb-3 flex items-center gap-2">
-                                                                                <span className="text-xl">🌸</span> Selected Flowers
+                                                                                Selected Flowers
                                                                             </h5>
                                                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                                                                 {data.flowers.map((f, i) => (
@@ -202,7 +202,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                     {data.colors?.length > 0 && (
                                                                         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                                                             <h5 className="font-bold text-text mb-3 flex items-center gap-2">
-                                                                                <span className="text-xl">🎨</span> Colors
+                                                                                Colors
                                                                             </h5>
                                                                             <div className="flex flex-wrap gap-2">
                                                                                 {data.colors.map((c, i) => (
@@ -226,7 +226,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                     {data.wrapping && (
                                                                         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                                                             <h5 className="font-bold text-text mb-3 flex items-center gap-2">
-                                                                                <span className="text-xl">🎁</span> Wrapping
+                                                                                Wrapping
                                                                             </h5>
                                                                             <div className="flex items-center gap-3 bg-gray-50/50 p-2 rounded-lg border border-gray-50 inline-flex">
                                                                                 {data.wrapping.image_url && (
@@ -246,7 +246,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                     {data.accessories?.length > 0 && (
                                                                         <div className="md:col-span-2 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                                                             <h5 className="font-bold text-text mb-3 flex items-center gap-2">
-                                                                                <span className="text-xl">✨</span> Accessories
+                                                                                Accessories
                                                                             </h5>
                                                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                                                                 {data.accessories.map((a, i) => (
@@ -277,7 +277,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                             {data.description && (
                                                                                 <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                                                                     <h5 className="font-bold text-text mb-2 flex items-center gap-2">
-                                                                                        <span className="text-xl">✍️</span> Notes
+                                                                                        Notes
                                                                                     </h5>
                                                                                     <div className="bg-gray-50/50 p-3 rounded-lg border border-gray-50">
                                                                                         <p className="text-sm text-text/80 whitespace-pre-wrap leading-relaxed">{data.description}</p>
@@ -288,7 +288,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                             {item.reference_images?.length > 0 && (
                                                                                 <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                                                                     <h5 className="font-bold text-text mb-3 flex items-center gap-2">
-                                                                                        <span className="text-xl">📸</span> Reference Image
+                                                                                        Reference Image
                                                                                     </h5>
                                                                                     <div className="flex gap-3 flex-wrap">
                                                                                         {item.reference_images.map((img, i) => (
@@ -314,7 +314,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                     {data.colors?.length > 0 && (
                                                                         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                                                             <h5 className="font-bold text-text mb-3 flex items-center gap-2">
-                                                                                <span className="text-xl">🎨</span> Colors
+                                                                                Colors
                                                                             </h5>
                                                                             <div className="flex flex-wrap gap-2">
                                                                                 {data.colors.map((c, i) => (
@@ -337,7 +337,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                     {/* Description and Specs */}
                                                                     <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                                                         <h5 className="font-bold text-text mb-3 flex items-center gap-2">
-                                                                            <span className="text-xl">✍️</span> Details
+                                                                            Details
                                                                         </h5>
                                                                         <div className="space-y-4">
                                                                             <div className="bg-gray-50/50 p-3 rounded-lg border border-gray-50">
@@ -368,7 +368,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                             {isRequest && item.reference_images?.length > 0 && (
                                                                 <div className="mt-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                                                     <h5 className="font-bold text-text mb-3 flex items-center gap-2">
-                                                                        <span className="text-xl">📸</span> Reference Images
+                                                                        Reference Images
                                                                     </h5>
                                                                     <div className="flex gap-3 flex-wrap">
                                                                         {item.reference_images.map((img, i) => (
