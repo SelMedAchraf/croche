@@ -70,4 +70,4 @@ Pour le déploiement en production :
 1. Dans **Authentication > URL Configuration** de Supabase, mettez à jour la **Site URL** avec votre domaine en direct (par ex. `https://crocheella.com`).
 2. Ajoutez l'URL de rappel de production aux **Redirect URLs** (par ex. `https://crocheella.com/auth/callback`).
 3. Chaque fois qu'un utilisateur se connecte en production, Supabase vérifiera que le domaine correspond bien à cette liste blanche.
-4. Assurez-vous que votre plateforme de déploiement en production (Vercel, Render, etc.) a renseigné `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` dans les variables d'environnement de son tableau de bord.
+4. Assurez-vous que votre plateforme de déploiement en production (Vercel) a renseigné `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` dans les variables d'environnement de son tableau de bord.
