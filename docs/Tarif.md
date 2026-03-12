@@ -74,13 +74,13 @@ Vous et vos clientes êtes notifiées automatiquement à chaque étape :
 | Service | Fournisseur | Prix |
 |---------|-------------|------|
 | Site web (frontend) | Vercel Free | 0 DA/mois |
-| Serveur (backend) | Render Free | 0 DA/mois |
+| Serveur (backend) | Vercel Free | 0 DA/mois |
 | Base de données | Supabase Free | 0 DA/mois |
 | Stockage images | Supabase Storage Free | 0 DA/mois |
 | Emails | Gmail SMTP | 0 DA/mois |
 | **TOTAL** | | **0 DA/mois** |
 
-> ⚠️ Avec le plan gratuit, le serveur "dort" après 15 min d'inactivité. Le premier chargement après une longue pause peut prendre 20 à 30 secondes.
+> ⚡ **Avantage** : Avec Vercel, le chargement est instantané. Contrairement à d'autres services gratuits, il n'y a pas de temps d'attente (pas de mode "veille").
 
 ---
 
@@ -102,9 +102,8 @@ Vous et vos clientes êtes notifiées automatiquement à chaque étape :
 
 | Fournisseur | Prix/mois | Recommandé pour |
 |-------------|-----------|-----------------|
-| Render Free | 0 DA | Démarrage |
+| Vercel Free | 0 DA | Démarrage (Inclus) |
 | Railway Starter | ~800 DA | Boutique active |
-| Render Paid | ~1 200 DA | Alternative Railway |
 | DigitalOcean | ~1 500 DA | Forte croissance |
 
 ---
