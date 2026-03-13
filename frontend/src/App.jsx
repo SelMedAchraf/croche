@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import './i18n/config';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetails from './pages/ProductDetails';
@@ -48,6 +49,7 @@ function AppContent() {
         </Routes>
       </main>
       {!isAdminRoute && <Footer />}
+      {!isAdminRoute && <ScrollToTop />}
     </div>
   );
 }

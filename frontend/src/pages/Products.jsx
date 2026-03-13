@@ -129,10 +129,10 @@ const Products = () => {
 
         {/* Products Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="card animate-pulse">
-                <div className="h-64 bg-gray-200"></div>
+                <div className="h-48 sm:h-64 bg-gray-200"></div>
                 <div className="p-4 space-y-3">
                   <div className="h-6 bg-gray-200 rounded"></div>
                   <div className="h-4 bg-gray-200 rounded"></div>
@@ -146,7 +146,7 @@ const Products = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
             >
               {currentProducts.map((product, index) => (
                 <motion.div
@@ -225,7 +225,7 @@ const ProductCard = ({ product, addToCart }) => {
 
   return (
     <Link to={`/products/${product.id}`} className="card group h-full flex flex-col">
-      <div className="relative h-64 overflow-hidden">
+      <div className="relative h-48 sm:h-64 overflow-hidden">
         <img
           src={productImage}
           alt="Product"
@@ -259,12 +259,12 @@ const ProductCard = ({ product, addToCart }) => {
         )}
 
         <div className="mt-auto">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-primary font-bold text-xl">
-              {product.price} DA
-            </span>
-            <span className="text-xs text-text/60 bg-gray-100 px-2 py-1 rounded-full">
+          <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2 sm:gap-0 mb-3 text-center sm:text-left">
+            <span className="text-xs text-text/60 bg-gray-100 px-2 py-1 rounded-full order-1 sm:order-2">
               {product.category}
+            </span>
+            <span className="text-primary font-bold text-xl order-2 sm:order-1">
+              {product.price} DA
             </span>
           </div>
 

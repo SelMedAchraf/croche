@@ -95,10 +95,10 @@ const Home = () => {
           </motion.div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="card animate-pulse">
-                  <div className="h-64 bg-gray-200"></div>
+                  <div className="h-48 sm:h-72 bg-gray-200"></div>
                   <div className="p-4">
                     <div className="h-6 bg-gray-200 rounded mb-2"></div>
                     <div className="h-4 bg-gray-200 rounded w-2/3"></div>
@@ -107,7 +107,7 @@ const Home = () => {
               ))}
             </div>
           ) : featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} addToCart={addToCart} />
               ))}
@@ -118,7 +118,7 @@ const Home = () => {
             </div>
           )}
 
-          <div className="text-center mt-12">
+          <div className="flex justify-center mt-12">
             <Link to="/products" className="btn-primary inline-flex items-center">
               {t('common.viewMore')}
               <FiArrowRight className="ml-2" />
@@ -169,10 +169,12 @@ const Home = () => {
                 high-quality crochet items that bring joy and warmth to your life. From delicate flowers
                 to practical bags and charming keychains, each creation tells a story.
               </p>
-              <Link to="/about" className="btn-primary inline-flex items-center">
-                {t('common.learnMore')}
-                <FiArrowRight className="ml-2" />
-              </Link>
+              <div className="flex justify-center sm:justify-start">
+                <Link to="/about" className="btn-primary inline-flex items-center">
+                  {t('common.learnMore')}
+                  <FiArrowRight className="ml-2" />
+                </Link>
+              </div>
             </motion.div>
 
             <motion.div
@@ -207,7 +209,7 @@ const ProductCard = ({ product, addToCart }) => {
 
   return (
     <Link to={`/products/${product.id}`} className="card group h-full flex flex-col">
-      <div className="relative h-72 overflow-hidden">
+      <div className="relative h-48 sm:h-72 overflow-hidden">
         <img
           src={productImage}
           alt="Product"
@@ -241,12 +243,12 @@ const ProductCard = ({ product, addToCart }) => {
         )}
 
         <div className="mt-auto">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-primary font-bold text-xl">
-              {product.price} DA
-            </span>
-            <span className="text-xs text-text/60 bg-gray-100 px-2 py-1 rounded-full">
+          <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2 sm:gap-0 mb-3 text-center sm:text-left">
+            <span className="text-xs text-text/60 bg-gray-100 px-2 py-1 rounded-full order-1 sm:order-2">
               {product.category}
+            </span>
+            <span className="text-primary font-bold text-xl order-2 sm:order-1">
+              {product.price} DA
             </span>
           </div>
 

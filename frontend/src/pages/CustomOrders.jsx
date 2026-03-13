@@ -815,7 +815,7 @@ const FlowerSelection = ({ selectedFlowers, onUpdateFlowers, onPreviewImage, con
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {currentItems.map((flower) => (
               <ItemCard
                 key={flower.id}
@@ -934,7 +934,7 @@ const WrappingSelection = ({ selectedWrapping, onSelectWrapping, onPreviewImage,
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {currentItems.map((wrapping) => (
               <div
                 key={wrapping.id}
@@ -960,9 +960,9 @@ const WrappingSelection = ({ selectedWrapping, onSelectWrapping, onPreviewImage,
                     <FiZoomIn className="text-white w-8 h-8" />
                   </div>
                 </div>
-                <div className="p-4">
+                <div className="p-4 flex flex-col items-center text-center">
                   <h3 className="font-semibold mb-2">{wrapping.name}</h3>
-                  <p className="text-sm text-text/60 mb-3 line-clamp-2">{wrapping.description}</p>
+                  <p className="text-sm text-text/60  line-clamp-2">{wrapping.description}</p>
                   <p className="font-bold text-primary text-lg">{wrapping.price} DA</p>
                   {selectedWrapping?.id === wrapping.id && (
                     <div className="flex justify-center mt-3">
@@ -1257,7 +1257,7 @@ const AccessorySelection = ({ selectedAccessories, onUpdateAccessories, onPrevie
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {currentItems.map((accessory) => (
               <ItemCard
                 key={accessory.id}
@@ -1391,10 +1391,10 @@ const ReferenceImageUpload = ({ image, onImageChange }) => {
           >
             <FiUpload className={`w-16 h-16 mb-4 transition-colors ${isDragging ? 'text-highlight' : 'text-primary'
               }`} />
-            <p className="text-lg font-medium mb-2">
+            <p className="text-lg font-medium mb-2 text-center">
               {isDragging ? 'Drop image here' : 'Click or drag to upload reference image'}
             </p>
-            <p className="text-sm text-text/60">PNG, JPG up to 10MB</p>
+            <p className="text-sm text-text/60 text-center">PNG, JPG up to 10MB</p>
             <input
               type="file"
               accept="image/*"
@@ -1574,7 +1574,7 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
             <p className="text-lg font-medium mb-1">
               {isDragging ? 'Drop images here' : 'Click or drag to upload images'}
             </p>
-            <p className="text-sm text-text/60">PNG, JPG up to 10MB each • {images.length}/{MAX_IMAGES} uploaded</p>
+            <p className="text-sm text-text/60 text-center">PNG, JPG up to 10MB each • {images.length}/{MAX_IMAGES} uploaded</p>
             <input
               type="file"
               accept="image/*"
@@ -1636,17 +1636,17 @@ const ItemCard = ({ item, quantity, onAdd, onRemove, onPreview }) => {
           <FiZoomIn className="text-white w-8 h-8" />
         </div>
       </div>
-      <div className="p-4">
+      <div className="p-4 flex flex-col items-center text-center gap-0">
         <h3 className="font-semibold mb-2">{item.name}</h3>
         {item.description && (
           <p className="text-sm text-text/60 mb-3 line-clamp-2">{item.description}</p>
         )}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center sm:justify-between w-full gap-3 sm:gap-0 mt-auto">
           <span className="font-bold text-primary text-lg">{item.price} DA</span>
           {quantity === 0 ? (
             <button
               onClick={onAdd}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-all flex items-center gap-1"
+              className="w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-1"
             >
               <FiPlus className="w-4 h-4" /> Add
             </button>

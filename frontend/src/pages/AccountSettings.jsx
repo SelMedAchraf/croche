@@ -210,9 +210,9 @@ const AccountSettings = () => {
                                 {formData.full_name || 'My Profile'}
                             </h2>
                             <div className="flex items-center gap-2 text-text/60 mt-1">
-                                <FiMail className="w-4 h-4" />
+                                <FiMail className="w-4 h-4 flex-shrink-0" />
                                 <span>{user.email}</span>
-                                {isAdmin && <span className="ml-2 bg-primary text-white text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider">Admin</span>}
+                                {isAdmin && <span className="hidden sm:block ml-2 bg-primary text-white text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider">Admin</span>}
                                 {user.app_metadata?.provider === 'google' && <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider">Google</span>}
                             </div>
                         </div>
