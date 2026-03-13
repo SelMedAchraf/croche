@@ -136,9 +136,6 @@ const Cart = () => {
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div className="font-display font-semibold text-base sm:text-lg truncate">
                               {item.name}
-                              <span className="ml-2 text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full align-middle">
-                                Custom
-                              </span>
                             </div>
                             <button
                               onClick={() => setSelectedCustomOrder(item)}

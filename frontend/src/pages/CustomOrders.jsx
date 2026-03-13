@@ -120,14 +120,6 @@ const OptionSelection = ({ onSelectOption }) => {
             <p className="text-text/70 mb-4 leading-relaxed">
               {option.description}
             </p>
-            <ul className="space-y-2 mb-6">
-              {option.features.map((feature, index) => (
-                <li key={index} className="flex items-center gap-2 text-sm text-text/80">
-                  <span className="text-green-500">✓</span>
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
             <div className="btn-primary w-full text-center group-hover:bg-highlight transition-colors">
               Start Creating
             </div>

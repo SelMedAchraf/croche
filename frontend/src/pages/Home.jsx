@@ -88,7 +88,7 @@ const Home = () => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl font-display font-bold text-primary mb-4">
+            <h2 className="text-4xl font-display font-bold text-primary mb-4 break-words">
               {t('home.featured')}
             </h2>
             <div className="w-20 h-1 bg-highlight mx-auto rounded-full"></div>
@@ -136,7 +136,7 @@ const Home = () => {
             viewport={{ once: true }}
             className="text-center max-w-3xl mx-auto"
           >
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-primary mb-6">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-primary mb-6 break-words">
               Create Your Dream Design
             </h2>
 
@@ -153,7 +153,7 @@ const Home = () => {
       </section>
 
       {/* About Preview */}
-      <section className="section-padding bg-gradient-to-br from-highlight/20 via-highlight/10 to-white">
+      <section className="section-padding bg-gradient-to-br from-highlight/20 via-highlight/10 to-white overflow-hidden">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -161,10 +161,10 @@ const Home = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-4xl font-display font-bold text-primary mb-6">
+              <h2 className="text-4xl font-display font-bold text-primary mb-6 break-words text-center sm:text-left">
                 {t('home.aboutTitle')}
               </h2>
-              <p className="text-text/70 mb-6 leading-relaxed">
+              <p className="text-text/70 mb-6 leading-relaxed text-center sm:text-left">
                 Every piece is handmade with love and attention to detail. I believe in creating unique,
                 high-quality crochet items that bring joy and warmth to your life. From delicate flowers
                 to practical bags and charming keychains, each creation tells a story.

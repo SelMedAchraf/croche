@@ -205,24 +205,15 @@ const AccountSettings = () => {
                     </div>
 
                     <div className="card p-8">
-                        <div className="flex items-center gap-4 mb-8 pb-8 border-b border-gray-100">
-                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary text-2xl flex-shrink-0">
-                                {user.user_metadata?.avatar_url ? (
-                                    <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
-                                ) : (
-                                    <FiUser />
-                                )}
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-semibold text-gray-900">
-                                    {formData.full_name || 'My Profile'}
-                                </h2>
-                                <div className="flex items-center gap-2 text-text/60 mt-1">
-                                    <FiMail className="w-4 h-4" />
-                                    <span>{user.email}</span>
-                                    {isAdmin && <span className="ml-2 bg-primary text-white text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider">Admin</span>}
-                                    {user.app_metadata?.provider === 'google' && <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider">Google</span>}
-                                </div>
+                        <div className="mb-8 pb-8 border-b border-gray-100">
+                            <h2 className="text-xl font-semibold text-gray-900">
+                                {formData.full_name || 'My Profile'}
+                            </h2>
+                            <div className="flex items-center gap-2 text-text/60 mt-1">
+                                <FiMail className="w-4 h-4" />
+                                <span>{user.email}</span>
+                                {isAdmin && <span className="ml-2 bg-primary text-white text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider">Admin</span>}
+                                {user.app_metadata?.provider === 'google' && <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider">Google</span>}
                             </div>
                         </div>
 
