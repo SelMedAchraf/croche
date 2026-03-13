@@ -735,7 +735,7 @@ const ProductsTab = ({ products, onRefresh, setZoomedImage }) => {
                 <button
                   type="submit"
                   className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={uploading}
+                  disabled={uploading || !formData.price || !formData.category || (!selectedImage && !imagePreview)}
                 >
                   {uploading ? 'Uploading...' : editingProduct ? 'Update' : 'Create'}
                 </button>
@@ -1243,7 +1243,11 @@ const CategoriesTab = ({ onRefresh }) => {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button
+                  type="submit"
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!formData.name.trim()}
+                >
                   {editingCategory ? 'Update' : 'Create'}
                 </button>
               </div>
@@ -1624,7 +1628,7 @@ const ItemsTab = ({ setZoomedImage }) => {
                 <button
                   type="submit"
                   className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={uploading}
+                  disabled={uploading || !formData.name.trim() || !formData.price || !formData.category || (!selectedImage && !imagePreview)}
                 >
                   {uploading ? 'Uploading...' : editingItem ? 'Update' : 'Create'}
                 </button>
