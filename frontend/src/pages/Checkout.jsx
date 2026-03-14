@@ -394,11 +394,6 @@ const Checkout = () => {
                       <div className="flex-grow">
                         <h3 className="font-semibold text-sm mb-1">
                           {item.name}
-                          {isCustomOrder && (
-                            <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                              Custom
-                            </span>
-                          )}
                         </h3>
                         {item.price !== null ? (
                           <p className="text-sm text-text/60">

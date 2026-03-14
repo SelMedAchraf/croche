@@ -204,7 +204,7 @@ const AccountSettings = () => {
                         </p>
                     </div>
 
-                    <div className="card p-8">
+                    <div className="card p-4 sm:p-8">
                         <div className="mb-8 pb-8 border-b border-gray-100">
                             <h2 className="text-xl font-semibold text-gray-900">
                                 {formData.full_name || 'My Profile'}
@@ -213,7 +213,7 @@ const AccountSettings = () => {
                                 <FiMail className="w-4 h-4 flex-shrink-0" />
                                 <span>{user.email}</span>
                                 {isAdmin && <span className="hidden sm:block ml-2 bg-primary text-white text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider">Admin</span>}
-                                {user.app_metadata?.provider === 'google' && <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider">Google</span>}
+                                {user.app_metadata?.provider === 'google' && <span className="hidden sm:block ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider">Google</span>}
                             </div>
                         </div>
 

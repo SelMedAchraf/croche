@@ -1571,7 +1571,7 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
           >
             <FiUpload className={`w-12 h-12 mb-3 transition-colors ${isDragging ? 'text-highlight' : 'text-primary'
               }`} />
-            <p className="text-lg font-medium mb-1">
+            <p className="text-lg font-medium mb-1 text-center">
               {isDragging ? 'Drop images here' : 'Click or drag to upload images'}
             </p>
             <p className="text-sm text-text/60 text-center">PNG, JPG up to 10MB each • {images.length}/{MAX_IMAGES} uploaded</p>
