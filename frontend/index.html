@@ -40,6 +40,24 @@
       It ensures LCP is recorded at <1s regardless of JS execution time.
     -->
     <style>
+      @font-face {
+        font-family: 'Playfair Display Fallback';
+        src: local('Georgia');
+        size-adjust: 97%;
+        ascent-override: 95%;
+        descent-override: 25%;
+        line-gap-override: 0%;
+      }
+
+      @font-face {
+        font-family: 'Poppins Fallback';
+        src: local('Arial');
+        size-adjust: 112%;
+        ascent-override: 88%;
+        descent-override: 22%;
+        line-gap-override: 0%;
+      }
+
       #root-shell-nav {
         position: fixed;
         top: 0;
@@ -53,39 +71,87 @@
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(8px);
         z-index: 50;
-        border-bottom: 1px solid rgba(162, 124, 98, 0.1);
+        border-bottom: 1px solid rgba(248, 200, 220, 0.2);
       }
 
       #root-shell-logo {
         display: flex;
         align-items: center;
-        font-family: 'Playfair Display', serif;
+        font-family: 'Playfair Display', 'Playfair Display Fallback', serif;
         font-weight: bold;
-        color: #a27c62;
+        color: #F8C8DC;
         text-decoration: none;
       }
 
       #root-shell-hero {
-        height: 600px;
+        margin-top: 80px;
+        min-height: 600px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         text-align: center;
-        background: linear-gradient(to bottom right, rgba(162, 124, 98, 0.2), #fdfcfb, rgba(232, 197, 143, 0.2));
+        background: linear-gradient(to bottom right, rgba(248, 200, 220, 0.2), #FFF6F9, rgba(217, 198, 243, 0.2));
         padding: 0 1rem;
+        position: relative;
+        overflow: hidden;
       }
 
       #root-shell-h1 {
-        font-family: 'Playfair Display', serif;
+        font-family: 'Playfair Display', 'Playfair Display Fallback', serif;
         font-size: 2.5rem;
-        color: #a27c62;
+        color: #F8C8DC;
         margin-bottom: 1.5rem;
+        z-index: 10;
+        font-weight: 700;
+      }
+
+      #root-shell-p {
+        font-family: 'Poppins', 'Poppins Fallback', sans-serif;
+        font-size: 1.25rem;
+        color: rgba(58, 58, 58, 0.7);
+        margin-bottom: 2rem;
+        z-index: 10;
+        max-width: 600px;
+      }
+
+      .root-shell-btn-container {
+        display: flex;
+        gap: 1rem;
+        z-index: 10;
+      }
+
+      .root-shell-btn {
+        padding: 0.75rem 1.75rem;
+        border-radius: 999px;
+        font-family: 'Poppins', 'Poppins Fallback', sans-serif;
+        font-weight: 500;
+        font-size: 1rem;
+      }
+
+      .root-shell-primary {
+        background: #F8C8DC;
+        color: white;
+      }
+
+      .root-shell-secondary {
+        background: #D9C6F3;
+        color: white;
+      }
+
+      .root-shell-emoji {
+        position: absolute;
+        opacity: 0.1;
+        pointer-events: none;
       }
 
       @media (min-width: 640px) {
         #root-shell-h1 {
           font-size: 3.5rem;
+        }
+
+        #root-shell-p {
+          font-size: 1.5rem;
         }
       }
     </style>
@@ -96,7 +162,18 @@
       </div>
     </nav>
     <section id="root-shell-hero">
+      <div class="root-shell-emoji" style="top: 10%; left: 5%; font-size: 3rem;">🧶</div>
+      <div class="root-shell-emoji" style="top: 30%; right: 10%; font-size: 2rem;">🌸</div>
+      <div class="root-shell-emoji" style="bottom: 20%; left: 15%; font-size: 2.5rem;">💐</div>
+      <div class="root-shell-emoji" style="bottom: 35%; right: 25%; font-size: 2rem;">👜</div>
+
       <h1 id="root-shell-h1">Handmade Crochet Creations</h1>
+      <p id="root-shell-p">Unique handmade gifts crafted with love</p>
+
+      <div class="root-shell-btn-container">
+        <div class="root-shell-btn root-shell-primary">Shop Now</div>
+        <div class="root-shell-btn root-shell-secondary">Custom Order</div>
+      </div>
     </section>
   </div>
   <script type="module" src="/src/main.jsx"></script>
