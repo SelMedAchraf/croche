@@ -41,6 +41,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     checkAuth();
     fetchData();
+    document.title = 'Admin Dashboard | Croche Ella';
 
     // Listen for auth state changes (e.g., logout in another tab)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -59,6 +60,7 @@ const AdminDashboard = () => {
 
     return () => {
       subscription.unsubscribe();
+      document.title = 'Croche Ella | Handmade Crochet Creations';
     };
   }, []);
 
@@ -129,7 +131,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex" dir="ltr">
       {/* Sidebar */}
       <div
         className="fixed top-0 left-0 h-full bg-white shadow-[4px_0_24px_rgba(0,0,0,0.02)] border-r border-gray-100 z-50 transition-all duration-300 w-20 hover:w-64 group flex flex-col overflow-hidden"

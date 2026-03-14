@@ -211,6 +211,7 @@ const AdminOrderDetailsModal = ({ order: initialOrder, isOpen, onClose, onRefres
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+                        dir="ltr"
                     >
                         {/* Header */}
                         <div className="bg-white border-b px-6 py-4 flex items-center justify-between shrink-0">

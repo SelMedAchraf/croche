@@ -154,7 +154,7 @@ const MyOrders = () => {
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     placeholder={t('myOrders.searchPlaceholder')}
-                                    className="w-full px-4 py-2.5 ps-10 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white shadow-sm"
+                                    className="w-full pe-4 py-2.5 ps-10 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white shadow-sm"
                                 />
                                 <div className="absolute inset-y-0 start-3.5 flex items-center pointer-events-none">
                                     <FiSearch className="text-gray-400 w-5 h-5" />
@@ -164,7 +164,7 @@ const MyOrders = () => {
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="w-full px-4 py-2.5 pe-10 rtl:ps-10 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none bg-white cursor-pointer shadow-sm font-medium text-text/80"
+                                    className="w-full ps-4 pe-10 py-2.5 rtl:ps-10 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none bg-white cursor-pointer shadow-sm font-medium text-text/80"
                                 >
                                     <option value="all">{t('myOrders.allStatuses')}</option>
                                     <option value="pending">{t('orderTable.statuses.pending')}</option>
