@@ -24,20 +24,29 @@ const Home = () => {
   const isRTL = i18n.language === 'ar';
 
   useEffect(() => {
-    fetchHomeData();
+    const controller = new AbortController();
+    fetchHomeData(controller.signal);
+    return () => controller.abort();
   }, []);
 
-  const fetchHomeData = async () => {
+  const fetchHomeData = async (signal) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const productsRes = await axios.get(`${apiUrl}/products`).catch(() => ({ data: [] }));
+      const productsRes = await axios.get(`${apiUrl}/products`, { signal }).catch((err) => {
+        if (err.name === 'CanceledError' || axios.isCancel(err)) return { data: [] };
+        throw err;
+      });
       setFeaturedProducts(productsRes.data.slice(0, 6));
     } catch (error) {
+      if (axios.isCancel(error)) return;
       console.error('Error fetching home data:', error);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
+
 
   return (
     <div className="min-h-screen">
