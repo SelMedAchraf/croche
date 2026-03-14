@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import { FiArrowRight, FiHeart } from 'react-icons/fi';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
