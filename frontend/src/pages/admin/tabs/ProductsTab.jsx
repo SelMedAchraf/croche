@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiEdit, FiTrash2, FiX, FiUpload, FiZoomIn, FiPackage } from 'react-icons/fi';
 import axios from 'axios';
 import { supabase } from '../../../config/supabase';
+import { compressImage } from '../../../utils/imageCompression';
 
 const ProductsTab = ({ products, onRefresh, setZoomedImage }) => {
     const navigate = useNavigate();
@@ -80,13 +81,20 @@ const ProductsTab = ({ products, onRefresh, setZoomedImage }) => {
 
         setUploading(true);
         try {
-            const fileExt = selectedImage.name.split('.').pop();
+            // Compress image before upload
+            const compressedFile = await compressImage(selectedImage, {
+                maxWidth: 1200,
+                maxHeight: 1200,
+                quality: 0.8
+            });
+
+            const fileExt = 'jpg'; // We convert to jpeg in compressImage
             const fileName = `${Math.random()}.${fileExt}`;
             const filePath = `${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from('product-images')
-                .upload(filePath, selectedImage);
+                .upload(filePath, compressedFile);
 
             if (uploadError) throw uploadError;
 

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FiPlus, FiEdit, FiTrash2, FiX, FiUpload, FiDroplet } from 'react-icons/fi';
 import { supabase } from '../../../config/supabase';
 import { useColors } from '../../../hooks/useColors';
+import { compressImage } from '../../../utils/imageCompression';
 
 const ColorsTab = () => {
     const navigate = useNavigate();
@@ -67,13 +68,20 @@ const ColorsTab = () => {
 
         setUploading(true);
         try {
-            const fileExt = selectedImage.name.split('.').pop();
+            // Compress color image
+            const compressedFile = await compressImage(selectedImage, {
+                maxWidth: 400, // Color swatches can be even smaller
+                maxHeight: 400,
+                quality: 0.8
+            });
+
+            const fileExt = 'jpg';
             const fileName = `${Math.random()}.${fileExt}`;
             const filePath = `${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from('color-images')
-                .upload(filePath, selectedImage);
+                .upload(filePath, compressedFile);
 
             if (uploadError) throw uploadError;
 
