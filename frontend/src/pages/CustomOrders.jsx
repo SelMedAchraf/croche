@@ -244,73 +244,81 @@ const CustomFlowerBouquet = ({ onBack, onPreviewImage }) => {
 
   const handleAddToCart = async () => {
     setIsAdding(true);
-    // Upload reference image if exists
-    let referenceImageUrl = null;
-    if (bouquetData.referenceImage) {
-      const formData = new FormData();
-      formData.append('image', bouquetData.referenceImage);
 
-      try {
-        const response = await axios.post(`${API_URL}/upload/custom-order-reference`, formData);
-        referenceImageUrl = response.data.url;
-      } catch (error) {
-        console.error('Failed to upload reference image:', error);
+    try {
+      // Upload reference image if exists
+      let referenceImageUrl = null;
+      if (bouquetData.referenceImage) {
+        const formData = new FormData();
+        formData.append('image', bouquetData.referenceImage);
+
+        try {
+          const response = await axios.post(`${API_URL}/upload/custom-order-reference`, formData);
+          referenceImageUrl = response.data.url;
+        } catch (error) {
+          console.error('Failed to upload reference image:', error);
+          // We continue even if upload fails, or we could toast an error
+        }
       }
-    }
 
-    // Calculate total price
-    const flowersTotal = Object.values(bouquetData.flowers).reduce(
-      (sum, item) => sum + (item.price * item.quantity), 0
-    );
-    const wrappingPrice = bouquetData.wrapping?.price || 0;
-    const accessoriesTotal = Object.values(bouquetData.accessories).reduce(
-      (sum, item) => sum + (item.price * item.quantity), 0
-    );
-    const totalPrice = flowersTotal + wrappingPrice + accessoriesTotal;
+      // Calculate total price
+      const flowersTotal = Object.values(bouquetData.flowers).reduce(
+        (sum, item) => sum + (item.price * item.quantity), 0
+      );
+      const wrappingPrice = bouquetData.wrapping?.price || 0;
+      const accessoriesTotal = Object.values(bouquetData.accessories).reduce(
+        (sum, item) => sum + (item.price * item.quantity), 0
+      );
+      const totalPrice = flowersTotal + wrappingPrice + accessoriesTotal;
 
-    // Prepare custom order data
-    const customOrder = {
-      name: 'Custom Flower Bouquet',
-      price: totalPrice,
-      isCustomOrder: true,
-      customOrderType: 'custom_bouquet',
-      customData: {
-        flowers: Object.values(bouquetData.flowers).map(f => ({
-          id: f.id,
-          name: f.name,
-          quantity: f.quantity,
-          price: f.price,
-          image_url: f.image_url
-        })),
-        colors: bouquetData.colors
-          .map(colorId => colors.find(c => c.id === colorId))
-          .filter(Boolean)
-          .map(c => ({
-            id: c.id,
-            name: c.name,
-            image_url: c.image_url
+      // Prepare custom order data
+      const customOrder = {
+        name: 'Custom Flower Bouquet',
+        price: totalPrice,
+        isCustomOrder: true,
+        customOrderType: 'custom_bouquet',
+        customData: {
+          flowers: Object.values(bouquetData.flowers).map(f => ({
+            id: f.id,
+            name: f.name,
+            quantity: f.quantity,
+            price: f.price,
+            image_url: f.image_url
           })),
-        wrapping: bouquetData.wrapping ? {
-          id: bouquetData.wrapping.id,
-          name: bouquetData.wrapping.name,
-          price: bouquetData.wrapping.price,
-          image_url: bouquetData.wrapping.image_url
-        } : null,
-        accessories: Object.values(bouquetData.accessories).map(a => ({
-          id: a.id,
-          name: a.name,
-          quantity: a.quantity,
-          price: a.price,
-          image_url: a.image_url
-        })),
-        description: bouquetData.description
-      },
-      referenceImageUrl
-    };
+          colors: bouquetData.colors
+            .map(colorId => colors.find(c => c.id === colorId))
+            .filter(Boolean)
+            .map(c => ({
+              id: c.id,
+              name: c.name,
+              image_url: c.image_url
+            })),
+          wrapping: bouquetData.wrapping ? {
+            id: bouquetData.wrapping.id,
+            name: bouquetData.wrapping.name,
+            price: bouquetData.wrapping.price,
+            image_url: bouquetData.wrapping.image_url
+          } : null,
+          accessories: Object.values(bouquetData.accessories).map(a => ({
+            id: a.id,
+            name: a.name,
+            quantity: a.quantity,
+            price: a.price,
+            image_url: a.image_url
+          })),
+          description: bouquetData.description
+        },
+        referenceImageUrl
+      };
 
-    addToCart(customOrder);
-    setIsAdding(false);
-    navigate('/cart');
+      addToCart(customOrder);
+      navigate('/cart');
+    } catch (error) {
+      console.error('Error adding custom bouquet to cart:', error);
+      toast.error('Failed to add to cart. Please try again.');
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const canProceed = () => isStepValid(currentStep);
@@ -530,44 +538,52 @@ const CustomCrochetRequest = ({ onBack, onPreviewImage }) => {
 
   const handleAddToCart = async () => {
     setIsAdding(true);
-    // Upload reference images
-    const referenceImageUrls = [];
-    for (const image of requestData.referenceImages) {
-      const formData = new FormData();
-      formData.append('image', image);
 
-      try {
-        const response = await axios.post(`${API_URL}/upload/custom-order-reference`, formData);
-        referenceImageUrls.push(response.data.url);
-      } catch (error) {
-        console.error('Failed to upload reference image:', error);
-      }
+    try {
+      // Upload reference images in parallel
+      const uploadPromises = requestData.referenceImages.map(async (image) => {
+        const formData = new FormData();
+        formData.append('image', image);
+        try {
+          const response = await axios.post(`${API_URL}/upload/custom-order-reference`, formData);
+          return response.data.url;
+        } catch (error) {
+          console.error('Failed to upload reference image:', error);
+          return null;
+        }
+      });
+
+      const referenceImageUrls = (await Promise.all(uploadPromises)).filter(Boolean);
+
+      // Prepare custom order data (price will be set by admin)
+      const customOrder = {
+        name: 'Custom Crochet Request',
+        price: null, // Price to be determined by admin
+        isCustomOrder: true,
+        customOrderType: 'custom_request',
+        customData: {
+          colors: requestData.colors
+            .map(colorId => colors.find(c => c.id === colorId))
+            .filter(Boolean)
+            .map(c => ({
+              id: c.id,
+              name: c.name,
+              image_url: c.image_url
+            })),
+          description: requestData.description
+        },
+        referenceImageUrl: referenceImageUrls[0] || null, // Store first image URL
+        allReferenceImages: referenceImageUrls
+      };
+
+      addToCart(customOrder);
+      navigate('/cart');
+    } catch (error) {
+      console.error('Error adding custom request to cart:', error);
+      toast.error('Failed to add to cart. Please try again.');
+    } finally {
+      setIsAdding(false);
     }
-
-    // Prepare custom order data (price will be set by admin)
-    const customOrder = {
-      name: 'Custom Crochet Request',
-      price: null, // Price to be determined by admin
-      isCustomOrder: true,
-      customOrderType: 'custom_request',
-      customData: {
-        colors: requestData.colors
-          .map(colorId => colors.find(c => c.id === colorId))
-          .filter(Boolean)
-          .map(c => ({
-            id: c.id,
-            name: c.name,
-            image_url: c.image_url
-          })),
-        description: requestData.description
-      },
-      referenceImageUrl: referenceImageUrls[0] || null, // Store first image URL
-      allReferenceImages: referenceImageUrls
-    };
-
-    addToCart(customOrder);
-    setIsAdding(false);
-    navigate('/cart');
   };
 
   const canProceed = () => isStepValid(currentStep);

@@ -84,6 +84,7 @@ const AccountSettings = () => {
             });
 
             if (error) throw error;
+            setUser(data.user);
             setSuccessMsg('Your account information has been updated successfully!');
         } catch (err) {
             console.error('Error updating profile:', err);
@@ -200,7 +201,7 @@ const AccountSettings = () => {
                         <p className="text-text/60">
                             {isAdmin
                                 ? 'Admin Profile Settings'
-                                : 'Update your contact and delivery information'}
+                                : 'Update your contact and delivery informations'}
                         </p>
                     </div>
 
@@ -406,7 +407,11 @@ const AccountSettings = () => {
                                 <div className="pt-4 border-t border-gray-100">
                                     <button
                                         type="submit"
-                                        disabled={saving}
+                                        disabled={saving || !(
+                                            formData.full_name !== (user.user_metadata?.full_name || '') ||
+                                            formData.phone !== (user.user_metadata?.phone || '') ||
+                                            formData.full_address !== (user.user_metadata?.full_address || '')
+                                        )}
                                         className="btn-primary py-3 px-8 flex items-center justify-center gap-2 ml-auto disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
                                         <FiSave />
