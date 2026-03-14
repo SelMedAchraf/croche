@@ -82,14 +82,27 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── Below-the-fold (lazy) ────────────────────────────────────────── */}
-      <Suspense fallback={<div className="min-h-[600px]" />}>
+      {/* ── Featured Products Header ── LCP Target moved here for instant paint ─────────── */}
+      <section className="bg-white pt-16">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12 hero-fade-in animation-delay-400">
+            <h2 className="text-4xl font-display font-bold text-primary mb-4 break-words">
+              {t('home.featured')}
+            </h2>
+            <div className="w-20 h-1 bg-highlight mx-auto rounded-full"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Below-the-fold Content (lazy) ─────────────────────────────────── */}
+      <Suspense fallback={<div className="min-h-[600px] bg-white" />}>
         <HomeSections
           featuredProducts={featuredProducts}
           loading={loading}
           isRTL={isRTL}
         />
       </Suspense>
+
     </div>
   );
 };

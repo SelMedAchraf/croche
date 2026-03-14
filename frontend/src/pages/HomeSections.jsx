@@ -2,9 +2,8 @@
  * HomeSections — below-the-fold content for the Home page.
  *
  * This file is lazy-loaded so that framer-motion is NOT part of the
- * initial JS bundle. The hero h1 paints first, then this chunk loads.
+ * initial JS bundle. 
  */
-import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -89,24 +88,12 @@ const HomeSections = ({ featuredProducts, loading, isRTL }) => {
 
     return (
         <>
-            {/* Featured Products */}
-            <section className="section-padding bg-white min-h-[600px]">
-                <div className="max-w-7xl mx-auto">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="text-center mb-12"
-                    >
-                        <h2 className="text-4xl font-display font-bold text-primary mb-4 break-words">
-                            {t('home.featured')}
-                        </h2>
-                        <div className="w-20 h-1 bg-highlight mx-auto rounded-full"></div>
-                    </motion.div>
-
+            {/* Featured Products Content */}
+            <section className="bg-white pb-16">
+                <div className="max-w-7xl mx-auto px-4">
                     {loading ? (
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                            {[...Array(6)].map((_, i) => (
+                            {[...Array(3)].map((_, i) => (
                                 <div key={i} className="card animate-pulse">
                                     <div className="h-48 sm:h-72 bg-gray-200"></div>
                                     <div className="p-4">

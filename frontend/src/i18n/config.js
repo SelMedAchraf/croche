@@ -3,15 +3,23 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import HttpBackend from 'i18next-http-backend';
 
+// Bundling ONLY English for instant LCP paint. 
+// Arabic and French remain dynamic for reduced bundle size.
+import enTranslation from './en.json';
+
 i18n
-  .use(HttpBackend) // Load translations from /public/locales
+  .use(HttpBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
     supportedLngs: ['en', 'fr', 'ar'],
     
-    // Path to the translation files
+    // Bundled resources for immediate paint
+    resources: {
+      en: { translation: enTranslation }
+    },
+
     backend: {
       loadPath: '/locales/{{lng}}/translation.json',
     },
@@ -26,6 +34,7 @@ i18n
       order: ['localStorage', 'htmlTag', 'cookie', 'navigator'],
     },
   });
+
 
 
 // Apply RTL direction on init
