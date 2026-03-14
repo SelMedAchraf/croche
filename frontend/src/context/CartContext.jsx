@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 const CartContext = createContext();
@@ -12,6 +13,7 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
+  const { t } = useTranslation();
   const [cartItems, setCartItems] = useState(() => {
     const savedCart = localStorage.getItem('crocheCart');
     return savedCart ? JSON.parse(savedCart) : [];
@@ -49,8 +51,10 @@ export const CartProvider = ({ children }) => {
       return [...prevItems, { ...product, quantity, selectedColor }];
     });
 
-    toast.success(`${product.category} added to cart!`, {
-      description: quantity > 1 ? `${quantity} items added` : 'Product successfully added',
+    toast.success(t('cart.successToast'), {
+      description: quantity > 1
+        ? t('cart.itemsAdded', { count: quantity })
+        : t('cart.itemAdded'),
       duration: 3000,
     });
   };

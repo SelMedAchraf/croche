@@ -146,7 +146,7 @@ const Checkout = () => {
       }
     } catch (error) {
       console.error('Error placing order:', error);
-      toast.error('Failed to place order. Please try again.');
+      toast.error(t('checkout.failedOrder'));
     } finally {
       setLoading(false);
     }
@@ -183,7 +183,7 @@ const Checkout = () => {
             {t('checkout.thankYou')}
           </p>
           <p className="text-sm text-text/60">
-            Redirecting to home page...
+            {t('checkout.redirecting')}
           </p>
         </motion.div>
       </div>
@@ -215,7 +215,7 @@ const Checkout = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-text mb-2">
-                    Wilaya (Province) *
+                    {t('checkout.wilayaLabel')}
                   </label>
                   <div className="relative">
                     <select
@@ -223,9 +223,9 @@ const Checkout = () => {
                       value={formData.wilaya_code}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all appearance-none"
+                      className="w-full px-4 py-2 pr-10 rtl:pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all appearance-none bg-white"
                     >
-                      <option value="">Select your wilaya</option>
+                      <option value="">{t('checkout.selectWilaya')}</option>
                       {deliveryPrices.map((wilaya) => (
                         <option key={wilaya.id} value={wilaya.wilaya_code}>
                           {wilaya.wilaya_code} - {wilaya.wilaya_name}
@@ -242,7 +242,7 @@ const Checkout = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-text mb-2">
-                    Delivery Type *
+                    {t('checkout.deliveryTypeLabel')}
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
@@ -254,10 +254,10 @@ const Checkout = () => {
                         }`}
                     >
                       <FiHome className="w-6 h-6 mx-auto mb-2" />
-                      <p className="font-medium text-sm">Home Delivery</p>
+                      <p className="font-medium text-sm">{t('checkout.homeDelivery')}</p>
                       {formData.wilaya_code && (
                         <p className="text-xs text-text/60 mt-1">
-                          {deliveryPrices.find(w => w.wilaya_code === parseInt(formData.wilaya_code))?.home_delivery_price || 0} DA
+                          {deliveryPrices.find(w => w.wilaya_code === parseInt(formData.wilaya_code))?.home_delivery_price || 0} {t('common.da')}
                         </p>
                       )}
                     </button>
@@ -270,10 +270,10 @@ const Checkout = () => {
                         }`}
                     >
                       <FiTruck className="w-6 h-6 mx-auto mb-2" />
-                      <p className="font-medium text-sm">Stop Desk</p>
+                      <p className="font-medium text-sm">{t('checkout.stopDesk')}</p>
                       {formData.wilaya_code && (
                         <p className="text-xs text-text/60 mt-1">
-                          {deliveryPrices.find(w => w.wilaya_code === parseInt(formData.wilaya_code))?.stopdesk_delivery_price || 0} DA
+                          {deliveryPrices.find(w => w.wilaya_code === parseInt(formData.wilaya_code))?.stopdesk_delivery_price || 0} {t('common.da')}
                         </p>
                       )}
                     </button>
@@ -312,19 +312,19 @@ const Checkout = () => {
 
                 {formData.delivery_type === 'home' && (
                   <div>
-                  <label className="block text-sm font-medium text-text mb-2">
-                    Full Address *
-                  </label>
-                  <textarea
-                    name="full_address"
+                    <label className="block text-sm font-medium text-text mb-2">
+                      {t('checkout.fullAddress')} *
+                    </label>
+                    <textarea
+                      name="full_address"
                       value={formData.full_address}
-                    onChange={handleChange}
+                      onChange={handleChange}
                       required
-                    rows="2"
-                    className="input-field resize-none"
-                    placeholder="Street address, building, apartment number..."
-                  />
-                </div>
+                      rows="2"
+                      className="input-field resize-none"
+                      placeholder={t('checkout.addressPlaceholder')}
+                    />
+                  </div>
                 )}
 
                 <div className="border-t pt-4">
@@ -334,15 +334,15 @@ const Checkout = () => {
                       <FiCreditCard className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="font-medium">{t('checkout.cashOnDelivery')}</p>
-                        <p className="text-sm text-text/60">Pay when you receive your order</p>
+                        <p className="text-sm text-text/60">{t('checkout.cashOnDeliveryDesc')}</p>
                       </div>
                     </div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 font-mono rtl:font-sans">
                       <p className="text-sm text-blue-900 font-medium mb-1">
-                        Deposit Required
+                        {t('checkout.depositRequired')}
                       </p>
                       <p className="text-sm text-blue-800">
-                        To confirm your order and begin production, a deposit payment is required. Our team will contact you to arrange the deposit and provide payment details. The remaining balance will be paid upon delivery.
+                        {t('checkout.depositDesc')}
                       </p>
                     </div>
                   </div>
@@ -353,7 +353,7 @@ const Checkout = () => {
                   disabled={loading}
                   className="btn-primary w-full py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Processing...' : t('checkout.placeOrder')}
+                  {loading ? t('checkout.processing') : t('checkout.placeOrder')}
                 </button>
               </form>
             </div>
@@ -397,18 +397,18 @@ const Checkout = () => {
                         </h3>
                         {item.price !== null ? (
                           <p className="text-sm text-text/60">
-                            Qty: {item.quantity || 1} × {item.price} DA
+                            {t('checkout.qty')} {item.quantity || 1} × {item.price} {t('common.da')}
                           </p>
                         ) : (
                           <p className="text-sm text-yellow-600">
-                            Price pending admin confirmation
+                            {t('checkout.pricePending')}
                           </p>
                         )}
                       </div>
                       <div className="font-semibold text-primary">
                         {item.price !== null
-                          ? `${(item.price * (item.quantity || 1)).toFixed(2)} DA`
-                          : 'TBD'}
+                          ? `${(item.price * (item.quantity || 1)).toFixed(2)} ${t('common.da')}`
+                          : t('cart.priceTBD')}
                       </div>
                     </div>
                   );
@@ -418,23 +418,23 @@ const Checkout = () => {
               {cartItems.some(item => item.price === null) && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
                   <p className="text-sm text-yellow-800">
-                    ⚠️ Your order includes custom items with pending prices. We'll confirm the final price before processing payment.
+                    {t('checkout.pendingOrderWarning')}
                   </p>
                 </div>
               )}
 
               <div className="border-t pt-4 space-y-3">
                 <div className="flex justify-between text-text/70">
-                  <span>Subtotal</span>
-                  <span>{getCartTotal().toFixed(2)} DA</span>
+                  <span>{t('checkout.subtotal')}</span>
+                  <span>{getCartTotal().toFixed(2)} {t('common.da')}</span>
                 </div>
                 <div className="flex justify-between text-text/70">
-                  <span>Delivery ({formData.delivery_type === 'home' ? 'Home' : 'Stop Desk'})</span>
-                  <span>{deliveryPrice > 0 ? `${deliveryPrice.toFixed(2)} DA` : 'Select wilaya'}</span>
+                  <span>{t('checkout.delivery')} ({formData.delivery_type === 'home' ? t('checkout.home') : t('checkout.stopDeskLabel')})</span>
+                  <span>{deliveryPrice > 0 ? `${deliveryPrice.toFixed(2)} ${t('common.da')}` : t('checkout.selectWilayaPrompt')}</span>
                 </div>
                 <div className="flex justify-between text-xl font-bold pt-3 border-t">
                   <span>{t('cart.total')}</span>
-                  <span className="text-primary">{(getCartTotal() + deliveryPrice).toFixed(2)} DA</span>
+                  <span className="text-primary">{(getCartTotal() + deliveryPrice).toFixed(2)} {t('common.da')}</span>
                 </div>
               </div>
             </div>

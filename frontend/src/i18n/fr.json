@@ -89,7 +89,10 @@
         "signInDesc": "Connectez-vous de manière sécurisée avec Google pour compléter votre commande et suivre facilement son avancement.",
         "cancelBrowsing": "Annuler et continuer à naviguer",
         "cartCleared": "Panier vidé avec succès",
-        "loginFailed": "Impossible de lancer la connexion Google. Veuillez réessayer."
+        "loginFailed": "Échec du lancement de la connexion Google. Veuillez réessayer.",
+        "successToast": "Ajouté au panier !",
+        "itemsAdded": "{{count}} articles ajoutés",
+        "itemAdded": "Produit ajouté avec succès"
     },
     "checkout": {
         "title": "Paiement",
@@ -113,14 +116,20 @@
         "payWhenReceive": "Payez à la réception de votre commande",
         "depositRequired": "Acompte Requis",
         "depositDesc": "Pour confirmer votre commande et commencer la production, un acompte est requis. Notre équipe vous contactera pour organiser le paiement. Le solde restant sera payé à la livraison.",
+        "wilayaLabel": "Wilaya (Province) *",
+        "deliveryTypeLabel": "Type de Livraison *",
+        "pendingOrderWarning": "⚠️ Votre commande inclut des articles personnalisés avec des prix en attente. Nous confirmerons le prix final avant de traiter le paiement.",
+        "selectWilayaPrompt": "Sélectionnez wilaya",
+        "home": "Domicile",
+        "stopDeskLabel": "Point de Retrait",
+        "cashOnDeliveryDesc": "Payez à la réception de votre commande",
         "success": "Commande passée avec succès !",
         "thankYou": "Merci pour votre commande",
         "redirecting": "Redirection vers la page d'accueil...",
         "subtotal": "Sous-total",
         "delivery": "Livraison",
-        "qty": "Qté",
+        "qty": "Qté :",
         "pricePending": "Prix en attente de confirmation",
-        "pendingWarning": "Votre commande inclut des articles personnalisés avec des prix en attente. Nous confirmerons le prix final avant de traiter le paiement.",
         "failedOrder": "Échec de la commande. Veuillez réessayer."
     },
     "customOrders": {

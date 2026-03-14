@@ -89,7 +89,10 @@
     "signInDesc": "Sign in securely with Google to complete your order and easily track its progress later.",
     "cancelBrowsing": "Cancel and keep browsing",
     "cartCleared": "Cart cleared successfully",
-    "loginFailed": "Failed to launch Google Login. Please try again."
+    "loginFailed": "Failed to launch Google Login. Please try again.",
+    "successToast": "Added to cart!",
+    "itemsAdded": "{{count}} items added",
+    "itemAdded": "Product successfully added"
   },
   "checkout": {
     "title": "Checkout",
@@ -113,14 +116,20 @@
     "payWhenReceive": "Pay when you receive your order",
     "depositRequired": "Deposit Required",
     "depositDesc": "To confirm your order and begin production, a deposit payment is required. Our team will contact you to arrange the deposit and provide payment details. The remaining balance will be paid upon delivery.",
+    "wilayaLabel": "Wilaya (Province) *",
+    "deliveryTypeLabel": "Delivery Type *",
+    "pendingOrderWarning": "⚠️ Your order includes custom items with pending prices. We'll confirm the final price before processing payment.",
+    "selectWilayaPrompt": "Select wilaya",
+    "home": "Home",
+    "stopDeskLabel": "Stop Desk",
+    "cashOnDeliveryDesc": "Pay when you receive your order",
     "success": "Order placed successfully!",
     "thankYou": "Thank you for your order",
     "redirecting": "Redirecting to home page...",
     "subtotal": "Subtotal",
     "delivery": "Delivery",
-    "qty": "Qty",
+    "qty": "Qty:",
     "pricePending": "Price pending admin confirmation",
-    "pendingWarning": "Your order includes custom items with pending prices. We'll confirm the final price before processing payment.",
     "failedOrder": "Failed to place order. Please try again."
   },
   "customOrders": {

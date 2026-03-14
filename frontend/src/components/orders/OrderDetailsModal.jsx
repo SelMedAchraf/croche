@@ -218,7 +218,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                         <div className="space-y-4">
                                                                             {data.wrapping && (
                                                                                 <div>
-                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">Wrapping</p>
+                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.wrapping')}</p>
                                                                                     <div className="flex justify-between text-sm bg-white p-2 rounded border border-gray-200 hover:border-primary/50 transition-colors">
                                                                                         <div className="flex items-center gap-2">
                                                                                             {data.wrapping.image_url && (
