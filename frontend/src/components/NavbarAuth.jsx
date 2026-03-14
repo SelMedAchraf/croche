@@ -28,13 +28,22 @@ const NavbarAuth = ({ mobile = false, closeMenu = () => { } }) => {
     }, []);
 
     const handleLogin = async () => {
+        console.log('Login attempt initiated...');
         try {
-            localStorage.setItem('returnToAfterLogin', window.location.pathname);
-            await authService.signInWithGoogle();
+            const currentPath = window.location.pathname;
+            localStorage.setItem('returnToAfterLogin', currentPath);
+            console.log('Saved return path:', currentPath);
+
+            const { data, error } = await authService.signInWithGoogle();
+            console.log('Supabase sign-in response:', { data, error });
+
+            if (error) throw error;
         } catch (error) {
             console.error('Failed to login:', error);
+            alert(`Login failed: ${error.message || 'Unknown error'}`);
         }
     };
+
 
     const handleLogout = async () => {
         try {
