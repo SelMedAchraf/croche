@@ -334,7 +334,7 @@ const ItemsTab = ({ setZoomedImage }) => {
                                         <p className="text-gray-600 mb-1 font-medium">
                                             Drop your image here, or <span className="text-primary">browse</span>
                                         </p>
-                                        <p className="text-sm text-gray-400">Supports: JPG, PNG, GIF (Max 5MB)</p>
+                                        <p className="text-sm text-gray-400">Supports: JPG, PNG, GIF</p>
                                     </div>
                                 ) : (
                                     <div className="relative rounded-lg overflow-hidden border-2 border-gray-200">

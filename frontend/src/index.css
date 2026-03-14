@@ -1,3 +1,26 @@
+/*
+  Adjusted fallback fonts — closely match the metrics of Playfair Display and Poppins
+  so the layout barely moves if the web font hasn't cached yet (first visit).
+  Technique: https://web.dev/css-size-adjust/
+*/
+@font-face {
+  font-family: 'Playfair Display Fallback';
+  src: local('Georgia');
+  size-adjust: 97%;
+  ascent-override: 95%;
+  descent-override: 25%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Poppins Fallback';
+  src: local('Arial');
+  size-adjust: 112%;
+  ascent-override: 88%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

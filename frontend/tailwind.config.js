@@ -14,8 +14,8 @@ export default {
         text: '#3A3A3A',
       },
       fontFamily: {
-        display: ['Playfair Display', 'serif'],
-        body: ['Poppins', 'sans-serif'],
+        display: ['Playfair Display', 'Playfair Display Fallback', 'Georgia', 'serif'],
+        body: ['Poppins', 'Poppins Fallback', 'Arial', 'sans-serif'],
       },
     },
   },

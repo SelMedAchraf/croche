@@ -12,17 +12,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://xqflfxplxcxwiftsdccv.supabase.co">
 
-  <!-- Optimized Font Loading (Non-blocking) -->
-  <link rel="preload" as="style"
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap">
+  <!--
+    Font loading strategy for CLS = 0:
+    - display=optional: browser uses fallback if font isn't ready in the first ~100ms.
+      Once cached (second visit) it loads instantly. No swap ever happens → no layout shift.
+    - Loaded synchronously (blocking) so fonts are requested as early as possible.
+  -->
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
-    media="print" onload="this.media='all'">
-  <noscript>
-    <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap">
-  </noscript>
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=optional">
 </head>
+
 
 <body>
   <div id="root"></div>
