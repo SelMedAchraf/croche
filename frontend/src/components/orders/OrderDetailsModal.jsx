@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiX, FiInfo, FiCheckCircle, FiZoomIn, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const OrderDetailsModal = ({ order, isOpen, onClose }) => {
+    const { t } = useTranslation();
     const [expandedItems, setExpandedItems] = useState({});
     const [zoomedImage, setZoomedImage] = useState(null);
 
@@ -25,8 +27,8 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                     {/* Header */}
                     <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b px-6 py-4 flex items-center justify-between z-10">
                         <div>
-                            <h2 className="text-xl font-bold font-display text-primary">Order Details</h2>
-                            <p className="text-sm text-text/60 font-mono mt-1">Order #{order.order_id}</p>
+                            <h2 className="text-xl font-bold font-display text-primary">{t('orderDetails.title')}</h2>
+                            <p className="text-sm text-text/60 font-mono mt-1">{t('orderDetails.orderIdPrefix', 'Order #')}{order.order_id}</p>
                         </div>
                         <button
                             onClick={onClose}
@@ -41,51 +43,51 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Order Info */}
                             <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 space-y-3">
-                                <h3 className="font-semibold text-lg border-b pb-2 mb-3">Order Summary</h3>
+                                <h3 className="font-semibold text-lg border-b pb-2 mb-3">{t('orderDetails.orderSummary')}</h3>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-text/60">Date:</span>
-                                    <span className="font-medium">{new Date(order.created_at).toLocaleString('en-US')}</span>
+                                    <span className="text-text/60">{t('orderDetails.date')}</span>
+                                    <span className="font-medium">{new Date(order.created_at).toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-text/60">Status:</span>
-                                    <span className="font-medium capitalize">{order.status.replace('_', ' ')}</span>
+                                    <span className="text-text/60">{t('orderDetails.status')}</span>
+                                    <span className="font-medium capitalize">{t(`orderTable.statuses.${order.status}`)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm pt-2 border-t">
-                                    <span className="text-text/60">Total:</span>
-                                    <span className="font-bold text-primary">{order.total_amount} DA {hasPendingItems ? '(+ Pending)' : ''}</span>
+                                    <span className="text-text/60">{t('orderDetails.total')}</span>
+                                    <span className="font-bold text-primary">{order.total_amount} {t('common.da')} {hasPendingItems ? t('orderDetails.pendingPlus') : ''}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-text/60">Deposit:</span>
-                                    <span className="font-medium">{order.deposit_value || 0} DA</span>
+                                    <span className="text-text/60">{t('orderDetails.deposit')}</span>
+                                    <span className="font-medium">{order.deposit_value || 0} {t('common.da')}</span>
                                 </div>
                                 <div className="flex justify-between text-sm pt-2 border-t">
-                                    <span className="text-text/60">Remaining Balance:</span>
-                                    <span className="font-medium">{order.total_amount - (order.deposit_value || 0)} DA</span>
+                                    <span className="text-text/60">{t('orderDetails.remainingBalance')}</span>
+                                    <span className="font-medium">{order.total_amount - (order.deposit_value || 0)} {t('common.da')}</span>
                                 </div>
                             </div>
 
                             {/* Customer Info */}
                             <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 space-y-3">
-                                <h3 className="font-semibold text-lg border-b pb-2 mb-3">Customer Information</h3>
+                                <h3 className="font-semibold text-lg border-b pb-2 mb-3">{t('orderDetails.customerInfo')}</h3>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-text/60">Name:</span>
+                                    <span className="text-text/60">{t('orderDetails.name')}</span>
                                     <span className="font-medium">{order.customer_name}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-text/60">Phone:</span>
+                                    <span className="text-text/60">{t('orderDetails.phone')}</span>
                                     <span className="font-medium">{order.customer_phone}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-text/60">Wilaya/City:</span>
+                                    <span className="text-text/60">{t('orderDetails.wilayaCity')}</span>
                                     <span className="font-medium">{order.customer_city}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-text/60">Delivery:</span>
-                                    <span className="font-medium capitalize">{order.delivery_type.replace('_', ' ')} (Price: {order.delivery_price} DA)</span>
+                                    <span className="text-text/60">{t('orderDetails.delivery')}</span>
+                                    <span className="font-medium capitalize">{t(`checkout.${order.delivery_type === 'home' ? 'homeDelivery' : 'stopDesk'}`)} ({t('productDetails.price')}: {order.delivery_price} {t('common.da')})</span>
                                 </div>
                                 {order.delivery_type === 'home' && order.full_address && (
                                     <div className="flex justify-between text-sm pt-2 border-t mt-2">
-                                        <span className="text-text/60">Address:</span>
+                                        <span className="text-text/60">{t('orderDetails.address')}</span>
                                         <span className="font-medium text-right max-w-[200px]">{order.full_address}</span>
                                     </div>
                                 )}
@@ -94,7 +96,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
 
                         {/* Order Items */}
                         <div>
-                            <h3 className="text-xl font-bold font-display text-primary border-b pb-3 mb-4">Order Items</h3>
+                            <h3 className="text-xl font-bold font-display text-primary border-b pb-3 mb-4">{t('orderDetails.orderItems')}</h3>
                             <div className="space-y-4">
                                 {order.order_items?.map((item, idx) => {
                                     const isStandard = !item.custom_order_type;
@@ -123,23 +125,23 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                 </div>
                                                 <div className="flex-grow w-full">
                                                     <h5 className="font-bold text-gray-900 text-lg flex items-center gap-2 flex-wrap">
-                                                        {isBouquet ? 'Custom Flower Bouquet' : isRequest ? 'Custom Crochet Request' : (item.products?.name || item.products?.category || `Product #${String(item.product_id).slice(0, 8)}`)}
+                                                        {isBouquet ? t('orderDetails.customBouquet') : isRequest ? t('orderDetails.customRequest') : (item.products?.name || item.products?.category || `${t('orderDetails.productLabel')} #${String(item.product_id).slice(0, 8)}`)}
                                                     </h5>
-                                                    {(!isBouquet && !isRequest) && <p className="text-sm text-gray-500">Quantity: {item.quantity || 1}</p>}
+                                                    {(!isBouquet && !isRequest) && <p className="text-sm text-gray-500">{t('orderDetails.quantity')} {item.quantity || 1}</p>}
                                                 </div>
                                                 <div className="sm:text-right flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto mt-2 sm:mt-0 gap-2">
                                                     {(isBouquet || isRequest) && (
                                                         <span className="text-gray-400 text-sm">
-                                                            {expandedItems[uniqueId] ? 'Collapse ▲' : 'Details ▼'}
+                                                            {expandedItems[uniqueId] ? t('orderDetails.collapse') : t('orderDetails.expand')}
                                                         </span>
                                                     )}
                                                     {item.price !== null ? (
                                                         <div className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-semibold shadow-sm">
-                                                            Total: {(item.price * (item.quantity || 1)).toFixed(2)} DA
+                                                            {t('orderDetails.total')} {(item.price * (item.quantity || 1)).toFixed(2)} {t('common.da')}
                                                         </div>
                                                     ) : (
                                                         <div className="px-3 py-1 bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-lg text-sm font-semibold shadow-sm flex items-center gap-1 whitespace-nowrap">
-                                                            ⚠️ Pending Price
+                                                            {t('orderDetails.pendingPrice')}
                                                         </div>
                                                     )}
                                                 </div>
@@ -162,7 +164,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                         <div className="space-y-4">
                                                                             {data.flowers?.length > 0 && (
                                                                                 <div>
-                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">Flowers</p>
+                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.flowers')}</p>
                                                                                     <div className="space-y-2">
                                                                                         {data.flowers.map((f, i) => (
                                                                                             <div key={i} className="flex justify-between text-sm bg-white p-2 rounded border border-gray-200 hover:border-primary/50 transition-colors">
@@ -178,8 +180,8 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                                                     <span className="font-medium">{f.name} (x{f.quantity})</span>
                                                                                                 </div>
                                                                                                 <div className="flex flex-col items-end">
-                                                                                                    <span className="text-gray-600">{(f.price * f.quantity).toFixed(2)} DA</span>
-                                                                                                    <span className="text-xs text-gray-500 mt-1">{f.price} DA/unit</span>
+                                                                                                    <span className="text-gray-600">{(f.price * f.quantity).toFixed(2)} {t('common.da')}</span>
+                                                                                                    <span className="text-xs text-gray-500 mt-1">{f.price} {t('common.da')}/{t('common.unit')}</span>
                                                                                                 </div>
                                                                                             </div>
                                                                                         ))}
@@ -188,7 +190,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                             )}
                                                                             {data.accessories?.length > 0 && (
                                                                                 <div>
-                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">Accessories</p>
+                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.accessories')}</p>
                                                                                     <div className="space-y-2">
                                                                                         {data.accessories.map((a, i) => (
                                                                                             <div key={i} className="flex justify-between text-sm bg-white p-2 rounded border border-gray-200 hover:border-primary/50 transition-colors">
@@ -204,8 +206,8 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                                                     <span className="font-medium">{a.name} (x{a.quantity})</span>
                                                                                                 </div>
                                                                                                 <div className="flex flex-col items-end">
-                                                                                                    <span className="text-gray-600">{(a.price * a.quantity).toFixed(2)} DA</span>
-                                                                                                    <span className="text-xs text-gray-500 mt-1">{a.price} DA/unit</span>
+                                                                                                    <span className="text-gray-600">{(a.price * a.quantity).toFixed(2)} {t('common.da')}</span>
+                                                                                                    <span className="text-xs text-gray-500 mt-1">{a.price} {t('common.da')}/{t('common.unit')}</span>
                                                                                                 </div>
                                                                                             </div>
                                                                                         ))}
@@ -229,13 +231,13 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                                             )}
                                                                                             <span className="font-medium">{data.wrapping.name}</span>
                                                                                         </div>
-                                                                                        <span className="text-gray-600">{data.wrapping.price} DA</span>
+                                                                                        <span className="text-gray-600">{data.wrapping.price} {t('common.da')}</span>
                                                                                     </div>
                                                                                 </div>
                                                                             )}
                                                                             {data.colors?.length > 0 && (
                                                                                 <div>
-                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">Colors</p>
+                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.colors')}</p>
                                                                                     <div className="flex flex-wrap gap-2">
                                                                                         {data.colors.map((c, i) => (
                                                                                             <div key={i} className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200">
@@ -257,14 +259,14 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                             )}
                                                                             {data.description && (
                                                                                 <div>
-                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">Description</p>
+                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.description')}</p>
                                                                                     <p className="text-sm bg-white p-3 rounded border border-gray-200 text-gray-700">{data.description}</p>
                                                                                 </div>
                                                                             )}
                                                                             {/* Reference Images for Bouquet */}
                                                                             {item.reference_images?.length > 0 && (
                                                                                 <div>
-                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">Reference Image</p>
+                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.referenceImage')}</p>
                                                                                     <div className="flex gap-2">
                                                                                         {item.reference_images.slice(0, 1).map((img, i) => {
                                                                                             const src = typeof img === 'string' ? img : img.url || img.image_url;
@@ -294,7 +296,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                         <div className="space-y-4">
                                                                             {data.description && (
                                                                                 <div>
-                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">Description</p>
+                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.description')}</p>
                                                                                     <p className="text-sm bg-white p-3 rounded border border-gray-200 text-gray-700">{data.description}</p>
                                                                                 </div>
                                                                             )}
@@ -302,7 +304,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                         <div className="space-y-4">
                                                                             {data.colors?.length > 0 && (
                                                                                 <div>
-                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">Colors</p>
+                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.colors')}</p>
                                                                                     <div className="flex flex-wrap gap-2">
                                                                                         {data.colors.map((c, i) => (
                                                                                             <div key={i} className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200">
@@ -325,7 +327,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
                                                                             {/* Reference Images for Custom Request */}
                                                                             {item.reference_images?.length > 0 && (
                                                                                 <div>
-                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">Reference Images</p>
+                                                                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.referenceImages')}</p>
                                                                                     <div className="flex gap-2 flex-wrap">
                                                                                         {item.reference_images.map((img, i) => {
                                                                                             const src = typeof img === 'string' ? img : img.url || img.image_url;

@@ -286,6 +286,7 @@
         "cancelReq": "طلب إلغاء",
         "dateLabel": "التاريخ",
         "totalLabel": "الإجمالي",
+        "pendingIndicator": "(+)",
         "statuses": {
             "pending": "قيد الانتظار",
             "waiting_deposit": "انتظار الدفعة المقدمة",
@@ -324,7 +325,9 @@
         "customBouquet": "باقة زهور مخصصة",
         "customRequest": "طلب كروشيه مخصص",
         "quantity": "الكمية:",
-        "pendingPlus": "(+ معلق)"
+        "pendingPlus": "(+ معلق)",
+        "orderIdPrefix": "الطلب #",
+        "productLabel": "منتج"
     },
     "account": {
         "title": "إدارة حسابي",

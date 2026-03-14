@@ -286,6 +286,7 @@
     "cancelReq": "Cancel Req.",
     "dateLabel": "Date",
     "totalLabel": "Total",
+    "pendingIndicator": "(+)",
     "statuses": {
       "pending": "Pending",
       "waiting_deposit": "Waiting Deposit",
@@ -324,7 +325,9 @@
     "customBouquet": "Custom Flower Bouquet",
     "customRequest": "Custom Crochet Request",
     "quantity": "Quantity:",
-    "pendingPlus": "(+ Pending)"
+    "pendingPlus": "(+ Pending)",
+    "orderIdPrefix": "Order #",
+    "productLabel": "Product"
   },
   "account": {
     "title": "Manage My Account",

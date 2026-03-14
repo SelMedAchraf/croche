@@ -39,8 +39,8 @@ const OrderTable = ({ orders, onCancel, onRequestCancel, onViewDetails }) => {
                         {orders.map((order) => {
                             const hasPendingItems = order.order_items?.some(item => item.price === null);
                             const totalAmountText = hasPendingItems
-                                ? `${order.total_amount} DA (+)`
-                                : `${order.total_amount} DA`;
+                                ? `${order.total_amount} ${t('common.da')} ${t('orderTable.pendingIndicator')}`
+                                : `${order.total_amount} ${t('common.da')}`;
 
                             return (
                                 <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">

@@ -286,6 +286,7 @@
         "cancelReq": "Ann. Demandée",
         "dateLabel": "Date",
         "totalLabel": "Total",
+        "pendingIndicator": "(+)",
         "statuses": {
             "pending": "En Attente",
             "waiting_deposit": "Attente Acompte",
@@ -324,7 +325,9 @@
         "customBouquet": "Bouquet de Fleurs Personnalisé",
         "customRequest": "Demande de Crochet Personnalisé",
         "quantity": "Quantité :",
-        "pendingPlus": "(+ En Attente)"
+        "pendingPlus": "(+ En Attente)",
+        "orderIdPrefix": "Commande #",
+        "productLabel": "Produit"
     },
     "account": {
         "title": "Gérer Mon Compte",
