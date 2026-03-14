@@ -46,7 +46,7 @@ const NavbarAuth = ({ mobile = false, closeMenu = () => { } }) => {
         }
     };
 
-    const isAdmin = user && (user.app_metadata?.is_admin || user.user_metadata?.is_admin || user.email === 'crochetella19@gmail.com');
+    const isAdmin = user && (user.app_metadata?.is_admin || user.user_metadata?.is_admin || user.email === 'crochetwebsite19@gmail.com');
 
     if (mobile) {
         return (

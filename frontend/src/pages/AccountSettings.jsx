@@ -36,7 +36,7 @@ const AccountSettings = () => {
             const currentUser = await authService.getCurrentUser();
             if (currentUser) {
                 setUser(currentUser);
-                const adminCheck = currentUser.app_metadata?.is_admin || currentUser.user_metadata?.is_admin || currentUser.email === 'crochetella19@gmail.com';
+                const adminCheck = currentUser.app_metadata?.is_admin || currentUser.user_metadata?.is_admin || currentUser.email === 'crochetwebsite19@gmail.com';
                 setIsAdmin(adminCheck);
 
                 setFormData({

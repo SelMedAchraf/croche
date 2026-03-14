@@ -180,8 +180,8 @@ const Contact = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold mb-1">{t('contact.emailLabel')}</h4>
-                    <a href="mailto:crochetella19@gmail.com" className="text-text/70 hover:text-primary">
-                      crochetella19@gmail.com
+                    <a href="mailto:crochetwebsite19@gmail.com" className="text-text/70 hover:text-primary">
+                      crochetwebsite19@gmail.com
                     </a>
                   </div>
                 </div>
