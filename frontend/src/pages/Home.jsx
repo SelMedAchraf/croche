@@ -85,7 +85,7 @@ const Home = () => {
       {/* ── Featured Products Header ── LCP Target moved here for instant paint ─────────── */}
       <section className="bg-white pt-16">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12 hero-fade-in animation-delay-400">
+          <div className="text-center pb-12 hero-fade-in animation-delay-400">
             <h2 className="text-4xl font-display font-bold text-primary mb-4 break-words">
               {t('home.featured')}
             </h2>

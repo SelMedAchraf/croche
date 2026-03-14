@@ -22,7 +22,7 @@ const AuthCallback = () => {
                 const user = session.user;
                 const isAdmin = user.app_metadata?.is_admin ||
                     user.user_metadata?.is_admin ||
-                    user.email === 'admincroche19@gmail.com';
+                    user.email === 'crochetella19@gmail.com';
 
                 if (isAdmin) {
                     localStorage.removeItem('returnToAfterLogin');

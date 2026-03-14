@@ -1,7 +1,7 @@
 ## Step 1: Generate a Google App Password
 
 1. Go to your Google Account on your phone or computer: [myaccount.google.com](https://myaccount.google.com).
-2. Make sure you are logged in as **admincroche19@gmail.com**.
+2. Make sure you are logged in as **crochetella19@gmail.com**.
 3. On the left side menu, click on **Security**.
 4. Scroll down to the **"How you sign in to Google"** section.
 5. First, verify that **2-Step Verification** is turned `On`. 
@@ -21,7 +21,7 @@
 2. Go into the `backend` folder and open the file named `.env`.
 3. Scroll to the very bottom of the `.env` file. You will see these two lines:
    ```env
-   EMAIL_USER=admincroche19@gmail.com
+   EMAIL_USER=crochetella19@gmail.com
    EMAIL_PASS=YOUR_APP_PASSWORD_HERE
    ```
 4. Delete `YOUR_APP_PASSWORD_HERE` and paste the 16-letter code you copied from Google.
