@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { authService } from '../services/authService';
 import OrderTable from '../components/orders/OrderTable';
@@ -9,6 +10,7 @@ import { motion } from 'framer-motion';
 
 const MyOrders = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -43,7 +45,6 @@ const MyOrders = () => {
 
         fetchOrders();
 
-        // Setup real-time listener just in case they log out
         const { data: authListener } = authService.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT' || !session) {
                 navigate('/');
@@ -56,7 +57,7 @@ const MyOrders = () => {
     }, [navigate]);
 
     const handleCancelOrder = async (orderId) => {
-        if (!window.confirm('Are you sure you want to cancel this order?')) return;
+        if (!window.confirm(t('myOrders.confirmCancel'))) return;
 
         try {
             const { data: { session } } = await authService.getSession();
@@ -73,12 +74,12 @@ const MyOrders = () => {
             }
         } catch (error) {
             console.error('Error cancelling order:', error);
-            alert(error.response?.data?.error || 'Failed to cancel the order. Please try again.');
+            alert(error.response?.data?.error || t('myOrders.failedCancel'));
         }
     };
 
     const handleRequestCancel = async (orderId) => {
-        if (!window.confirm('Request cancellation for this order? Our team will review the request.')) return;
+        if (!window.confirm(t('myOrders.confirmRequestCancel'))) return;
 
         try {
             const { data: { session } } = await authService.getSession();
@@ -95,7 +96,7 @@ const MyOrders = () => {
             }
         } catch (error) {
             console.error('Error requesting cancellation:', error);
-            alert(error.response?.data?.error || 'Failed to request cancellation. Please try again.');
+            alert(error.response?.data?.error || t('myOrders.failedRequestCancel'));
         }
     };
 
@@ -122,21 +123,21 @@ const MyOrders = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-10 text-center"
                 >
-                    <h1 className="text-4xl font-display font-bold text-primary mb-4">My Orders</h1>
-                    <p className="text-text/70">View and manage your previous orders</p>
+                    <h1 className="text-4xl font-display font-bold text-primary mb-4">{t('myOrders.title')}</h1>
+                    <p className="text-text/70">{t('myOrders.subtitle')}</p>
                 </motion.div>
 
                 {orders.length === 0 ? (
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
                         <span className="text-6xl mb-4 block">🧶</span>
-                        <h2 className="text-2xl font-display font-bold text-primary mb-2">No orders found</h2>
-                        <p className="text-text/70 mb-6">You haven't placed any orders yet.</p>
+                        <h2 className="text-2xl font-display font-bold text-primary mb-2">{t('myOrders.noOrders')}</h2>
+                        <p className="text-text/70 mb-6">{t('myOrders.noOrdersDesc')}</p>
                         <button
                             onClick={() => navigate('/products')}
                             className="btn-primary inline-flex items-center gap-2 mx-auto"
                         >
                             <FiShoppingBag />
-                            Start Shopping
+                            {t('myOrders.startShopping')}
                         </button>
                     </div>
                 ) : (
@@ -152,10 +153,10 @@ const MyOrders = () => {
                                     type="text"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Search by order ID..."
-                                    className="w-full px-4 py-2.5 pl-10 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white shadow-sm"
+                                    placeholder={t('myOrders.searchPlaceholder')}
+                                    className="w-full px-4 py-2.5 ps-10 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white shadow-sm"
                                 />
-                                <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
+                                <div className="absolute inset-y-0 start-3.5 flex items-center pointer-events-none">
                                     <FiSearch className="text-gray-400 w-5 h-5" />
                                 </div>
                             </div>
@@ -163,18 +164,18 @@ const MyOrders = () => {
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="w-full px-4 py-2.5 pr-10 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none bg-white cursor-pointer shadow-sm font-medium text-text/80"
+                                    className="w-full px-4 py-2.5 pe-10 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none bg-white cursor-pointer shadow-sm font-medium text-text/80"
                                 >
-                                    <option value="all">All Statuses</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="waiting_deposit">Waiting Deposit</option>
-                                    <option value="confirmed">Confirmed</option>
-                                    <option value="in_progress">In Progress</option>
-                                    <option value="delivered">Delivered</option>
-                                    <option value="done">Done</option>
-                                    <option value="cancelled">Cancelled</option>
+                                    <option value="all">{t('myOrders.allStatuses')}</option>
+                                    <option value="pending">{t('orderTable.statuses.pending')}</option>
+                                    <option value="waiting_deposit">{t('orderTable.statuses.waiting_deposit')}</option>
+                                    <option value="confirmed">{t('orderTable.statuses.confirmed')}</option>
+                                    <option value="in_progress">{t('orderTable.statuses.in_progress')}</option>
+                                    <option value="delivered">{t('orderTable.statuses.delivered')}</option>
+                                    <option value="done">{t('orderTable.statuses.done')}</option>
+                                    <option value="cancelled">{t('orderTable.statuses.cancelled')}</option>
                                 </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center">
+                                <div className="pointer-events-none absolute inset-y-0 end-3.5 flex items-center">
                                     <FiChevronDown className="text-gray-400 w-5 h-5" />
                                 </div>
                             </div>
@@ -187,8 +188,8 @@ const MyOrders = () => {
                                 className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center"
                             >
                                 <FiPackage className="w-16 h-16 mx-auto mb-4 text-gray-200" />
-                                <h2 className="text-xl font-display font-bold text-primary mb-2">No matching orders</h2>
-                                <p className="text-text/70 mb-4">Try adjusting your search or filters.</p>
+                                <h2 className="text-xl font-display font-bold text-primary mb-2">{t('myOrders.noMatchingOrders')}</h2>
+                                <p className="text-text/70 mb-4">{t('myOrders.noMatchingDesc')}</p>
                                 <button
                                     onClick={() => {
                                         setSearchTerm('');
@@ -196,7 +197,7 @@ const MyOrders = () => {
                                     }}
                                     className="text-primary font-semibold hover:underline"
                                 >
-                                    Clear all filters
+                                    {t('myOrders.clearFilters')}
                                 </button>
                             </motion.div>
                         ) : (
@@ -224,7 +225,7 @@ const MyOrders = () => {
                     isOpen={isModalOpen}
                     onClose={() => {
                         setIsModalOpen(false);
-                        setTimeout(() => setSelectedOrder(null), 300); // Wait for exit animation
+                        setTimeout(() => setSelectedOrder(null), 300);
                     }}
                 />
             </div>

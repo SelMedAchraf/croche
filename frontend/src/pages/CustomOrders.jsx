@@ -9,11 +9,13 @@ import {
 import { useItems } from '../hooks/useItems';
 import { useColors } from '../hooks/useColors';
 import { useCart } from '../context/CartContext';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const CustomOrders = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedOption = searchParams.get('type');
@@ -32,10 +34,10 @@ const CustomOrders = () => {
           className="text-center mb-12"
         >
           <h1 className="text-4xl sm:text-5xl font-display font-bold text-primary mb-4">
-            Custom Orders
+            {t('customOrders.title')}
           </h1>
           <p className="text-xl text-text/70 max-w-2xl mx-auto">
-            Create your personalized flower bouquet or request a custom crochet design
+            {t('customOrders.subtitle')}
           </p>
           <div className="w-20 h-1 bg-highlight mx-auto rounded-full mt-6"></div>
         </motion.div>
@@ -59,20 +61,21 @@ const CustomOrders = () => {
 
 // Option Selection Component
 const OptionSelection = ({ onSelectOption }) => {
+  const { t } = useTranslation();
   const options = [
     {
       id: 'bouquet',
-      title: 'Custom Flower Bouquet',
+      title: t('customOrders.bouquetTitle'),
       icon: '💐',
-      description: 'Design your own unique flower bouquet by selecting flowers, colors, wrapping, and accessories',
-      features: ['Choose your flowers', 'Pick colors', 'Select wrapping', 'Add accessories']
+      description: t('customOrders.bouquetDesc'),
+      features: t('customOrders.bouquetFeatures', { returnObjects: true })
     },
     {
       id: 'request',
-      title: 'Custom Crochet Request',
+      title: t('customOrders.requestTitle'),
       icon: '🧶',
-      description: 'Request a custom crochet design by providing reference images and specifications',
-      features: ['Upload reference images', 'Specify colors', 'Describe requirements', 'Get custom quote']
+      description: t('customOrders.requestDesc'),
+      features: t('customOrders.requestFeatures', { returnObjects: true })
     }
   ];
 
@@ -115,13 +118,13 @@ const OptionSelection = ({ onSelectOption }) => {
           <div className="p-6">
             <h3 className="text-2xl font-display font-bold text-primary mb-3 flex items-center gap-2">
               {option.title}
-              <FiChevronRight className="w-5 h-5 transform group-hover:translate-x-2 transition-transform" />
+              <FiChevronRight className="w-5 h-5 transform group-hover:translate-x-2 transition-transform rtl:rotate-180" />
             </h3>
             <p className="text-text/70 mb-4 leading-relaxed">
               {option.description}
             </p>
             <div className="btn-primary w-full text-center group-hover:bg-highlight transition-colors">
-              Start Creating
+              {t('customOrders.startCreating')}
             </div>
           </div>
         </motion.div>
@@ -162,6 +165,7 @@ const ImageModal = ({ image, onClose }) => {
 
 // Custom Flower Bouquet Component
 const CustomFlowerBouquet = ({ onBack, onPreviewImage }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentStep = parseInt(searchParams.get('step') || '1');
@@ -198,13 +202,13 @@ const CustomFlowerBouquet = ({ onBack, onPreviewImage }) => {
   }, [currentStep]);
 
   const steps = [
-    { number: 1, title: 'Select Flowers' },
-    { number: 2, title: 'Select Colors' },
-    { number: 3, title: 'Pick Wrapping' },
-    { number: 4, title: 'Add Accessories' },
-    { number: 5, title: 'Reference Image' },
-    { number: 6, title: 'Provide Details' },
-    { number: 7, title: 'Review & Add to Cart' }
+    { number: 1, title: t('customOrders.steps.selectFlowers') },
+    { number: 2, title: t('customOrders.steps.selectColors') },
+    { number: 3, title: t('customOrders.steps.pickWrapping') },
+    { number: 4, title: t('customOrders.steps.addAccessories') },
+    { number: 5, title: t('customOrders.steps.referenceImage') },
+    { number: 6, title: t('customOrders.steps.provideDetails') },
+    { number: 7, title: t('customOrders.steps.reviewCart') }
   ];
 
   const handleNext = () => {
@@ -273,7 +277,7 @@ const CustomFlowerBouquet = ({ onBack, onPreviewImage }) => {
 
       // Prepare custom order data
       const customOrder = {
-        name: 'Custom Flower Bouquet',
+        name: t('orderDetails.customBouquet'),
         price: totalPrice,
         isCustomOrder: true,
         customOrderType: 'custom_bouquet',
@@ -315,7 +319,7 @@ const CustomFlowerBouquet = ({ onBack, onPreviewImage }) => {
       navigate('/cart');
     } catch (error) {
       console.error('Error adding custom bouquet to cart:', error);
-      toast.error('Failed to add to cart. Please try again.');
+      toast.error(t('customOrders.addFailed'));
     } finally {
       setIsAdding(false);
     }
@@ -330,17 +334,17 @@ const CustomFlowerBouquet = ({ onBack, onPreviewImage }) => {
         onClick={onBack}
         className="flex items-center gap-2 text-text/70 hover:text-primary mb-6"
       >
-        <FiChevronLeft /> Back to Options
+        <FiChevronLeft className="rtl:rotate-180" /> {t('customOrders.backToOptions')}
       </button>
 
       {/* Stepper - Mobile Specific */}
       <div className="md:hidden flex flex-col gap-2 mb-8 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
         <div className="flex justify-between items-center">
           <span className="text-sm font-bold text-primary uppercase tracking-wider">
-            Step {currentStep} of {steps.length}
+            {t('customOrders.step')} {currentStep} {t('customOrders.of')} {steps.length}
           </span>
           <span className="text-xs font-medium text-text/50">
-            {Math.round((currentStep / steps.length) * 100)}% Complete
+            {Math.round((currentStep / steps.length) * 100)}% {t('customOrders.complete')}
           </span>
         </div>
         <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -427,7 +431,7 @@ const CustomFlowerBouquet = ({ onBack, onPreviewImage }) => {
           className={`btn-secondary flex items-center gap-2 ${currentStep === 1 ? 'opacity-50 cursor-not-allowed' : ''
             }`}
         >
-          <FiChevronLeft /> Previous
+          <FiChevronLeft className="rtl:rotate-180" /> {t('customOrders.previous')}
         </button>
 
         {currentStep < 7 ? (
@@ -437,7 +441,7 @@ const CustomFlowerBouquet = ({ onBack, onPreviewImage }) => {
             className={`btn-primary flex items-center gap-2 ${!canProceed() ? 'opacity-50 cursor-not-allowed' : ''
               }`}
           >
-            Next <FiChevronRight />
+            {t('customOrders.next')} <FiChevronRight className="rtl:rotate-180" />
           </button>
         ) : (
           <button
@@ -448,11 +452,11 @@ const CustomFlowerBouquet = ({ onBack, onPreviewImage }) => {
             {isAdding ? (
               <>
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Adding...
+                {t('customOrders.adding')}
               </>
             ) : (
               <>
-                <FiShoppingCart /> Add to Cart
+                <FiShoppingCart /> {t('customOrders.addToCart')}
               </>
             )}
           </button>
@@ -464,6 +468,7 @@ const CustomFlowerBouquet = ({ onBack, onPreviewImage }) => {
 
 // Custom Crochet Request Component
 const CustomCrochetRequest = ({ onBack, onPreviewImage }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentStep = parseInt(searchParams.get('step') || '1');
@@ -497,10 +502,10 @@ const CustomCrochetRequest = ({ onBack, onPreviewImage }) => {
   }, [currentStep]);
 
   const steps = [
-    { number: 1, title: 'Upload Reference' },
-    { number: 2, title: 'Select Colors' },
-    { number: 3, title: 'Provide Details' },
-    { number: 4, title: 'Review & Submit' }
+    { number: 1, title: t('customOrders.steps.uploadReference') },
+    { number: 2, title: t('customOrders.steps.selectColors') },
+    { number: 3, title: t('customOrders.steps.provideDetails') },
+    { number: 4, title: t('customOrders.steps.reviewSubmit') }
   ];
 
   const handleNext = () => {
@@ -557,7 +562,7 @@ const CustomCrochetRequest = ({ onBack, onPreviewImage }) => {
 
       // Prepare custom order data (price will be set by admin)
       const customOrder = {
-        name: 'Custom Crochet Request',
+        name: t('orderDetails.customRequest'),
         price: null, // Price to be determined by admin
         isCustomOrder: true,
         customOrderType: 'custom_request',
@@ -580,7 +585,7 @@ const CustomCrochetRequest = ({ onBack, onPreviewImage }) => {
       navigate('/cart');
     } catch (error) {
       console.error('Error adding custom request to cart:', error);
-      toast.error('Failed to add to cart. Please try again.');
+      toast.error(t('customOrders.addFailed'));
     } finally {
       setIsAdding(false);
     }
@@ -595,17 +600,17 @@ const CustomCrochetRequest = ({ onBack, onPreviewImage }) => {
         onClick={onBack}
         className="flex items-center gap-2 text-text/70 hover:text-primary mb-6"
       >
-        <FiChevronLeft /> Back to Options
+        <FiChevronLeft className="rtl:rotate-180" /> {t('customOrders.backToOptions')}
       </button>
 
       {/* Stepper - Mobile Specific */}
       <div className="md:hidden flex flex-col gap-2 mb-8 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
         <div className="flex justify-between items-center">
           <span className="text-sm font-bold text-primary uppercase tracking-wider">
-            Step {currentStep} of {steps.length}
+            {t('customOrders.step')} {currentStep} {t('customOrders.of')} {steps.length}
           </span>
           <span className="text-xs font-medium text-text/50">
-            {Math.round((currentStep / steps.length) * 100)}% Complete
+            {Math.round((currentStep / steps.length) * 100)}% {t('customOrders.complete')}
           </span>
         </div>
         <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -665,7 +670,7 @@ const CustomCrochetRequest = ({ onBack, onPreviewImage }) => {
           className={`btn-secondary flex items-center gap-2 ${currentStep === 1 ? 'opacity-50 cursor-not-allowed' : ''
             }`}
         >
-          <FiChevronLeft /> Previous
+          <FiChevronLeft className="rtl:rotate-180" /> {t('customOrders.previous')}
         </button>
 
         {currentStep < 4 ? (
@@ -675,7 +680,7 @@ const CustomCrochetRequest = ({ onBack, onPreviewImage }) => {
             className={`btn-primary flex items-center gap-2 ${!canProceed() ? 'opacity-50 cursor-not-allowed' : ''
               }`}
           >
-            Next <FiChevronRight />
+            {t('customOrders.next')} <FiChevronRight className="rtl:rotate-180" />
           </button>
         ) : (
           <button
@@ -686,11 +691,11 @@ const CustomCrochetRequest = ({ onBack, onPreviewImage }) => {
             {isAdding ? (
               <>
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Adding...
+                {t('customOrders.adding')}
               </>
             ) : (
               <>
-                <FiShoppingCart /> Add to Cart
+                <FiShoppingCart /> {t('customOrders.addToCart')}
               </>
             )}
           </button>
@@ -745,6 +750,7 @@ const scrollToContainer = (ref) => {
 
 // Flower Selection Component
 const FlowerSelection = ({ selectedFlowers, onUpdateFlowers, onPreviewImage, containerRef }) => {
+  const { t } = useTranslation();
   const { items, loading } = useItems();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -790,10 +796,10 @@ const FlowerSelection = ({ selectedFlowers, onUpdateFlowers, onPreviewImage, con
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-display font-bold text-primary mb-2">
-            Select Your Flowers
+            {t('customOrders.flowers.title')}
           </h2>
           <p className="text-text/70">
-            Choose the flowers you'd like in your custom bouquet
+            {t('customOrders.flowers.subtitle')}
           </p>
         </div>
 
@@ -802,7 +808,7 @@ const FlowerSelection = ({ selectedFlowers, onUpdateFlowers, onPreviewImage, con
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text/40" />
           <input
             type="text"
-            placeholder="Search flowers..."
+            placeholder={t('customOrders.flowers.search')}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -816,17 +822,17 @@ const FlowerSelection = ({ selectedFlowers, onUpdateFlowers, onPreviewImage, con
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
-          <p className="text-text/60">Loading flowers...</p>
+          <p className="text-text/60">{t('common.loading')}</p>
         </div>
       ) : flowers.length === 0 ? (
         <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
           <div className="text-5xl mb-4">🌸</div>
-          <p className="text-text/60 font-medium">No flowers found matching your search</p>
+          <p className="text-text/60 font-medium">{t('customOrders.flowers.noFlowers')}</p>
           <button
             onClick={() => setSearchQuery('')}
             className="text-primary hover:underline mt-2 font-medium"
           >
-            Clear search
+            {t('products.clearFilters')}
           </button>
         </div>
       ) : (
@@ -852,7 +858,7 @@ const FlowerSelection = ({ selectedFlowers, onUpdateFlowers, onPreviewImage, con
                 disabled={currentPage === 1}
                 className={`p-2 rounded-lg transition-all ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
               >
-                <FiChevronLeft className="w-6 h-6" />
+                <FiChevronLeft className="w-6 h-6 rtl:rotate-180" />
               </button>
 
               <div className="flex gap-1">
@@ -872,7 +878,7 @@ const FlowerSelection = ({ selectedFlowers, onUpdateFlowers, onPreviewImage, con
                 disabled={currentPage === totalPages}
                 className={`p-2 rounded-lg transition-all ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
               >
-                <FiChevronRight className="w-6 h-6" />
+                <FiChevronRight className="w-6 h-6 rtl:rotate-180" />
               </button>
             </div>
           )}
@@ -884,6 +890,7 @@ const FlowerSelection = ({ selectedFlowers, onUpdateFlowers, onPreviewImage, con
 
 // Wrapping Selection Component
 const WrappingSelection = ({ selectedWrapping, onSelectWrapping, onPreviewImage, containerRef }) => {
+  const { t } = useTranslation();
   const { items, loading } = useItems();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -909,10 +916,10 @@ const WrappingSelection = ({ selectedWrapping, onSelectWrapping, onPreviewImage,
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-display font-bold text-primary mb-2">
-            Pick Your Wrapping
+            {t('customOrders.wrapping.title')}
           </h2>
           <p className="text-text/70">
-            Choose how you'd like your bouquet wrapped
+            {t('customOrders.wrapping.subtitle')}
           </p>
         </div>
 
@@ -921,7 +928,7 @@ const WrappingSelection = ({ selectedWrapping, onSelectWrapping, onPreviewImage,
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text/40" />
           <input
             type="text"
-            placeholder="Search wrapping..."
+            placeholder={t('customOrders.wrapping.search')}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -935,17 +942,17 @@ const WrappingSelection = ({ selectedWrapping, onSelectWrapping, onPreviewImage,
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
-          <p className="text-text/60">Loading wrapping options...</p>
+          <p className="text-text/60">{t('common.loading')}</p>
         </div>
       ) : wrappingOptions.length === 0 ? (
         <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
           <div className="text-5xl mb-4">🎁</div>
-          <p className="text-text/60 font-medium">No wrapping found matching your search</p>
+          <p className="text-text/60 font-medium">{t('customOrders.wrapping.noWrapping')}</p>
           <button
             onClick={() => setSearchQuery('')}
             className="text-primary hover:underline mt-2 font-medium"
           >
-            Clear search
+            {t('products.clearFilters')}
           </button>
         </div>
       ) : (
@@ -979,11 +986,11 @@ const WrappingSelection = ({ selectedWrapping, onSelectWrapping, onPreviewImage,
                 <div className="p-4 flex flex-col items-center text-center">
                   <h3 className="font-semibold mb-2">{wrapping.name}</h3>
                   <p className="text-sm text-text/60  line-clamp-2">{wrapping.description}</p>
-                  <p className="font-bold text-primary text-lg">{wrapping.price} DA</p>
+                  <p className="font-bold text-primary text-lg">{wrapping.price} {t('common.da')}</p>
                   {selectedWrapping?.id === wrapping.id && (
                     <div className="flex justify-center mt-3">
                       <div className="bg-primary text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                        <FiCheck /> Selected
+                        <FiCheck /> {t('customOrders.wrapping.selected')}
                       </div>
                     </div>
                   )}
@@ -1000,7 +1007,7 @@ const WrappingSelection = ({ selectedWrapping, onSelectWrapping, onPreviewImage,
                 disabled={currentPage === 1}
                 className={`p-2 rounded-lg transition-all ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
               >
-                <FiChevronLeft className="w-6 h-6" />
+                <FiChevronLeft className="w-6 h-6 rtl:rotate-180" />
               </button>
 
               <div className="flex gap-1">
@@ -1020,7 +1027,7 @@ const WrappingSelection = ({ selectedWrapping, onSelectWrapping, onPreviewImage,
                 disabled={currentPage === totalPages}
                 className={`p-2 rounded-lg transition-all ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
               >
-                <FiChevronRight className="w-6 h-6" />
+                <FiChevronRight className="w-6 h-6 rtl:rotate-180" />
               </button>
             </div>
           )}
@@ -1032,6 +1039,7 @@ const WrappingSelection = ({ selectedWrapping, onSelectWrapping, onPreviewImage,
 
 // Color Selection Component
 const ColorSelection = ({ selectedColors, onUpdateColors, onPreviewImage, containerRef }) => {
+  const { t } = useTranslation();
   const { colors, loading } = useColors();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -1066,10 +1074,10 @@ const ColorSelection = ({ selectedColors, onUpdateColors, onPreviewImage, contai
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-display font-bold text-primary mb-2">
-            Select Colors
+            {t('customOrders.colors.title')}
           </h2>
           <p className="text-text/70">
-            Select one or more colors for your custom order
+            {t('customOrders.colors.subtitle')}
           </p>
         </div>
 
@@ -1078,7 +1086,7 @@ const ColorSelection = ({ selectedColors, onUpdateColors, onPreviewImage, contai
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text/40" />
           <input
             type="text"
-            placeholder="Search colors..."
+            placeholder={t('customOrders.colors.search')}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -1092,17 +1100,17 @@ const ColorSelection = ({ selectedColors, onUpdateColors, onPreviewImage, contai
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
-          <p className="text-text/60">Loading colors...</p>
+          <p className="text-text/60">{t('common.loading')}</p>
         </div>
       ) : filteredColors.length === 0 ? (
         <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
           <div className="text-5xl mb-4">🎨</div>
-          <p className="text-text/60 font-medium">No colors found matching your search</p>
+          <p className="text-text/60 font-medium">{t('customOrders.colors.noColors')}</p>
           <button
             onClick={() => setSearchQuery('')}
             className="text-primary hover:underline mt-2 font-medium"
           >
-            Clear search
+            {t('products.clearFilters')}
           </button>
         </div>
       ) : (
@@ -1139,7 +1147,7 @@ const ColorSelection = ({ selectedColors, onUpdateColors, onPreviewImage, contai
                 {selectedColors.includes(color.id) && (
                   <div className="flex justify-center mt-3">
                     <div className="bg-primary text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                      <FiCheck /> Selected
+                      <FiCheck /> {t('customOrders.wrapping.selected')}
                     </div>
                   </div>
                 )}
@@ -1155,7 +1163,7 @@ const ColorSelection = ({ selectedColors, onUpdateColors, onPreviewImage, contai
                 disabled={currentPage === 1}
                 className={`p-2 rounded-lg transition-all ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
               >
-                <FiChevronLeft className="w-6 h-6" />
+                <FiChevronLeft className="w-6 h-6 rtl:rotate-180" />
               </button>
 
               <div className="flex gap-1">
@@ -1175,7 +1183,7 @@ const ColorSelection = ({ selectedColors, onUpdateColors, onPreviewImage, contai
                 disabled={currentPage === totalPages}
                 className={`p-2 rounded-lg transition-all ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
               >
-                <FiChevronRight className="w-6 h-6" />
+                <FiChevronRight className="w-6 h-6 rtl:rotate-180" />
               </button>
             </div>
           )}
@@ -1187,6 +1195,7 @@ const ColorSelection = ({ selectedColors, onUpdateColors, onPreviewImage, contai
 
 // Accessory Selection Component
 const AccessorySelection = ({ selectedAccessories, onUpdateAccessories, onPreviewImage, containerRef }) => {
+  const { t } = useTranslation();
   const { items, loading } = useItems();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -1232,10 +1241,10 @@ const AccessorySelection = ({ selectedAccessories, onUpdateAccessories, onPrevie
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-display font-bold text-primary mb-2">
-            Add Accessories (Optional)
+            {t('customOrders.accessories.title')}
           </h2>
           <p className="text-text/70">
-            Enhance your bouquet with special accessories
+            {t('customOrders.accessories.subtitle')}
           </p>
         </div>
 
@@ -1244,7 +1253,7 @@ const AccessorySelection = ({ selectedAccessories, onUpdateAccessories, onPrevie
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text/40" />
           <input
             type="text"
-            placeholder="Search accessories..."
+            placeholder={t('customOrders.accessories.search')}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -1258,17 +1267,17 @@ const AccessorySelection = ({ selectedAccessories, onUpdateAccessories, onPrevie
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
-          <p className="text-text/60">Loading accessories...</p>
+          <p className="text-text/60">{t('common.loading')}</p>
         </div>
       ) : accessories.length === 0 ? (
         <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
           <div className="text-5xl mb-4">🎀</div>
-          <p className="text-text/60 font-medium">No accessories found matching your search</p>
+          <p className="text-text/60 font-medium">{t('customOrders.accessories.noAccessories')}</p>
           <button
             onClick={() => setSearchQuery('')}
             className="text-primary hover:underline mt-2 font-medium"
           >
-            Clear search
+            {t('products.clearFilters')}
           </button>
         </div>
       ) : (
@@ -1294,7 +1303,7 @@ const AccessorySelection = ({ selectedAccessories, onUpdateAccessories, onPrevie
                 disabled={currentPage === 1}
                 className={`p-2 rounded-lg transition-all ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
               >
-                <FiChevronLeft className="w-6 h-6" />
+                <FiChevronLeft className="w-6 h-6 rtl:rotate-180" />
               </button>
 
               <div className="flex gap-1">
@@ -1314,7 +1323,7 @@ const AccessorySelection = ({ selectedAccessories, onUpdateAccessories, onPrevie
                 disabled={currentPage === totalPages}
                 className={`p-2 rounded-lg transition-all ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
               >
-                <FiChevronRight className="w-6 h-6" />
+                <FiChevronRight className="w-6 h-6 rtl:rotate-180" />
               </button>
             </div>
           )}
@@ -1326,13 +1335,14 @@ const AccessorySelection = ({ selectedAccessories, onUpdateAccessories, onPrevie
 
 // Reference Image Upload Component (Single)
 const ReferenceImageUpload = ({ image, onImageChange }) => {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type.startsWith('image/')) {
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('Image size should be less than 10MB');
+        toast.error(t('customOrders.referenceImageStep.sizeError'));
         return;
       }
       onImageChange(file);
@@ -1366,12 +1376,12 @@ const ReferenceImageUpload = ({ image, onImageChange }) => {
       const file = files[0];
       if (file.type.startsWith('image/')) {
         if (file.size > 10 * 1024 * 1024) {
-          toast.error('Image size should be less than 10MB');
+          toast.error(t('customOrders.referenceImageStep.sizeError'));
           return;
         }
         onImageChange(file);
       } else {
-        toast.warning('Please upload only image files');
+        toast.warning(t('customOrders.referenceImageStep.typeError'));
       }
     }
   };
@@ -1387,10 +1397,10 @@ const ReferenceImageUpload = ({ image, onImageChange }) => {
       exit={{ opacity: 0, x: -20 }}
     >
       <h2 className="text-3xl font-display font-bold text-primary mb-6">
-        Upload Reference Image (Optional)
+        {t('customOrders.referenceImageStep.title')}
       </h2>
       <p className="text-text/70 mb-8">
-        Upload an inspiration image to help us understand your vision
+        {t('customOrders.referenceImageStep.subtitle')}
       </p>
 
       <div className="max-w-2xl mx-auto">
@@ -1408,9 +1418,9 @@ const ReferenceImageUpload = ({ image, onImageChange }) => {
             <FiUpload className={`w-16 h-16 mb-4 transition-colors ${isDragging ? 'text-highlight' : 'text-primary'
               }`} />
             <p className="text-lg font-medium mb-2 text-center">
-              {isDragging ? 'Drop image here' : 'Click or drag to upload reference image'}
+              {isDragging ? t('customOrders.referenceImageStep.uploading') : t('customOrders.referenceImageStep.upload')}
             </p>
-            <p className="text-sm text-text/60 text-center">PNG, JPG up to 10MB</p>
+            <p className="text-sm text-text/60 text-center">{t('customOrders.referenceImageStep.formats')}</p>
             <input
               type="file"
               accept="image/*"
@@ -1441,6 +1451,7 @@ const ReferenceImageUpload = ({ image, onImageChange }) => {
 
 // Provide Details Component
 const ProvideDetails = ({ description, onDescriptionChange }) => {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -1448,21 +1459,21 @@ const ProvideDetails = ({ description, onDescriptionChange }) => {
       exit={{ opacity: 0, x: -20 }}
     >
       <h2 className="text-3xl font-display font-bold text-primary mb-6">
-        Provide Details
+        {t('customOrders.details.title')}
       </h2>
       <p className="text-text/70 mb-8">
-        Share your preferences, special requests, or any additional information about your custom order
+        {t('customOrders.details.subtitle')}
       </p>
 
       <div className="max-w-2xl mx-auto">
         <div className="card p-6">
           <label className="block mb-2 font-medium text-text">
-            Description <span className="text-red-500">*</span>
+            {t('orderDetails.description')} <span className="text-red-500">*</span>
           </label>
           <textarea
             value={description}
             onChange={(e) => onDescriptionChange(e.target.value)}
-            placeholder="Tell us about your preferences, occasion, color preferences, or any special requests..."
+            placeholder={t('customOrders.details.placeholder')}
             className="w-full h-40 px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
             required
           />
@@ -1474,6 +1485,7 @@ const ProvideDetails = ({ description, onDescriptionChange }) => {
 
 // Reference Images Upload Component (Multiple)
 const ReferenceImagesUpload = ({ images, onImagesChange }) => {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const MAX_IMAGES = 4;
 
@@ -1482,7 +1494,7 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
     const remainingSlots = MAX_IMAGES - images.length;
 
     if (remainingSlots <= 0) {
-      toast.warning(`Maximum ${MAX_IMAGES} images allowed`);
+      toast.warning(t('customOrders.referenceImageStep.maxImagesError', { count: MAX_IMAGES }));
       return;
     }
 
@@ -1490,14 +1502,14 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
     const validFiles = filesToAdd.filter(file => {
       if (!file.type.startsWith('image/')) return false;
       if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} is too large. Maximum size is 10MB`);
+        toast.error(t('customOrders.referenceImageStep.sizeError'));
         return false;
       }
       return true;
     });
 
     if (files.length > remainingSlots) {
-      toast.warning(`Only ${remainingSlots} more image(s) can be added (maximum ${MAX_IMAGES} total)`);
+      toast.warning(t('customOrders.referenceImageStep.maxImagesError', { count: MAX_IMAGES }));
     }
 
     onImagesChange([...images, ...validFiles]);
@@ -1529,25 +1541,25 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
     const remainingSlots = MAX_IMAGES - images.length;
 
     if (remainingSlots <= 0) {
-      toast.warning(`Maximum ${MAX_IMAGES} images allowed`);
+      toast.warning(t('customOrders.referenceImageStep.maxImagesError', { count: MAX_IMAGES }));
       return;
     }
 
     const filesToAdd = files.slice(0, remainingSlots);
     const validFiles = filesToAdd.filter(file => {
       if (!file.type.startsWith('image/')) {
-        toast.warning(`${file.name} is not an image file`);
+        toast.warning(t('customOrders.referenceImageStep.typeError'));
         return false;
       }
       if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} is too large. Maximum size is 10MB`);
+        toast.error(t('customOrders.referenceImageStep.sizeError'));
         return false;
       }
       return true;
     });
 
     if (files.length > remainingSlots) {
-      toast.warning(`Only ${remainingSlots} more image(s) can be added (maximum ${MAX_IMAGES} total)`);
+      toast.warning(t('customOrders.referenceImageStep.maxImagesError', { count: MAX_IMAGES }));
     }
 
     if (validFiles.length > 0) {
@@ -1567,10 +1579,10 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
       exit={{ opacity: 0, x: -20 }}
     >
       <h2 className="text-3xl font-display font-bold text-primary mb-6">
-        Upload Reference Images
+        {t('customOrders.referenceImageStep.uploadMultiple')}
       </h2>
       <p className="text-text/70 mb-8">
-        Upload images of designs you'd like us to recreate or use as inspiration (Maximum 4 images)
+        {t('customOrders.referenceImageStep.subtitleMultiple')}
       </p>
 
       <div className="max-w-4xl mx-auto">
@@ -1588,9 +1600,9 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
             <FiUpload className={`w-12 h-12 mb-3 transition-colors ${isDragging ? 'text-highlight' : 'text-primary'
               }`} />
             <p className="text-lg font-medium mb-1 text-center">
-              {isDragging ? 'Drop images here' : 'Click or drag to upload images'}
+              {isDragging ? t('customOrders.referenceImageStep.uploading') : t('customOrders.referenceImageStep.upload')}
             </p>
-            <p className="text-sm text-text/60 text-center">PNG, JPG up to 10MB each • {images.length}/{MAX_IMAGES} uploaded</p>
+            <p className="text-sm text-text/60 text-center">{t('customOrders.referenceImageStep.formats')} • {images.length}/{MAX_IMAGES} {t('customOrders.referenceImageStep.imageCount')}</p>
             <input
               type="file"
               accept="image/*"
@@ -1637,6 +1649,7 @@ const ReferenceImagesUpload = ({ images, onImagesChange }) => {
 
 // Item Card Component (reusable for flowers and accessories)
 const ItemCard = ({ item, quantity, onAdd, onRemove, onPreview }) => {
+  const { t } = useTranslation();
   return (
     <div className="card overflow-hidden group">
       <div
@@ -1659,14 +1672,14 @@ const ItemCard = ({ item, quantity, onAdd, onRemove, onPreview }) => {
         )}
         <div className="flex flex-col sm:flex-row items-center sm:justify-between w-full gap-3 sm:gap-0 mt-auto">
           <span className="font-bold text-primary text-lg">
-            {quantity > 1 ? `${(item.price * quantity).toFixed(2)} DA` : `${item.price} DA`}
+            {quantity > 1 ? `${(item.price * quantity).toFixed(2)} ${t('common.da')}` : `${item.price} ${t('common.da')}`}
           </span>
           {quantity === 0 ? (
             <button
               onClick={onAdd}
               className="w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-1"
             >
-              <FiPlus className="w-4 h-4" /> Add
+              <FiPlus className="w-4 h-4" /> {t('products.addToCart')}
             </button>
           ) : (
             <div className="flex items-center gap-3">
@@ -1693,6 +1706,7 @@ const ItemCard = ({ item, quantity, onAdd, onRemove, onPreview }) => {
 
 // Bouquet Summary Component
 const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
+  const { t } = useTranslation();
   const { colors } = useColors();
 
   const flowersTotal = Object.values(bouquetData.flowers).reduce(
@@ -1718,9 +1732,9 @@ const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
     >
       <div className="text-center mb-10">
         <h2 className="text-4xl font-display font-bold text-primary mb-3">
-          Review Your Masterpiece
+          {t('customOrders.summary.title')}
         </h2>
-        <p className="text-text/60 text-lg">Double check the details of your custom bouquet before ordering</p>
+        <p className="text-text/60 text-lg">{t('customOrders.summary.subtitle')}</p>
       </div>
 
       <div className="max-w-5xl mx-auto">
@@ -1731,7 +1745,7 @@ const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
               {/* Flowers */}
               {Object.values(bouquetData.flowers).length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">Flowers</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.flowers')}</p>
                   <div className="space-y-2">
                     {Object.values(bouquetData.flowers).map((f, i) => (
                       <div key={i} className="flex justify-between text-sm bg-white p-2 rounded border border-gray-200 hover:border-primary/50 transition-colors">
@@ -1747,8 +1761,8 @@ const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
                           <span className="font-medium">{f.name} (x{f.quantity})</span>
                         </div>
                         <div className="flex flex-col items-end">
-                          <span className="text-gray-600">{(f.price * f.quantity).toFixed(2)} DA</span>
-                          <span className="text-xs text-gray-500 mt-1">{f.price.toFixed(2)} DA/unit</span>
+                          <span className="text-gray-600">{(f.price * f.quantity).toFixed(2)} {t('common.da')}</span>
+                          <span className="text-xs text-gray-500 mt-1">{f.price.toFixed(2)} {t('common.da')}/{t('common.unit')}</span>
                         </div>
                       </div>
                     ))}
@@ -1759,7 +1773,7 @@ const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
               {/* Accessories */}
               {Object.values(bouquetData.accessories).length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">Accessories</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.accessories')}</p>
                   <div className="space-y-2">
                     {Object.values(bouquetData.accessories).map((a, i) => (
                       <div key={i} className="flex justify-between text-sm bg-white p-2 rounded border border-gray-200 hover:border-primary/50 transition-colors">
@@ -1775,8 +1789,8 @@ const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
                           <span className="font-medium">{a.name} (x{a.quantity})</span>
                         </div>
                         <div className="flex flex-col items-end">
-                          <span className="text-gray-600">{(a.price * a.quantity).toFixed(2)} DA</span>
-                          <span className="text-xs text-gray-500 mt-1">{a.price.toFixed(2)} DA/unit</span>
+                          <span className="text-gray-600">{(a.price * a.quantity).toFixed(2)} {t('common.da')}</span>
+                          <span className="text-xs text-gray-500 mt-1">{a.price.toFixed(2)} {t('common.da')}/{t('common.unit')}</span>
                         </div>
                       </div>
                     ))}
@@ -1790,7 +1804,7 @@ const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
               {/* Wrapping */}
               {bouquetData.wrapping && (
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">Wrapping</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.wrapping')}</p>
                   <div className="flex justify-between text-sm bg-white p-2 rounded border border-gray-200 hover:border-primary/50 transition-colors">
                     <div className="flex items-center gap-2">
                       {bouquetData.wrapping.image_url && (
@@ -1803,7 +1817,7 @@ const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
                       )}
                       <span className="font-medium">{bouquetData.wrapping.name}</span>
                     </div>
-                    <span className="text-gray-600">{bouquetData.wrapping.price.toFixed(2)} DA</span>
+                    <span className="text-gray-600">{bouquetData.wrapping.price.toFixed(2)} {t('common.da')}</span>
                   </div>
                 </div>
               )}
@@ -1811,7 +1825,7 @@ const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
               {/* Colors */}
               {selectedColorObjects.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">Colors</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.colors')}</p>
                   <div className="flex flex-wrap gap-2">
                     {selectedColorObjects.map((c, i) => (
                       <div key={i} className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200">
@@ -1835,7 +1849,7 @@ const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
               {/* Description */}
               {bouquetData.description && (
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">Description</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.description')}</p>
                   <p className="text-sm bg-white p-3 rounded border border-gray-200 text-gray-700">{bouquetData.description}</p>
                 </div>
               )}
@@ -1843,7 +1857,7 @@ const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
               {/* Reference Image */}
               {bouquetData.referenceImage && (
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">Reference Image</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.referenceImage')}</p>
                   <div className="flex gap-2">
                     <div className="relative group">
                       <img
@@ -1864,12 +1878,12 @@ const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
 
           {/* Total Price - Below Grid */}
           <div className="mt-6 bg-white p-5 rounded-lg border border-gray-200 shadow-sm text-center">
-            <h3 className="text-xs font-bold text-gray-500 uppercase mb-3">Total Estimated Price</h3>
+            <h3 className="text-xs font-bold text-gray-500 uppercase mb-3">{t('customOrders.summary.totalPrice')}</h3>
             <div className="flex items-baseline gap-3 justify-center">
-              <span className="text-5xl font-bold text-primary">{totalPrice.toFixed(2)} DA</span>
+              <span className="text-5xl font-bold text-primary">{totalPrice.toFixed(2)} {t('common.da')}</span>
             </div>
             <p className="text-xs text-gray-600 mt-3 leading-relaxed">
-              Final price includes flowers, wrapping, and all selected accessories.
+              {t('customOrders.summary.minimumOrder')}
             </p>
           </div>
         </div>
@@ -1880,6 +1894,7 @@ const BouquetSummary = ({ bouquetData, onPreviewImage }) => {
 
 // Request Summary Component
 const RequestSummary = ({ requestData, onPreviewImage }) => {
+  const { t, i18n } = useTranslation();
   const { colors } = useColors();
 
   // Get selected color objects from IDs
@@ -1896,9 +1911,9 @@ const RequestSummary = ({ requestData, onPreviewImage }) => {
     >
       <div className="text-center mb-10">
         <h2 className="text-4xl font-display font-bold text-primary mb-3">
-          Review Your Custom Request
+          {t('customOrders.summary.requestTitle')}
         </h2>
-        <p className="text-text/60 text-lg">Make sure everything looks perfect before confirming</p>
+        <p className="text-text/60 text-lg">{t('customOrders.summary.subtitle')}</p>
       </div>
 
       <div className="max-w-5xl mx-auto">
@@ -1909,7 +1924,7 @@ const RequestSummary = ({ requestData, onPreviewImage }) => {
               {/* Description */}
               {requestData.description && (
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">Description</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.description')}</p>
                   <p className="text-sm bg-white p-3 rounded border border-gray-200 text-gray-700">{requestData.description}</p>
                 </div>
               )}
@@ -1919,15 +1934,15 @@ const RequestSummary = ({ requestData, onPreviewImage }) => {
                 <div className="space-y-2">
                   {requestData.size && (
                     <div className="bg-white rounded-lg p-3 border border-gray-200">
-                      <p className="text-xs font-bold text-gray-500 uppercase mb-1">Size</p>
+                      <p className="text-xs font-bold text-gray-500 uppercase mb-1">{t('customOrders.summary.size')}</p>
                       <p className="font-semibold text-gray-700">{requestData.size}</p>
                     </div>
                   )}
 
                   {requestData.deadline && (
                     <div className="bg-white rounded-lg p-3 border border-gray-200">
-                      <p className="text-xs font-bold text-gray-500 uppercase mb-1">Deadline</p>
-                      <p className="font-semibold text-gray-700">{new Date(requestData.deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                      <p className="text-xs font-bold text-gray-500 uppercase mb-1">{t('customOrders.summary.deadline')}</p>
+                      <p className="font-semibold text-gray-700">{new Date(requestData.deadline).toLocaleDateString(i18n.language, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     </div>
                   )}
                 </div>
@@ -1939,7 +1954,7 @@ const RequestSummary = ({ requestData, onPreviewImage }) => {
               {/* Colors */}
               {selectedColorObjects.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">Colors</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.colors')}</p>
                   <div className="flex flex-wrap gap-2">
                     {selectedColorObjects.map((c, i) => (
                       <div key={i} className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200">
@@ -1963,7 +1978,7 @@ const RequestSummary = ({ requestData, onPreviewImage }) => {
               {/* Reference Images */}
               {requestData.referenceImages.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">Reference Images</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.referenceImages')}</p>
                   <div className="flex gap-2 flex-wrap">
                     {requestData.referenceImages.map((img, i) => {
                       const src = URL.createObjectURL(img);
@@ -1989,9 +2004,9 @@ const RequestSummary = ({ requestData, onPreviewImage }) => {
 
           {/* Price Notice - Below Grid */}
           <div className="mt-6 bg-yellow-50 p-5 rounded-lg border border-yellow-300 shadow-sm text-center">
-            <h3 className="text-xs font-bold text-yellow-700 uppercase mb-3">Price Estimate</h3>
+            <h3 className="text-xs font-bold text-yellow-700 uppercase mb-3">{t('customOrders.summary.totalPrice')}</h3>
             <p className="text-sm text-yellow-800 leading-relaxed">
-              Because this is a bespoke request, our team will review the details to provide a fair custom quote.
+              {t('customOrders.summary.minimumOrder')}
             </p>
           </div>
         </div>

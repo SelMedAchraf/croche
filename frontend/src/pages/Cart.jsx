@@ -31,7 +31,7 @@ const Cart = () => {
       await authService.signInWithGoogle();
     } catch (error) {
       console.error('Login failed', error);
-      toast.error('Failed to launch Google Login. Please try again.');
+      toast.error(t('cart.loginFailed'));
     }
   };
 
@@ -50,7 +50,7 @@ const Cart = () => {
             {t('cart.empty')}
           </h2>
           <p className="text-text/60 mb-8">
-            Start adding beautiful crochet items to your cart!
+            {t('cart.emptyDesc')}
           </p>
           <Link to="/products" className="btn-primary inline-flex items-center gap-2">
             <FiShoppingBag />
@@ -80,12 +80,12 @@ const Cart = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 onClick={() => {
                   clearCart();
-                  toast.success('Cart cleared successfully');
+                  toast.success(t('cart.cartCleared'));
                 }}
                 className="flex items-center gap-2 text-red-500 hover:text-red-700 font-medium transition-colors p-2 rounded-lg hover:bg-red-50"
               >
                 <FiTrash2 className="w-5 h-5" />
-                Clear Cart
+                {t('cart.clearCart')}
               </motion.button>
             </div>
             <div className="space-y-4">
@@ -124,7 +124,7 @@ const Cart = () => {
                     )}
 
                     <div className="flex-grow flex flex-col justify-between min-h-[7rem] overflow-hidden">
-                      <div>
+                      <div className="rtl:text-right">
                         {!isCustomOrder ? (
                           <Link
                             to={`/products/${item.id}`}
@@ -142,14 +142,14 @@ const Cart = () => {
                               className="text-xs bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-highlight inline-flex items-center gap-1 transition-colors w-fit"
                             >
                               <FiEye className="w-3.5 h-3.5" />
-                              View Details
+                              {t('cart.viewDetails')}
                             </button>
                           </div>
                         )}
 
                         {item.selectedColor && !isCustomOrder && (
                           <div className="flex items-center gap-2 mt-1.5">
-                            <span className="text-xs text-text/60">Color:</span>
+                            <span className="text-xs text-text/60">{t('cart.color')}:</span>
                             <div
                               className="w-4 h-4 rounded-full border border-gray-200"
                               style={{ backgroundColor: item.selectedColor }}
@@ -159,20 +159,20 @@ const Cart = () => {
 
                         {!isCustomOrder && (
                           <div className="text-xs text-text/60 mt-1">
-                            {item.price?.toFixed(2)} DA each
+                            {item.price?.toFixed(2)} {t('common.da')} {t('cart.each')}
                           </div>
                         )}
 
                         {isCustomOrder && item.customData && (
                           <p className="text-xs text-text/60 mt-1 line-clamp-1">
                             {item.customOrderType === 'custom_bouquet'
-                              ? `Custom bouquet with ${Object.keys(item.customData.flowers || {}).length} types`
-                              : 'Custom crochet design'}
+                              ? t('cart.customBouquetSummary', { count: Object.keys(item.customData.flowers || {}).length })
+                              : t('cart.customRequestSummary')}
                           </p>
                         )}
 
                         {!isCustomOrder && (
-                          <div className="flex items-center gap-1 mt-2 scale-90 origin-left">
+                          <div className="flex items-center gap-1 mt-2 rtl:justify-start">
                             <button
                               onClick={() => updateQuantity(item.id, item.selectedColor, item.quantity - 1)}
                               className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors font-bold text-lg"
@@ -195,8 +195,8 @@ const Cart = () => {
                       <div className="flex items-center justify-between gap-2 mt-2">
                         <span className="text-lg font-bold text-primary whitespace-nowrap">
                           {item.price === null
-                            ? 'Price TBD'
-                            : `${(item.price * (item.quantity || 1)).toFixed(2)} DA`}
+                            ? t('cart.priceTBD')
+                            : `${(item.price * (item.quantity || 1)).toFixed(2)} ${t('common.da')}`}
                         </span>
                         <button
                           onClick={() => isCustomOrder
@@ -223,22 +223,22 @@ const Cart = () => {
               className="card p-6 sticky top-24"
             >
               <h2 className="text-2xl font-display font-bold text-primary mb-6">
-                Order Summary
+                {t('cart.orderSummary')}
               </h2>
 
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-text/70">
                   <span>{t('cart.subtotal')}</span>
-                  <span>{getCartTotal().toFixed(2)} DA</span>
+                  <span>{getCartTotal().toFixed(2)} {t('common.da')}</span>
                 </div>
                 <div className="flex justify-between text-text/70">
-                  <span>Shipping</span>
-                  <span>Calculated at checkout</span>
+                  <span>{t('cart.shipping')}</span>
+                  <span>{t('cart.shippingCalc')}</span>
                 </div>
                 {cartItems.some(item => item.price === null) && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
                     <p className="text-yellow-800">
-                      ⚠️ Some custom items have pending prices. Final total will be confirmed before payment.
+                      ⚠️ {t('cart.pendingPriceWarning')}
                     </p>
                   </div>
                 )}
@@ -247,7 +247,7 @@ const Cart = () => {
               <div className="border-t pt-4 mb-6">
                 <div className="flex justify-between text-lg font-bold">
                   <span>{t('cart.total')}</span>
-                  <span className="text-primary">{getCartTotal().toFixed(2)} DA</span>
+                  <span className="text-primary">{getCartTotal().toFixed(2)} {t('common.da')}</span>
                 </div>
               </div>
 
@@ -302,11 +302,11 @@ const Cart = () => {
                 </div>
 
                 <h2 className="text-2xl font-display font-bold text-primary mb-3">
-                  Almost there!
+                  {t('cart.almostThere')}
                 </h2>
 
                 <p className="text-text/70 mb-8">
-                  Sign in securely with Google to complete your order and easily track its progress later.
+                  {t('cart.signInDesc')}
                 </p>
 
                 <button
@@ -314,14 +314,14 @@ const Cart = () => {
                   className="w-full bg-white border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-text font-medium py-3 px-4 rounded-xl flex items-center justify-center gap-3 transition-all mb-4"
                 >
                   <FcGoogle className="w-6 h-6" />
-                  Continue with Google
+                  {t('nav.continueWithGoogle')}
                 </button>
 
                 <button
                   onClick={() => setShowLoginModal(false)}
                   className="text-text/60 hover:text-text text-sm font-medium transition-colors"
                 >
-                  Cancel and browsing
+                  {t('cart.cancelBrowsing')}
                 </button>
               </motion.div>
             </motion.div>
@@ -334,6 +334,7 @@ const Cart = () => {
 
 // Custom Order Details Modal Component
 const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
+  const { t } = useTranslation();
   const { colors } = useColors();
 
   if (!order) return null;
@@ -384,7 +385,7 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                       {order.name}
                     </h2>
                     <p className="text-xs text-text/50 font-medium uppercase tracking-wider">
-                      {isBouquet ? 'Custom Bouquet' : 'Bespoke Request'}
+                      {isBouquet ? t('cart.customBouquet') : t('cart.customRequest')}
                     </p>
                   </div>
                 </div>
@@ -405,7 +406,7 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                       <div className="space-y-4">
                         {data.flowers?.length > 0 && (
                           <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Flowers</p>
+                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.flowers')}</p>
                             <div className="space-y-2">
                               {data.flowers.map((f, i) => (
                                 <div key={i} className="flex justify-between text-sm bg-white p-2 rounded border border-gray-200 hover:border-primary/50 transition-colors">
@@ -421,8 +422,8 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                                     <span className="font-medium">{f.name} (x{f.quantity})</span>
                                   </div>
                                   <div className="flex flex-col items-end">
-                                    <span className="text-gray-600">{(f.price * f.quantity).toFixed(2)} DA</span>
-                                    <span className="text-xs text-gray-500 mt-1">{f.price.toFixed(2)} DA/unit</span>
+                                    <span className="text-gray-600">{(f.price * f.quantity).toFixed(2)} {t('common.da')}</span>
+                                    <span className="text-xs text-gray-500 mt-1">{f.price.toFixed(2)} {t('common.da')}/{t('common.unit')}</span>
                                   </div>
                                 </div>
                               ))}
@@ -431,7 +432,7 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                         )}
                         {data.accessories?.length > 0 && (
                           <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Accessories</p>
+                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.accessories')}</p>
                             <div className="space-y-2">
                               {data.accessories.map((a, i) => (
                                 <div key={i} className="flex justify-between text-sm bg-white p-2 rounded border border-gray-200 hover:border-primary/50 transition-colors">
@@ -447,8 +448,8 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                                     <span className="font-medium">{a.name} (x{a.quantity})</span>
                                   </div>
                                   <div className="flex flex-col items-end">
-                                    <span className="text-gray-600">{(a.price * a.quantity).toFixed(2)} DA</span>
-                                    <span className="text-xs text-gray-500 mt-1">{a.price.toFixed(2)} DA/unit</span>
+                                    <span className="text-gray-600">{(a.price * a.quantity).toFixed(2)} {t('common.da')}</span>
+                                    <span className="text-xs text-gray-500 mt-1">{a.price.toFixed(2)} {t('common.da')}/{t('common.unit')}</span>
                                   </div>
                                 </div>
                               ))}
@@ -459,7 +460,7 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                       <div className="space-y-4">
                         {data.wrapping && (
                           <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Wrapping</p>
+                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.wrapping')}</p>
                             <div className="flex justify-between text-sm bg-white p-2 rounded border border-gray-200 hover:border-primary/50 transition-colors">
                               <div className="flex items-center gap-2">
                                 {data.wrapping.image_url && (
@@ -472,13 +473,13 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                                 )}
                                 <span className="font-medium">{data.wrapping.name}</span>
                               </div>
-                              <span className="text-gray-600">{data.wrapping.price} DA</span>
+                              <span className="text-gray-600">{data.wrapping.price} {t('common.da')}</span>
                             </div>
                           </div>
                         )}
                         {selectedColorObjects?.length > 0 && (
                           <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Colors</p>
+                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('orderDetails.colors')}</p>
                             <div className="flex flex-wrap gap-2">
                               {selectedColorObjects.map((c, i) => (
                                 <div key={i} className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200">
@@ -500,14 +501,14 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                         )}
                         {data.description && (
                           <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Description</p>
+                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.description')}</p>
                             <p className="text-sm bg-white p-3 rounded border border-gray-200 text-gray-700">{data.description}</p>
                           </div>
                         )}
                         {/* Reference Images for Bouquet */}
                         {(order.referenceImageUrl || order.allReferenceImages?.length > 0) && (
                           <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Reference Image</p>
+                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.referenceImage')}</p>
                             <div className="flex gap-2 text-wrap flex-wrap">
                               {(order.allReferenceImages || [order.referenceImageUrl]).filter(Boolean).slice(0, 1).map((img, i) => {
                                 const src = typeof img === 'string' ? img : img.url || img.image_url;
@@ -537,7 +538,7 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                       <div className="space-y-4">
                         {data.description && (
                           <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Description</p>
+                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.description')}</p>
                             <p className="text-sm bg-white p-3 rounded border border-gray-200 text-gray-700">{data.description}</p>
                           </div>
                         )}
@@ -545,7 +546,7 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                       <div className="space-y-4">
                         {selectedColorObjects?.length > 0 && (
                           <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Colors</p>
+                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.colors')}</p>
                             <div className="flex flex-wrap gap-2">
                               {selectedColorObjects.map((c, i) => (
                                 <div key={i} className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200">
@@ -568,7 +569,7 @@ const CustomOrderModal = ({ order, onClose, onZoomImage }) => {
                         {/* Reference Images for Custom Request */}
                         {(order.referenceImageUrl || order.allReferenceImages?.length > 0) && (
                           <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Reference Images</p>
+                            <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t('customOrders.summary.referenceImages')}</p>
                             <div className="flex gap-2 flex-wrap text-wrap">
                               {(order.allReferenceImages || [order.referenceImageUrl]).filter(Boolean).map((img, i) => {
                                 const src = typeof img === 'string' ? img : img.url || img.image_url;

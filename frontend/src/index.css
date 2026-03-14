@@ -39,6 +39,7 @@
 /* RTL Support */
 [dir="rtl"] {
   direction: rtl;
+  font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 [dir="rtl"] .text-left {
@@ -47,6 +48,41 @@
 
 [dir="rtl"] .text-right {
   text-align: left;
+}
+
+/* RTL: Flip chevrons and directional icons */
+[dir="rtl"] .fi-chevron-right,
+[dir="rtl"] [data-rtl-flip="true"] {
+  transform: scaleX(-1);
+}
+
+/* RTL: Space utilities - use logical properties */
+[dir="rtl"] .space-x-2 > * + * { margin-right: 0.5rem; margin-left: 0; }
+[dir="rtl"] .space-x-3 > * + * { margin-right: 0.75rem; margin-left: 0; }
+[dir="rtl"] .space-x-4 > * + * { margin-right: 1rem; margin-left: 0; }
+[dir="rtl"] .space-x-8 > * + * { margin-right: 2rem; margin-left: 0; }
+
+/* RTL: Navbar logo spacing */
+[dir="rtl"] .ml-1\.5 { margin-right: 0.375rem; margin-left: 0; }
+[dir="rtl"] .ml-2 { margin-right: 0.5rem; margin-left: 0; }
+
+/* RTL: Input icons in forms */
+[dir="rtl"] .ps-10 { padding-left: 0; padding-right: 2.5rem; }
+[dir="rtl"] .pe-10 { padding-right: 0; padding-left: 2.5rem; }
+
+/* RTL: ensure dropdowns open to the correct side on mobile */
+[dir="rtl"] .origin-top-right {
+  transform-origin: top left;
+}
+
+/* RTL: prevent table overflow issues */
+[dir="rtl"] table {
+  text-align: right;
+}
+
+/* RTL: Fix select arrow positioning */
+[dir="rtl"] select {
+  background-position: left 0.75rem center;
 }
 
 /* Custom Scrollbar */

@@ -6,9 +6,10 @@ import { FiShoppingCart, FiMenu, FiX, FiLogOut, FiUser, FiShoppingBag } from 're
 import { useCart } from '../context/CartContext';
 import { authService } from '../services/authService';
 import { FcGoogle } from 'react-icons/fc';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Navbar = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { getCartCount } = useCart();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -74,7 +75,7 @@ const Navbar = () => {
     { path: '/custom-orders', label: t('nav.customOrders') },
     { path: '/about', label: t('nav.about') },
     { path: '/contact', label: t('nav.contact') },
-    ...(isAdmin ? [{ path: '/admin/dashboard', label: 'Dashboard' }] : [])
+    ...(isAdmin ? [{ path: '/admin/dashboard', label: t('nav.dashboard') }] : [])
   ];
 
   return (
@@ -111,7 +112,7 @@ const Navbar = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8">
+            <div className="hidden lg:flex items-center gap-8">
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
@@ -127,7 +128,12 @@ const Navbar = () => {
             </div>
 
             {/* Right Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-3">
+              {/* Language Switcher - Desktop */}
+              <div className="hidden lg:block">
+                <LanguageSwitcher />
+              </div>
+
               {/* Cart */}
               <Link
                 to="/cart"
@@ -146,7 +152,7 @@ const Navbar = () => {
               </Link>
 
               {/* Auth section desktop */}
-              <div className="hidden lg:flex items-center ml-2 border-l pl-4 border-gray-200">
+              <div className="hidden lg:flex items-center border-s ps-3 border-gray-200">
                 {user ? (
                   <div className="relative group">
                     <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors border border-transparent hover:border-gray-100">
@@ -170,7 +176,7 @@ const Navbar = () => {
                     {/* Dropdown Menu */}
                     <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-100 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50 py-2">
                       <div className="px-4 py-2 border-b border-gray-50 mb-1">
-                        <p className="text-xs text-text/50 uppercase tracking-wider font-semibold mb-0.5">Signed in as</p>
+                        <p className="text-xs text-text/50 uppercase tracking-wider font-semibold mb-0.5">{t('nav.signedInAs')}</p>
                         <p className="text-sm text-gray-900 font-medium truncate">{user.email}</p>
                       </div>
                       <Link
@@ -178,21 +184,21 @@ const Navbar = () => {
                         className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors"
                       >
                         <FiUser className="w-4 h-4" />
-                        Manage Account
+                        {t('nav.manageAccount')}
                       </Link>
                       <Link
                         to="/my-orders"
                         className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors"
                       >
                         <FiShoppingBag className="w-4 h-4" />
-                        My Orders
+                        {t('nav.myOrders')}
                       </Link>
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
                       >
                         <FiLogOut className="w-4 h-4" />
-                        Logout
+                        {t('nav.logout')}
                       </button>
                     </div>
                   </div>
@@ -202,7 +208,7 @@ const Navbar = () => {
                     className="flex items-center gap-2 text-sm font-medium bg-white border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors"
                   >
                     <FcGoogle className="w-4 h-4" />
-                    Login
+                    {t('nav.login')}
                   </button>
                 )}
               </div>
@@ -210,7 +216,7 @@ const Navbar = () => {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="lg:hidden p-2 rounded-full hover:bg-gray-100 transition-colors ml-2"
+                className="lg:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
                 aria-label="Toggle menu"
               >
                 {isMenuOpen ? (
@@ -247,7 +253,39 @@ const Navbar = () => {
                   </Link>
                 ))}
 
-                <div className="border-t pt-4 mt-2">
+                {/* Language Switcher - Mobile inline pills */}
+                <div className="pt-2 mt-2 border-t border-gray-100">
+                  <p className="text-sm font-bold text-text/40 uppercase tracking-widest mb-2">
+                    {t('language.switchLanguage')}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2" style={{ direction: 'ltr' }}>
+                    {[
+                      { code: 'en', flag: '🇬🇧', label: 'English' },
+                      { code: 'fr', flag: '🇫🇷', label: 'Français' },
+                      { code: 'ar', flag: '��', label: 'العربية' },
+                    ].map((lang) => {
+                      const isActive = i18n.language === lang.code;
+                      return (
+                        <button
+                          key={lang.code}
+                          onClick={() => {
+                            i18n.changeLanguage(lang.code);
+                            setIsMenuOpen(false);
+                          }}
+                          className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-xs font-semibold transition-all border ${isActive
+                            ? 'bg-primary text-white border-primary shadow-md'
+                            : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-primary/5 hover:border-primary/30 hover:text-primary'
+                            }`}
+                        >
+                          <span className="text-xl leading-none">{lang.flag}</span>
+                          <span className="leading-none">{lang.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="pt-4 mt-2 text-start border-t border-gray-100">
                   {user ? (
                     <div className="space-y-1">
                       {/* User Profile Info Header */}
@@ -276,7 +314,7 @@ const Navbar = () => {
                         className="flex items-center gap-3 w-full py-3 px-4 rounded-xl text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors font-medium"
                       >
                         <FiUser className="w-5 h-5 text-gray-400" />
-                        Manage Account
+                        {t('nav.manageAccount')}
                       </Link>
 
                       <Link
@@ -285,7 +323,7 @@ const Navbar = () => {
                         className="flex items-center gap-3 w-full py-3 px-4 rounded-xl text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors font-medium"
                       >
                         <FiShoppingBag className="w-5 h-5 text-gray-400" />
-                        My Orders
+                        {t('nav.myOrders')}
                       </Link>
 
                       <button
@@ -293,7 +331,7 @@ const Navbar = () => {
                         className="flex items-center gap-3 w-full py-3 px-4 rounded-xl text-red-600 hover:bg-red-50 transition-colors font-medium text-left mt-1"
                       >
                         <FiLogOut className="w-5 h-5" />
-                        Logout
+                        {t('nav.logout')}
                       </button>
                     </div>
                   ) : (
@@ -302,7 +340,7 @@ const Navbar = () => {
                       className="w-full flex items-center justify-center gap-3 py-4 mt-2 bg-white border border-gray-200 rounded-xl text-text font-bold shadow-sm hover:bg-gray-50 active:scale-[0.98] transition-all"
                     >
                       <FcGoogle className="w-6 h-6" />
-                      Continue with Google
+                      {t('nav.continueWithGoogle')}
                     </button>
                   )}
                 </div>

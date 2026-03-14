@@ -85,10 +85,10 @@ const AccountSettings = () => {
 
             if (error) throw error;
             setUser(data.user);
-            setSuccessMsg('Your account information has been updated successfully!');
+            setSuccessMsg(t('account.successUpdate'));
         } catch (err) {
             console.error('Error updating profile:', err);
-            setErrorMsg(err.message || 'Failed to update account information.');
+            setErrorMsg(err.message || t('account.failedUpdate'));
         } finally {
             setSaving(false);
         }
@@ -104,11 +104,11 @@ const AccountSettings = () => {
             await axios.post(`${apiUrl}/auth-settings/send-code`, {}, {
                 headers: { Authorization: `Bearer ${session.access_token}` }
             });
-            setSuccessMsg('A 6-digit confirmation code has been sent to your email.');
+            setSuccessMsg(t('account.codeSent'));
             setPasswordMode('verify');
         } catch (err) {
             console.error('Error sending code:', err);
-            setErrorMsg(err.response?.data?.error || 'Failed to send confirmation code.');
+            setErrorMsg(err.response?.data?.error || t('account.failedSendCode'));
         } finally {
             setSaving(false);
         }
@@ -125,11 +125,11 @@ const AccountSettings = () => {
             await axios.post(`${apiUrl}/auth-settings/verify-code`, { code: verificationCode }, {
                 headers: { Authorization: `Bearer ${session.access_token}` }
             });
-            setSuccessMsg('Code verified successfully! You may now enter your new password.');
+            setSuccessMsg(t('account.codeVerified'));
             setPasswordMode('update');
         } catch (err) {
             console.error('Error verifying code:', err);
-            setErrorMsg(err.response?.data?.error || 'Invalid or expired confirmation code.');
+            setErrorMsg(err.response?.data?.error || t('account.invalidCode'));
         } finally {
             setSaving(false);
         }
@@ -143,19 +143,19 @@ const AccountSettings = () => {
 
         if (newPassword !== confirmPassword) {
             setSaving(false);
-            return setErrorMsg('Passwords do not match.');
+            return setErrorMsg(t('account.passwordMismatch'));
         }
 
         if (newPassword.length < 6) {
             setSaving(false);
-            return setErrorMsg('Password must be at least 6 characters long.');
+            return setErrorMsg(t('account.passwordTooShort'));
         }
 
         try {
             const { error } = await supabase.auth.updateUser({ password: newPassword });
             if (error) throw error;
 
-            setSuccessMsg('Your password has been changed successfully! Redirecting...');
+            setSuccessMsg(t('account.passwordChanged'));
             setPasswordMode('request');
             setVerificationCode('');
             setNewPassword('');
@@ -167,7 +167,7 @@ const AccountSettings = () => {
             }, 3000);
         } catch (err) {
             console.error('Error changing password:', err);
-            setErrorMsg(err.message || 'Failed to update password.');
+            setErrorMsg(err.message || t('account.failedPassword'));
         } finally {
             setSaving(false);
         }
@@ -184,7 +184,7 @@ const AccountSettings = () => {
     if (!user) {
         return (
             <div className="min-h-screen section-padding text-center flex items-center justify-center">
-                <p className="text-xl text-text/60">You must be logged in to view this page.</p>
+                <p className="text-xl text-text/60">{t('account.mustLogin')}</p>
             </div>
         );
     }
@@ -197,18 +197,18 @@ const AccountSettings = () => {
                     animate={{ opacity: 1, y: 0 }}
                 >
                     <div className="text-center mb-10">
-                        <h1 className="text-4xl font-display font-bold text-primary mb-2">Manage My Account</h1>
+                        <h1 className="text-4xl font-display font-bold text-primary mb-2">{t('account.title')}</h1>
                         <p className="text-text/60">
                             {isAdmin
-                                ? 'Admin Profile Settings'
-                                : 'Update your contact and delivery informations'}
+                                ? t('account.adminProfile')
+                                : t('account.updateInfo')}
                         </p>
                     </div>
 
                     <div className="card p-4 sm:p-8">
                         <div className="mb-8 pb-8 border-b border-gray-100">
                             <h2 className="text-xl font-semibold text-gray-900">
-                                {formData.full_name || 'My Profile'}
+                                {formData.full_name || t('account.myProfile')}
                             </h2>
                             <div className="flex items-center gap-2 text-text/60 mt-1">
                                 <FiMail className="w-4 h-4 flex-shrink-0" />
@@ -237,10 +237,10 @@ const AccountSettings = () => {
                                     <div>
                                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                             <FiLock className="text-primary" />
-                                            Security Settings
+                                            {t('account.securitySettings')}
                                         </h3>
                                         <p className="text-text/70 mb-4">
-                                            As an administrator, you can change your password by requesting a secure 6-digit confirmation code to your email address: <strong>{user.email}</strong>
+                                            {t('account.securityDesc')} <strong>{user.email}</strong>
                                         </p>
                                         <button
                                             onClick={handleSendCode}
@@ -248,7 +248,7 @@ const AccountSettings = () => {
                                             className="btn-primary py-3 px-6 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                                         >
                                             <FiMail />
-                                            {saving ? 'Sending confirmation...' : 'Send Password Change Confirmation'}
+                                            {saving ? t('account.sending') : t('account.sendCode')}
                                         </button>
                                     </div>
                                 )}
@@ -257,10 +257,10 @@ const AccountSettings = () => {
                                     <form onSubmit={handleVerifyCode} className="space-y-4 max-w-sm">
                                         <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
                                             <FiKey className="text-primary" />
-                                            Enter Security Code
+                                            {t('account.enterCode')}
                                         </h3>
                                         <p className="text-text/70 mb-4 text-sm">
-                                            We sent a 6-digit code to <strong>{user.email}</strong>. Please enter it below.
+                                            {t('account.enterCodeDesc')} <strong>{user.email}</strong>{t('account.enterCodeDesc2')}
                                         </p>
                                         <input
                                             type="text"
@@ -294,11 +294,11 @@ const AccountSettings = () => {
                                     <form onSubmit={handleUpdateAdminPassword} className="space-y-5 max-w-sm">
                                         <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
                                             <FiLock className="text-primary" />
-                                            Set New Password
+                                            {t('account.setNewPassword')}
                                         </h3>
                                         <div>
                                             <label className="block text-sm font-medium text-text mb-2">
-                                                New Password
+                                                {t('account.newPassword')}
                                             </label>
                                             <div className="relative">
                                                 <input
@@ -322,7 +322,7 @@ const AccountSettings = () => {
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-text mb-2">
-                                                Confirm New Password
+                                                {t('account.confirmPassword')}
                                             </label>
                                             <div className="relative">
                                                 <input
@@ -349,7 +349,7 @@ const AccountSettings = () => {
                                             disabled={saving}
                                             className="btn-primary w-full py-3 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                                         >
-                                            {saving ? 'Updating...' : 'Update Password'}
+                                            {saving ? t('account.updating') : t('account.updatePassword')}
                                         </button>
                                     </form>
                                 )}
@@ -360,7 +360,7 @@ const AccountSettings = () => {
                                     <div>
                                         <label className="block text-sm font-medium text-text mb-2 flex items-center gap-2">
                                             <FiUser className="text-text/60" />
-                                            Full Name
+                                            {t('account.fullName')}
                                         </label>
                                         <input
                                             type="text"
@@ -375,7 +375,7 @@ const AccountSettings = () => {
                                     <div>
                                         <label className="block text-sm font-medium text-text mb-2 flex items-center gap-2">
                                             <FiPhone className="text-text/60" />
-                                            Phone Number
+                                            {t('account.phoneNumber')}
                                         </label>
                                         <input
                                             type="tel"
@@ -392,7 +392,7 @@ const AccountSettings = () => {
                                 <div>
                                     <label className="block text-sm font-medium text-text mb-2 flex items-center gap-2">
                                         <FiMapPin className="text-text/60" />
-                                        Full Address
+                                        {t('account.fullAddress')}
                                     </label>
                                     <textarea
                                         name="full_address"
@@ -400,7 +400,7 @@ const AccountSettings = () => {
                                         onChange={handleChange}
                                         rows="3"
                                         className="input-field resize-none"
-                                        placeholder="Street address, building, apartment number..."
+                                        placeholder={t('checkout.addressPlaceholder')}
                                     />
                                 </div>
 
@@ -412,10 +412,10 @@ const AccountSettings = () => {
                                             formData.phone !== (user.user_metadata?.phone || '') ||
                                             formData.full_address !== (user.user_metadata?.full_address || '')
                                         )}
-                                        className="btn-primary py-3 px-8 flex items-center justify-center gap-2 ml-auto disabled:opacity-70 disabled:cursor-not-allowed"
+                                        className="btn-primary py-3 px-8 flex items-center justify-center gap-2 ms-auto disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
                                         <FiSave />
-                                        {saving ? 'Saving...' : 'Save Changes'}
+                                        {saving ? t('account.saving') : t('account.saveChanges')}
                                     </button>
                                 </div>
                             </form>

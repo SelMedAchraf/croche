@@ -55,7 +55,7 @@ const Contact = () => {
       }, 5000);
     } catch (err) {
       console.error('Error submitting contact form:', err);
-      setError('Failed to send message. Please try again.');
+      setError(t('contact.failedSend'));
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ const Contact = () => {
             className="card p-8"
           >
             <h2 className="text-2xl font-display font-semibold text-primary mb-6">
-              Send Us a Message
+              {t('contact.sendMessage')}
             </h2>
 
             {submitted ? (
@@ -98,7 +98,7 @@ const Contact = () => {
                   {t('contact.success')}
                 </h3>
                 <p className="text-text/70">
-                  We'll get back to you as soon as possible.
+                  {t('contact.successDesc')}
                 </p>
               </div>
             ) : (
@@ -114,10 +114,9 @@ const Contact = () => {
                     onChange={handleChange}
                     required
                     className="input-field"
-                    placeholder="Your name"
+                    placeholder={t('contact.namePlaceholder')}
                   />
                 </div>
-
 
                 <div>
                   <label className="block text-sm font-medium text-text mb-2">
@@ -146,7 +145,7 @@ const Contact = () => {
                     required
                     rows="5"
                     className="input-field resize-none"
-                    placeholder="How can we help you?"
+                    placeholder={t('contact.messagePlaceholder')}
                   />
                 </div>
 
@@ -156,7 +155,7 @@ const Contact = () => {
                   className="btn-primary w-full py-4 text-lg flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   <FiSend />
-                  {loading ? 'Sending...' : t('contact.send')}
+                  {loading ? t('contact.sending') : t('contact.send')}
                 </button>
                 {error && <p className="text-red-500 text-sm mt-2 text-center">{error}</p>}
               </form>
@@ -171,7 +170,7 @@ const Contact = () => {
           >
             <div className="card p-8">
               <h3 className="text-xl font-display font-semibold text-primary mb-6">
-                Contact Information
+                {t('contact.info')}
               </h3>
 
               <div className="space-y-4">
@@ -180,7 +179,7 @@ const Contact = () => {
                     <FiMail className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Email</h4>
+                    <h4 className="font-semibold mb-1">{t('contact.emailLabel')}</h4>
                     <a href="mailto:crocheella19@gmail.com" className="text-text/70 hover:text-primary">
                       crocheella19@gmail.com
                     </a>
@@ -192,7 +191,7 @@ const Contact = () => {
                     <FiPhone className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Phone</h4>
+                    <h4 className="font-semibold mb-1">{t('contact.phoneLabel')}</h4>
                     <a href="tel:+212XXXXXXXXX" className="text-text/70 hover:text-primary">
                       +212 XXX-XXXXXX
                     </a>
@@ -204,8 +203,8 @@ const Contact = () => {
                     <FiMapPin className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Location</h4>
-                    <p className="text-text/70">Algeria - Setif</p>
+                    <h4 className="font-semibold mb-1">{t('contact.locationLabel')}</h4>
+                    <p className="text-text/70">{t('contact.location')}</p>
                   </div>
                 </div>
               </div>
@@ -213,7 +212,7 @@ const Contact = () => {
 
             <div className="card p-8">
               <h3 className="text-xl font-display font-semibold text-primary mb-6 text-center">
-                Follow Us
+                {t('contact.followUs')}
               </h3>
 
               <div className="flex gap-4 justify-center">

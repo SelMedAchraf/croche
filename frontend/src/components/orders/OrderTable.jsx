@@ -1,6 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { FiInfo, FiXCircle, FiEye } from 'react-icons/fi';
 
 const OrderTable = ({ orders, onCancel, onRequestCancel, onViewDetails }) => {
+    const { t } = useTranslation();
+
     const getStatusColor = (status) => {
         const colors = {
             pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -15,16 +18,7 @@ const OrderTable = ({ orders, onCancel, onRequestCancel, onViewDetails }) => {
     };
 
     const getStatusLabel = (status) => {
-        const labels = {
-            pending: 'Pending',
-            waiting_deposit: 'Waiting Deposit',
-            confirmed: 'Confirmed',
-            in_progress: 'In Progress',
-            delivered: 'Delivered',
-            done: 'Done',
-            cancelled: 'Cancelled'
-        };
-        return labels[status] || status;
+        return t(`orderTable.statuses.${status}`, status);
     };
 
     return (
@@ -33,12 +27,12 @@ const OrderTable = ({ orders, onCancel, onRequestCancel, onViewDetails }) => {
                 <table className="w-full text-left border-collapse whitespace-nowrap">
                     <thead>
                         <tr className="bg-gray-50 border-b border-gray-200 text-sm text-text/70 uppercase tracking-wider">
-                            <th className="px-6 py-4 font-semibold">Order ID</th>
-                            <th className="px-6 py-4 font-semibold">Date</th>
-                            <th className="px-6 py-4 font-semibold">Total</th>
-                            <th className="px-6 py-4 font-semibold">Status</th>
-                            <th className="px-6 py-4 font-semibold text-center">Action</th>
-                            <th className="px-6 py-4 font-semibold text-center">Details</th>
+                            <th className="px-6 py-4 font-semibold">{t('orderTable.orderId')}</th>
+                            <th className="px-6 py-4 font-semibold">{t('orderTable.date')}</th>
+                            <th className="px-6 py-4 font-semibold">{t('orderTable.total')}</th>
+                            <th className="px-6 py-4 font-semibold">{t('orderTable.status')}</th>
+                            <th className="px-6 py-4 font-semibold text-center">{t('orderTable.action')}</th>
+                            <th className="px-6 py-4 font-semibold text-center">{t('orderTable.details')}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -60,7 +54,7 @@ const OrderTable = ({ orders, onCancel, onRequestCancel, onViewDetails }) => {
                                             </span>
                                             {order.cancel_requested && !('cancelled' === order.status) && (
                                                 <span className="text-[10px] text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
-                                                    Cancel Requested
+                                                    {t('orderTable.cancelRequested')}
                                                 </span>
                                             )}
                                         </div>
@@ -70,20 +64,20 @@ const OrderTable = ({ orders, onCancel, onRequestCancel, onViewDetails }) => {
                                             <button
                                                 onClick={() => onCancel(order.id)}
                                                 className="inline-flex items-center justify-center gap-1 w-32 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg text-xs font-medium transition-colors border border-transparent hover:border-red-200"
-                                                title="Cancel Order"
+                                                title={t('orderTable.cancelOrder')}
                                             >
-                                                <FiXCircle className="w-4 h-4" /> Cancel Order
+                                                <FiXCircle className="w-4 h-4" /> {t('orderTable.cancelOrder')}
                                             </button>
                                         ) : ['confirmed', 'in_progress'].includes(order.status) && !order.cancel_requested ? (
                                             <button
                                                 onClick={() => onRequestCancel(order.id)}
                                                 className="inline-flex items-center justify-center gap-1 w-32 py-2.5 bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700 rounded-lg text-xs font-medium transition-colors border border-transparent hover:border-orange-200"
-                                                title="Request Cancel"
+                                                title={t('orderTable.requestCancel')}
                                             >
-                                                <FiInfo className="w-4 h-4" /> Request Cancel
+                                                <FiInfo className="w-4 h-4" /> {t('orderTable.requestCancel')}
                                             </button>
                                         ) : (
-                                            <span className="text-text/30 text-xs italic">No actions</span>
+                                            <span className="text-text/30 text-xs italic">{t('orderTable.noActions')}</span>
                                         )}
                                     </td>
                                     <td className="px-6 py-4 text-center">
@@ -91,7 +85,7 @@ const OrderTable = ({ orders, onCancel, onRequestCancel, onViewDetails }) => {
                                             onClick={() => onViewDetails(order)}
                                             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 text-primary border border-gray-200 hover:bg-primary hover:border-primary hover:text-white rounded-lg text-sm font-medium transition-colors"
                                         >
-                                            <FiEye className="w-4 h-4" /> View
+                                            <FiEye className="w-4 h-4" /> {t('orderTable.view')}
                                         </button>
                                     </td>
                                 </tr>
@@ -119,18 +113,18 @@ const OrderTable = ({ orders, onCancel, onRequestCancel, onViewDetails }) => {
                                     </span>
                                     {order.cancel_requested && !('cancelled' === order.status) && (
                                         <span className="text-[9px] text-gray-500 font-bold bg-gray-100 px-2 rounded border border-gray-200">
-                                            Cancel Req.
+                                            {t('orderTable.cancelReq')}
                                         </span>
                                     )}
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2 text-sm text-text/80 bg-gray-50 p-3 rounded-lg border border-gray-100">
                                 <div>
-                                    <span className="block text-xs text-text/50 mb-0.5">Date</span>
+                                    <span className="block text-xs text-text/50 mb-0.5">{t('orderTable.dateLabel')}</span>
                                     <span className="font-medium text-text">{new Date(order.created_at).toLocaleDateString()}</span>
                                 </div>
                                 <div>
-                                    <span className="block text-xs text-text/50 mb-0.5">Total</span>
+                                    <span className="block text-xs text-text/50 mb-0.5">{t('orderTable.totalLabel')}</span>
                                     <span className="font-medium text-text">{totalAmountText}</span>
                                 </div>
                             </div>
@@ -139,21 +133,21 @@ const OrderTable = ({ orders, onCancel, onRequestCancel, onViewDetails }) => {
                                     onClick={() => onViewDetails(order)}
                                     className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 bg-gray-50 text-primary border border-gray-200 hover:bg-primary hover:border-primary hover:text-white rounded-lg text-sm font-medium transition-colors"
                                 >
-                                    <FiEye className="w-4 h-4" /> View
+                                    <FiEye className="w-4 h-4" /> {t('orderTable.view')}
                                 </button>
                                 {['pending', 'waiting_deposit'].includes(order.status) && !order.cancel_requested ? (
                                     <button
                                         onClick={() => onCancel(order.id)}
                                         className="flex-1 inline-flex items-center justify-center gap-1 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg text-xs font-medium transition-colors border border-red-100"
                                     >
-                                        <FiXCircle className="w-4 h-4" /> Cancel
+                                        <FiXCircle className="w-4 h-4" /> {t('orderTable.cancelOrder')}
                                     </button>
                                 ) : ['confirmed', 'in_progress'].includes(order.status) && !order.cancel_requested ? (
                                     <button
                                         onClick={() => onRequestCancel(order.id)}
                                         className="flex-1 inline-flex items-center justify-center gap-1 py-2.5 bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700 rounded-lg text-xs font-medium transition-colors border border-orange-100"
                                     >
-                                        <FiInfo className="w-4 h-4" /> Req. Cancel
+                                        <FiInfo className="w-4 h-4" /> {t('orderTable.requestCancel')}
                                     </button>
                                 ) : null}
                             </div>

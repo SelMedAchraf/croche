@@ -57,7 +57,7 @@ const ProductDetails = () => {
     return (
       <div className="min-h-screen section-padding flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-display font-bold text-primary mb-4">Product not found</h2>
+          <h2 className="text-2xl font-display font-bold text-primary mb-4">{t('productDetails.notFound')}</h2>
           <Link to="/products" className="btn-primary">
             {t('common.backHome')}
           </Link>
@@ -73,9 +73,9 @@ const ProductDetails = () => {
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <div className="mb-8 text-sm text-text/60">
-          <Link to="/" className="hover:text-primary">Home</Link>
+          <Link to="/" className="hover:text-primary">{t('nav.home')}</Link>
           <span className="mx-2">/</span>
-          <Link to="/products" className="hover:text-primary">Products</Link>
+          <Link to="/products" className="hover:text-primary">{t('nav.products')}</Link>
           <span className="mx-2">/</span>
           <span className="text-text">{product.category}</span>
         </div>
@@ -115,9 +115,9 @@ const ProductDetails = () => {
               </span>
 
               <div className="flex flex-col gap-1">
-                <span className="text-text/60 text-sm font-medium">Unit Price</span>
+                <span className="text-text/60 text-sm font-medium">{t('productDetails.unitPrice')}</span>
                 <span className="text-2xl font-semibold text-primary/80">
-                  {product.price} DA
+                  {product.price} {t('common.da')}
                 </span>
               </div>
             </div>
@@ -144,9 +144,9 @@ const ProductDetails = () => {
               </div>
 
               <div className="flex flex-col items-end">
-                <span className="text-text/60 text-sm font-medium mb-1">Total Amount</span>
+                <span className="text-text/60 text-sm font-medium mb-1">{t('productDetails.totalAmount')}</span>
                 <span className="text-4xl font-bold text-primary">
-                  {(product.price * quantity).toFixed(2)} <span className="text-lg">DA</span>
+                  {(product.price * quantity).toFixed(2)} <span className="text-lg">{t('common.da')}</span>
                 </span>
               </div>
             </div>
@@ -199,7 +199,7 @@ const ProductDetails = () => {
                     <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">
                       {relatedProduct.category}
                     </h3>
-                    <p className="text-primary font-bold">{relatedProduct.price} DA</p>
+                    <p className="text-primary font-bold">{relatedProduct.price} {t('common.da')}</p>
                   </div>
                 </Link>
               ))}

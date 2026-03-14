@@ -32,16 +32,16 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center space-x-2 mb-4">
+            <div className="flex items-center gap-2 mb-4">
               <span className="text-3xl">🧶</span>
               <span className="text-2xl font-display font-bold text-primary">
                 Croche Ella
               </span>
             </div>
             <p className="text-text/70 text-sm mb-4">
-              Handmade crochet creations crafted with love and passion. Each piece is unique and tells its own story.
+              {t('footer.tagline')}
             </p>
-            <div className="flex space-x-3">
+            <div className="flex gap-3">
               <a
                 href="https://www.instagram.com/croche.ella_/"
                 target="_blank"
@@ -75,7 +75,7 @@ const Footer = () => {
           {/* Quick Links */}
           <div>
             <h3 className="font-display font-semibold text-lg mb-4 text-primary">
-              Quick Links
+              {t('footer.quickLinks')}
             </h3>
             <ul className="space-y-2">
               <li>
@@ -90,7 +90,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/custom-orders" className="text-text/70 hover:text-primary transition-colors text-sm">
-                  Custom Orders
+                  {t('footer.customOrders')}
                 </Link>
               </li>
               <li>
@@ -101,10 +101,10 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Produt Categories */}
+          {/* Product Categories */}
           <div>
             <h3 className="font-display font-semibold text-lg mb-4 text-primary">
-              Product Categories
+              {t('footer.productCategories')}
             </h3>
             <ul className="space-y-2">
               {categories.map((category) => (
@@ -123,20 +123,20 @@ const Footer = () => {
           {/* Contact */}
           <div>
             <h3 className="font-display font-semibold text-lg mb-4 text-primary">
-              Contact Us
+              {t('footer.contactUs')}
             </h3>
             <ul className="space-y-3">
               <li className="flex items-center text-text/70 text-sm">
-                <FiPhone className="w-4 h-4 mr-2 text-primary" />
+                <FiPhone className="w-4 h-4 me-2 text-primary flex-shrink-0" />
                 +212 XXX-XXXXXX
               </li>
               <li className="flex items-center text-text/70 text-sm">
-                <FiMail className="w-4 h-4 mr-2 text-primary" />
+                <FiMail className="w-4 h-4 me-2 text-primary flex-shrink-0" />
                 crocheella19@gmail.com
               </li>
               <li className="flex items-start text-text/70 text-sm">
-                <FiMapPin className="w-4 h-4 mr-2 mt-1 text-primary flex-shrink-0" />
-                Algeria - Setif
+                <FiMapPin className="w-4 h-4 me-2 mt-1 text-primary flex-shrink-0" />
+                {t('contact.location')}
               </li>
             </ul>
           </div>
