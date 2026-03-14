@@ -9,12 +9,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Custom lock implementation to enable Back/Forward Cache (bfcache)
 // The default Supabase lock uses the Web Locks API, which prevents bfcache eligibility.
-// This no-op lock allows the page to be cached while still functioning correctly
-// for the majority of single-tab use cases.
-const bfcacheLock = {
-  async acquire(name, callback) {
-    return await callback();
-  }
+const bfcacheLock = (name, callback) => {
+  return callback();
+};
+bfcacheLock.acquire = (name, callback) => {
+  return callback();
 };
 
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
@@ -24,9 +23,9 @@ export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
     detectSessionInUrl: true,
     storageKey: 'supabase-auth-token',
     storage: window.localStorage,
-    // Use the custom lock to prevent WebLocks API usage
     lock: bfcacheLock
   }
 });
+
 
 
