@@ -1642,7 +1642,9 @@ const ItemCard = ({ item, quantity, onAdd, onRemove, onPreview }) => {
           <p className="text-sm text-text/60 mb-3 line-clamp-2">{item.description}</p>
         )}
         <div className="flex flex-col sm:flex-row items-center sm:justify-between w-full gap-3 sm:gap-0 mt-auto">
-          <span className="font-bold text-primary text-lg">{item.price} DA</span>
+          <span className="font-bold text-primary text-lg">
+            {quantity > 1 ? `${(item.price * quantity).toFixed(2)} DA` : `${item.price} DA`}
+          </span>
           {quantity === 0 ? (
             <button
               onClick={onAdd}

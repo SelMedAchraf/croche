@@ -212,11 +212,11 @@ const Contact = () => {
             </div>
 
             <div className="card p-8">
-              <h3 className="text-xl font-display font-semibold text-primary mb-6">
+              <h3 className="text-xl font-display font-semibold text-primary mb-6 text-center">
                 Follow Us
               </h3>
 
-              <div className="flex gap-4">
+              <div className="flex gap-4 justify-center">
                 <a
                   href="https://www.instagram.com/croche.ella_/"
                   target="_blank"
