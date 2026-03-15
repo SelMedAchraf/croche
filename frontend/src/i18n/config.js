@@ -1,49 +1,47 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import HttpBackend from 'i18next-http-backend';
 
-// Bundling ONLY English for instant LCP paint. 
-// Arabic and French remain dynamic for reduced bundle size.
+// Import translations directly to ensure they're bundled and available immediately
 import enTranslation from './en.json';
+import frTranslation from './fr.json';
+import arTranslation from './ar.json';
 
 i18n
-  .use(HttpBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
     supportedLngs: ['en', 'fr', 'ar'],
+    load: 'languageOnly', // Only load base languages (e.g., 'en' instead of 'en-US')
     
-    // Bundled resources for immediate paint
+    // Bundled resources for instant paint and reliable translation
     resources: {
-      en: { translation: enTranslation }
-    },
-
-    backend: {
-      loadPath: '/locales/{{lng}}/translation.json',
+      en: { translation: enTranslation },
+      fr: { translation: frTranslation },
+      ar: { translation: arTranslation }
     },
 
     interpolation: {
       escapeValue: false,
     },
     detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
+      order: ['localStorage', 'htmlTag', 'cookie', 'navigator'],
       caches: ['localStorage'],
       lookupLocalStorage: 'i18nextLng',
-      order: ['localStorage', 'htmlTag', 'cookie', 'navigator'],
     },
   });
 
-
-
 // Apply RTL direction on init
 const applyDirection = (lang) => {
-  const dir = lang === 'ar' ? 'rtl' : 'ltr';
+  // Use resolvedLanguage to get the actual language being used (e.g., 'ar' from 'ar-DZ')
+  const currentLang = lang || i18n.resolvedLanguage || 'en';
+  const dir = currentLang.startsWith('ar') ? 'rtl' : 'ltr';
   document.documentElement.setAttribute('dir', dir);
-  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('lang', currentLang);
 };
 
+// Initial application
 applyDirection(i18n.language);
 
 i18n.on('languageChanged', (lang) => {

@@ -14,10 +14,12 @@ const LanguageSwitcher = memo(({ compact = false }) => {
     const ref = useRef(null);
 
     // Optimization: Memoize current language selection
+    const activeLang = i18n.resolvedLanguage || i18n.language || 'en';
     const current = useMemo(() =>
-        LANGUAGES.find((l) => l.code === i18n.language) || LANGUAGES[0],
-        [i18n.language]
+        LANGUAGES.find((l) => activeLang.startsWith(l.code)) || LANGUAGES[0],
+        [activeLang]
     );
+
 
     // Optimization: Use useCallback for change handler
     const handleChange = useCallback((code) => {
@@ -64,14 +66,14 @@ const LanguageSwitcher = memo(({ compact = false }) => {
                         <button
                             key={lang.code}
                             onClick={() => handleChange(lang.code)}
-                            className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-primary/5 hover:text-primary ${i18n.language === lang.code
+                            className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-primary/5 hover:text-primary ${activeLang.startsWith(lang.code)
                                 ? 'bg-primary/5 text-primary font-semibold'
                                 : 'text-gray-700'
                                 }`}
                         >
                             <span className="w-4 h-4 flex items-center justify-center">{lang.flag}</span>
                             <span>{lang.full}</span>
-                            {i18n.language === lang.code && (
+                            {activeLang.startsWith(lang.code) && (
                                 <span className="ml-auto text-primary">✓</span>
                             )}
                         </button>

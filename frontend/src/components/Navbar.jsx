@@ -159,9 +159,9 @@ const Navbar = () => {
                 {[
                   { code: 'en', flag: '🇬🇧', label: 'English' },
                   { code: 'fr', flag: '🇫🇷', label: 'Français' },
-                  { code: 'ar', flag: '🇦🇪', label: 'العربية' },
+                  { code: 'ar', flag: '🇸🇦', label: 'العربية' },
                 ].map((lang) => {
-                  const isActive = i18n.language === lang.code;
+                  const isActive = i18n.language?.startsWith(lang.code);
                   return (
                     <button
                       key={lang.code}
