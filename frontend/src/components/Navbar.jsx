@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FiShoppingCart, FiMenu, FiX } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import LanguageSwitcher from './LanguageSwitcher';
+import useLockBodyScroll from '../hooks/useLockBodyScroll';
 
 // Lazy-load Auth and icons used in it to reduce initial JS size
 const NavbarAuth = lazy(() => import('./NavbarAuth'));
@@ -15,6 +16,8 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
+  useLockBodyScroll(isMenuOpen);
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -24,18 +27,6 @@ const Navbar = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
-
-  // Prevent scroll when mobile menu is open
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isMenuOpen]);
 
   const navLinks = [
     { path: '/', label: t('nav.home') },

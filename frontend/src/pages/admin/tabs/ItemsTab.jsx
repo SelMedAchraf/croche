@@ -4,11 +4,14 @@ import { FiPlus, FiEdit, FiTrash2, FiX, FiUpload, FiZoomIn, FiBox } from 'react-
 import { supabase } from '../../../config/supabase';
 import { useItems } from '../../../hooks/useItems';
 import { compressImage } from '../../../utils/imageCompression';
+import useLockBodyScroll from '../../../hooks/useLockBodyScroll';
 
 const ItemsTab = ({ setZoomedImage }) => {
     const navigate = useNavigate();
     const { items, loading, createItem, updateItem, deleteItem } = useItems();
     const [showModal, setShowModal] = useState(false);
+
+    useLockBodyScroll(showModal);
     const [editingItem, setEditingItem] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);

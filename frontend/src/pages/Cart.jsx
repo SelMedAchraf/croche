@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext';
 import { useColors } from '../hooks/useColors';
 import { authService } from '../services/authService';
 import { FcGoogle } from 'react-icons/fc';
+import useLockBodyScroll from '../hooks/useLockBodyScroll';
 
 const Cart = () => {
   const { t } = useTranslation();
@@ -15,6 +16,8 @@ const Cart = () => {
   const [selectedCustomOrder, setSelectedCustomOrder] = useState(null);
   const [zoomedImage, setZoomedImage] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  useLockBodyScroll(!!selectedCustomOrder || !!zoomedImage || showLoginModal);
 
   const handleProceedToCheckout = async () => {
     const user = await authService.getCurrentUser();

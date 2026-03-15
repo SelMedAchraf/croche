@@ -4,10 +4,13 @@ import { FiPlus, FiEdit, FiTrash2, FiX, FiUpload, FiZoomIn, FiPackage } from 're
 import axios from 'axios';
 import { supabase } from '../../../config/supabase';
 import { compressImage } from '../../../utils/imageCompression';
+import useLockBodyScroll from '../../../hooks/useLockBodyScroll';
 
 const ProductsTab = ({ products, onRefresh, setZoomedImage }) => {
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
+
+    useLockBodyScroll(showModal);
     const [editingProduct, setEditingProduct] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);

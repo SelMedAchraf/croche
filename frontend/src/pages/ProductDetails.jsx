@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiShoppingCart, FiZoomIn, FiX } from 'react-icons/fi';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
+import useLockBodyScroll from '../hooks/useLockBodyScroll';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -16,6 +17,8 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [isZoomed, setIsZoomed] = useState(false);
+
+  useLockBodyScroll(isZoomed);
 
   useEffect(() => {
     fetchProduct();

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiZoomIn, FiSettings, FiSave } from 'react-icons/fi';
 import { supabase } from '../../config/supabase';
+import useLockBodyScroll from '../../hooks/useLockBodyScroll';
 
 const AdminOrderDetailsModal = ({ order: initialOrder, isOpen, onClose, onRefresh }) => {
     const [activeTab, setActiveTab] = useState('order_info');
@@ -12,6 +13,8 @@ const AdminOrderDetailsModal = ({ order: initialOrder, isOpen, onClose, onRefres
     const [zoomedImage, setZoomedImage] = useState(null);
     const [expandedCustomDetails, setExpandedCustomDetails] = useState({});
     const [order, setOrder] = useState(initialOrder);
+
+    useLockBodyScroll(isOpen || !!zoomedImage);
 
     // Reset states when order changes
     React.useEffect(() => {

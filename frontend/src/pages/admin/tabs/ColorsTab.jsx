@@ -5,6 +5,7 @@ import { FiPlus, FiEdit, FiTrash2, FiX, FiUpload, FiDroplet } from 'react-icons/
 import { supabase } from '../../../config/supabase';
 import { useColors } from '../../../hooks/useColors';
 import { compressImage } from '../../../utils/imageCompression';
+import useLockBodyScroll from '../../../hooks/useLockBodyScroll';
 
 const ColorsTab = () => {
     const navigate = useNavigate();
@@ -14,6 +15,8 @@ const ColorsTab = () => {
     );
 
     const [showModal, setShowModal] = useState(false);
+
+    useLockBodyScroll(showModal);
     const [editingColor, setEditingColor] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);

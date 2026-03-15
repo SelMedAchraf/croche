@@ -12,6 +12,7 @@ import { useCart } from '../context/CartContext';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { compressImage } from '../utils/imageCompression';
+import useLockBodyScroll from '../hooks/useLockBodyScroll';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -21,6 +22,8 @@ const CustomOrders = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedOption = searchParams.get('type');
   const [previewImage, setPreviewImage] = useState(null);
+
+  useLockBodyScroll(!!previewImage);
 
   const handleReset = () => {
     setSearchParams({});

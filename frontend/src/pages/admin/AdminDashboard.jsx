@@ -18,8 +18,8 @@ import axios from 'axios';
 import { supabase } from '../../config/supabase';
 import { useItems } from '../../hooks/useItems';
 import { useColors } from '../../hooks/useColors';
+import useLockBodyScroll from '../../hooks/useLockBodyScroll';
 
-// Lazy-loaded tab components — each tab's code is only fetched when first opened
 const ProductsTab = lazy(() => import('./tabs/ProductsTab'));
 const OrdersTab = lazy(() => import('./tabs/OrdersTab'));
 const CategoriesTab = lazy(() => import('./tabs/CategoriesTab'));
@@ -36,6 +36,8 @@ const AdminDashboard = () => {
   const { items } = useItems();
   const { colors } = useColors();
   const [zoomedImage, setZoomedImage] = useState(null);
+
+  useLockBodyScroll(!!zoomedImage);
 
   useEffect(() => {
     checkAuth();

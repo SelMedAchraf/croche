@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiEdit, FiTrash2, FiGrid } from 'react-icons/fi';
 import { supabase } from '../../../config/supabase';
 import { useCategoriesManagement } from '../../../hooks/useCategoriesManagement';
+import useLockBodyScroll from '../../../hooks/useLockBodyScroll';
 
 const CategoriesTab = ({ onRefresh }) => {
     const navigate = useNavigate();
     const { categories, loading, createCategory, updateCategory, deleteCategory } = useCategoriesManagement();
     const [showModal, setShowModal] = useState(false);
+
+    useLockBodyScroll(showModal);
     const [editingCategory, setEditingCategory] = useState(null);
     const [formData, setFormData] = useState({ name: '' });
 
